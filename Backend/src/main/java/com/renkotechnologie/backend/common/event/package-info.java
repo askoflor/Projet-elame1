@@ -1,0 +1,4 @@
+/**
+ * Shared domain event base classes shared across feature modules (maps to the future common-library).
+ */
+package com.renkotechnologie.backend.common.event;
