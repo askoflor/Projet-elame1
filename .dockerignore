@@ -1,0 +1,17 @@
+.dart_tool/
+.idea/
+.vscode/
+.git/
+.gitignore
+build/
+coverage/
+android/
+ios/
+linux/
+macos/
+windows/
+test/
+*.log
+*.iml
+serve_app.ps1
+README.md
