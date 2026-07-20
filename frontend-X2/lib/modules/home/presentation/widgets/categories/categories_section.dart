@@ -157,8 +157,6 @@ class _CategoriesSectionState extends State<CategoriesSection> {
           crossAxisCount = 3;
         }
 
-        const serviceIndexMap = [0, 1, 2, 4, 3, 6, 5, 7];
-
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -179,7 +177,7 @@ class _CategoriesSectionState extends State<CategoriesSection> {
               isSelected: selectedIndex == index,
               onTap: () {
                 setState(() => selectedIndex = index);
-                context.push('/reservation', extra: serviceIndexMap[index]);
+                context.push('/recherche', extra: categories[index]['name'] as String);
               },
             );
           },

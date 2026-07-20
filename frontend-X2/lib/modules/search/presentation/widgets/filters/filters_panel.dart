@@ -3,7 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/localization/translation_provider.dart';
 
 class FiltersPanel extends StatefulWidget {
-  const FiltersPanel({super.key});
+  final String? initialCategory;
+  final ValueChanged<String>? onCategoryChanged;
+
+  const FiltersPanel({super.key, this.initialCategory, this.onCategoryChanged});
 
   @override
   State<FiltersPanel> createState() => _FiltersPanelState();
@@ -15,7 +18,18 @@ class _FiltersPanelState extends State<FiltersPanel> {
   String selectedCity = 'Douala';
   String selectedUrgency = 'Semi-urgent';
 
-  late List<String> categories;
+  static const List<String> categories = [
+    'Tous',
+    'Électricité',
+    'Plomberie',
+    'Climatisation',
+    'Carrelage',
+    'Maintenance',
+    'Jardinage',
+    'Peinture',
+    'Menuiserie',
+  ];
+
   final List<String> availabilities = [
     'Maintenant',
     'Aujourd\'hui',
@@ -38,14 +52,10 @@ class _FiltersPanelState extends State<FiltersPanel> {
   @override
   void initState() {
     super.initState();
-    selectedCategory = context.tr('search.categoryAll');
-    categories = [
-      context.tr('search.categoryAll'),
-      'Électricité',
-      context.tr('search.categoryPlomberie'),
-      context.tr('search.categoryClim'),
-      context.tr('search.categoryMaintenance'),
-    ];
+    selectedCategory = widget.initialCategory != null &&
+            categories.contains(widget.initialCategory)
+        ? widget.initialCategory!
+        : 'Tous';
   }
 
   @override
@@ -71,7 +81,10 @@ class _FiltersPanelState extends State<FiltersPanel> {
             child: _buildTagsFilter(
               items: categories,
               selected: selectedCategory,
-              onSelect: (val) => setState(() => selectedCategory = val),
+              onSelect: (val) {
+                setState(() => selectedCategory = val);
+                widget.onCategoryChanged?.call(val);
+              },
             ),
           ),
           // Disponibilité
@@ -111,10 +124,11 @@ class _FiltersPanelState extends State<FiltersPanel> {
           cursor: SystemMouseCursors.click,
           child: GestureDetector(
             onTap: () => setState(() {
-              selectedCategory = context.tr('search.categoryAll');
+              selectedCategory = 'Tous';
               selectedAvailability = 'Maintenant';
               selectedCity = 'Douala';
               selectedUrgency = 'Semi-urgent';
+              widget.onCategoryChanged?.call(selectedCategory);
             }),
             child: Text(
               'Réinitialiser',

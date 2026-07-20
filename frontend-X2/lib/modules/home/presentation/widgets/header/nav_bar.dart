@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../auth/domain/auth_provider.dart';
-import '../../../../../core/localization/translation_provider.dart';
 
 class NavBar extends StatefulWidget {
   const NavBar({super.key});
@@ -63,8 +62,6 @@ class _NavBarState extends State<NavBar> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildLangSwitcher(),
-                    const SizedBox(width: 8),
                     if (!isLoggedIn) _buildButtons(),
                   ],
                 ),
@@ -75,14 +72,7 @@ class _NavBarState extends State<NavBar> {
               flex: 1,
               child: Align(
                 alignment: Alignment.centerRight,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildLangSwitcher(),
-                    const SizedBox(width: 4),
-                    _buildMobileMenu(currentItem),
-                  ],
-                ),
+                child: _buildMobileMenu(currentItem),
               ),
             ),
           ],
@@ -224,57 +214,6 @@ class _NavBarState extends State<NavBar> {
     }
   }
 
-  Widget _buildLangSwitcher() {
-    final tp = context.watch<TranslationProvider>();
-    final currentLocale = tp.locale.languageCode;
-
-    return Container(
-      height: 29,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F7FA),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildLangButton('FR', currentLocale == 'fr'),
-          _buildLangButton('EN', currentLocale == 'en'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLangButton(String lang, bool isActive) {
-    return _HoverButton(
-      onTap: () {
-        final tp = context.read<TranslationProvider>();
-        tp.setLocale(Locale(lang.toLowerCase()));
-      },
-      builder: (isHovered) => AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        height: 29,
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: BoxDecoration(
-          color: isActive ? Colors.white : (isHovered ? const Color(0xFFE8ECF2) : Colors.transparent),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Center(
-          child: Text(
-            lang,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: isActive
-                  ? const Color(0xFF2563EB)
-                  : (isHovered ? const Color(0xFF1E293B) : const Color(0xFF64748B)),
-              fontFamily: 'Sora',
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildButtons() {
     return Row(
       children: [
@@ -354,8 +293,6 @@ class _NavBarState extends State<NavBar> {
   }
 
   Widget _buildMobileDrawer(String currentItem) {
-    final currentLocale = context.read<TranslationProvider>().locale.languageCode;
-
     return Container(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -378,15 +315,6 @@ class _NavBarState extends State<NavBar> {
                 _navigateToItem(item);
               },
             ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildLangButton('FR', currentLocale == 'fr'),
-              const SizedBox(width: 4),
-              _buildLangButton('EN', currentLocale == 'en'),
-            ],
           ),
           const SizedBox(height: 16),
           if (!isLoggedIn)

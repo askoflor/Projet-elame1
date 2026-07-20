@@ -51,7 +51,10 @@ class AppRouter {
         ),
         GoRoute(
           path: AppConstants.searchRoute,
-          builder: (context, state) => const SearchPage(),
+          builder: (context, state) {
+            final extra = state.extra;
+            return SearchPage(initialCategory: extra is String ? extra : null);
+          },
         ),
         GoRoute(
           path: AppConstants.bookingRoute,

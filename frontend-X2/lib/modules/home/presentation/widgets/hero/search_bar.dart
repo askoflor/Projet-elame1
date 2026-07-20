@@ -10,16 +10,33 @@ class SearchBar extends StatefulWidget {
 }
 
 class _SearchBarState extends State<SearchBar> {
-  final TextEditingController _serviceController = TextEditingController();
-  final TextEditingController _locationController = TextEditingController();
-  DateTime? _selectedDate;
+  static const List<String> _services = [
+    'Électricité',
+    'Plomberie',
+    'Climatisation',
+    'Carrelage',
+    'Maintenance',
+    'Jardinage',
+    'Peinture',
+    'Menuiserie',
+  ];
 
-  @override
-  void dispose() {
-    _serviceController.dispose();
-    _locationController.dispose();
-    super.dispose();
-  }
+  static const List<String> _cities = [
+    'Douala',
+    'Yaoundé',
+    'Bafoussam',
+    'Garoua',
+    'Bamenda',
+    'Maroua',
+    'Ngaoundéré',
+    'Bertoua',
+    'Buea',
+    'Ebolowa',
+  ];
+
+  String? _selectedService;
+  String? _selectedCity;
+  DateTime? _selectedDate;
 
   Future<void> _selectDate() async {
     final picked = await showDatePicker(
@@ -55,10 +72,12 @@ class _SearchBarState extends State<SearchBar> {
         children: [
           // Service
           Expanded(
-            child: _buildInput(
-              controller: _serviceController,
+            child: _buildDropdown(
+              value: _selectedService,
               hint: 'Quel service recherchez-vous ?',
               icon: Icons.search,
+              items: _services,
+              onChanged: (val) => setState(() => _selectedService = val),
             ),
           ),
 
@@ -66,10 +85,12 @@ class _SearchBarState extends State<SearchBar> {
 
           // Localisation
           Expanded(
-            child: _buildInput(
-              controller: _locationController,
+            child: _buildDropdown(
+              value: _selectedCity,
               hint: 'Votre localisation',
               icon: Icons.location_on_outlined,
+              items: _cities,
+              onChanged: (val) => setState(() => _selectedCity = val),
             ),
           ),
 
@@ -89,33 +110,43 @@ class _SearchBarState extends State<SearchBar> {
     );
   }
 
-  Widget _buildInput({
-    required TextEditingController controller,
+  Widget _buildDropdown({
+    required String? value,
     required String hint,
     required IconData icon,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
   }) {
     return Row(
       children: [
         Icon(icon, size: 16, color: const Color(0xFF64748B)),
         const SizedBox(width: 8),
         Expanded(
-          child: TextField(
-            controller: controller,
-            style: GoogleFonts.sora(
-              fontSize: 13,
-              color: const Color(0xFF1E293B),
-            ),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: GoogleFonts.sora(
-                fontSize: 13,
-                color: const Color(0xFF94A3B8),
-              ),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
               isDense: true,
-              contentPadding: EdgeInsets.zero,
+              icon: const Icon(Icons.keyboard_arrow_down,
+                  size: 16, color: Color(0xFF64748B)),
+              hint: Text(
+                hint,
+                style: GoogleFonts.sora(
+                  fontSize: 13,
+                  color: const Color(0xFF94A3B8),
+                ),
+              ),
+              style: GoogleFonts.sora(
+                fontSize: 13,
+                color: const Color(0xFF1E293B),
+              ),
+              items: items
+                  .map((item) => DropdownMenuItem(
+                        value: item,
+                        child: Text(item, overflow: TextOverflow.ellipsis),
+                      ))
+                  .toList(),
+              onChanged: onChanged,
             ),
           ),
         ),
@@ -163,7 +194,7 @@ class _SearchBarState extends State<SearchBar> {
 
   Widget _buildSearchButton() {
     return _HoverButton(
-      onTap: () => context.go('/recherche'),
+      onTap: () => context.go('/recherche', extra: _selectedService),
       builder: (isHovered) => AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         curve: Curves.ease,

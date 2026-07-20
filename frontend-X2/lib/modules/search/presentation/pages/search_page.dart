@@ -8,9 +8,12 @@ import '../widgets/provider_list/result_card.dart';
 import '../widgets/search_bar/search_bar_widget.dart';
 import '../../../../core/widgets/app_back_button.dart';
 import '../../data/models/mock_providers.dart';
+import '../../domain/entities/provider_model.dart';
 
 class SearchPage extends StatefulWidget {
-  const SearchPage({super.key});
+  final String? initialCategory;
+
+  const SearchPage({super.key, this.initialCategory});
 
   @override
   State<SearchPage> createState() => _SearchPageState();
@@ -18,6 +21,42 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   int selectedIndex = 0;
+  late String _selectedCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCategory = widget.initialCategory ?? 'Tous';
+  }
+
+  List<ProviderModel> get _filteredProviders => mockProviders
+      .where((p) => _matchesCategory(p, _selectedCategory))
+      .toList();
+
+  bool _matchesCategory(ProviderModel provider, String category) {
+    if (category == 'Tous') return true;
+    final s = provider.specialty.toLowerCase();
+    switch (category) {
+      case 'Électricité':
+        return s.contains('électricien');
+      case 'Plomberie':
+        return s.contains('plomb');
+      case 'Climatisation':
+        return s.contains('clim') || s.contains('frigoriste');
+      case 'Carrelage':
+        return s.contains('carrel');
+      case 'Maintenance':
+        return s.contains('maintenance');
+      case 'Jardinage':
+        return s.contains('jardin');
+      case 'Peinture':
+        return s.contains('peintre') || s.contains('peinture');
+      case 'Menuiserie':
+        return s.contains('menuis');
+      default:
+        return true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +103,7 @@ class _SearchPageState extends State<SearchPage> {
         if (isMobile) {
           return Column(
             children: [
-              const FiltersPanel(),
+              _buildFiltersPanel(),
               const SizedBox(height: 16),
               _buildResultsList(),
             ],
@@ -74,7 +113,7 @@ class _SearchPageState extends State<SearchPage> {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const FiltersPanel(),
+            _buildFiltersPanel(),
             const SizedBox(width: 20),
             Expanded(child: _buildResultsList()),
           ],
@@ -83,14 +122,47 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
+  Widget _buildFiltersPanel() {
+    return FiltersPanel(
+      initialCategory: _selectedCategory,
+      onCategoryChanged: (category) {
+        setState(() {
+          _selectedCategory = category;
+          selectedIndex = 0;
+        });
+      },
+    );
+  }
+
   Widget _buildResultsList() {
+    final providers = _filteredProviders;
+
+    if (providers.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(right: 16),
+        child: Column(
+          children: [
+            _buildResultsHeader(),
+            const SizedBox(height: 40),
+            Text(
+              'Aucun prestataire trouvé pour cette catégorie',
+              style: GoogleFonts.dmSans(
+                fontSize: 13,
+                color: const Color(0xFF64748B),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.only(right: 16),
       child: Column(
         children: [
           _buildResultsHeader(),
           const SizedBox(height: 12),
-          ...mockProviders.asMap().entries.map((entry) {
+          ...providers.asMap().entries.map((entry) {
             final provider = entry.value;
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -134,7 +206,7 @@ class _SearchPageState extends State<SearchPage> {
       text: TextSpan(
         children: [
           TextSpan(
-            text: '${mockProviders.length * 15} ' + context.tr('search.resultsCount').trim() + ' ',
+            text: '${_filteredProviders.length * 15} ' + context.tr('search.resultsCount').trim() + ' ',
             style: GoogleFonts.sora(
               fontSize: 13,
               fontWeight: FontWeight.w700,
