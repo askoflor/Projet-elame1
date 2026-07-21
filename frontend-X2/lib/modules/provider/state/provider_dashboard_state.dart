@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
 import '../domain/provider_profile.dart';
-import '../domain/mission.dart';
+import '../domain/certification.dart';
 import '../domain/revenue.dart';
 import '../domain/planning.dart';
 import '../domain/notification_model.dart';
 import '../data/models/mock_provider_data.dart';
+
+String _dateKey(DateTime d) =>
+    '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
 class ProviderDashboardProvider extends ChangeNotifier {
   int _selectedIndex = 0;
   bool _isLoading = false;
 
   ProviderProfile _profile = MockProviderData.profile;
-  List<Mission> _missionsDuJour = [];
-  List<Mission> _toutesMissions = [];
   RevenueSummary _revenueSummary = MockProviderData.revenueSummary;
   List<RevenueChartPoint> _chartData = [];
   List<Revenue> _recentRevenus = [];
   PlanningSemaine _planningSemaine = MockProviderData.planningSemaine;
   List<DisponibiliteSemaine> _disponibilites = [];
+  final Map<String, bool> _dateOverrides = {};
   List<ProviderNotification> _notifications = [];
   int _notificationsNonLues = 0;
 
@@ -25,8 +27,6 @@ class ProviderDashboardProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   ProviderProfile get profile => _profile;
-  List<Mission> get missionsDuJour => _missionsDuJour;
-  List<Mission> get toutesMissions => _toutesMissions;
   RevenueSummary get revenueSummary => _revenueSummary;
   List<RevenueChartPoint> get chartData => _chartData;
   List<Revenue> get recentRevenus => _recentRevenus;
@@ -35,21 +35,11 @@ class ProviderDashboardProvider extends ChangeNotifier {
   List<ProviderNotification> get notifications => _notifications;
   int get notificationsNonLues => _notificationsNonLues;
 
-  List<Mission> get missionsEnAttente => _toutesMissions.where((m) => m.statut == MissionStatus.pending).toList();
-  List<Mission> get missionsConfirmes => _toutesMissions.where((m) => m.statut == MissionStatus.confirmed).toList();
-  List<Mission> get missionsTerminees => _toutesMissions.where((m) => m.statut == MissionStatus.completed).toList();
-  List<Mission> get missionsAnnulees => _toutesMissions.where((m) => m.statut == MissionStatus.cancelled).toList();
-
-  int get missionsCount => _toutesMissions.length;
-  int get missionsDuJourCount => _missionsDuJour.length;
-
   ProviderDashboardProvider() {
     _loadData();
   }
 
   void _loadData() {
-    _missionsDuJour = MockProviderData.missionsDuJour;
-    _toutesMissions = MockProviderData.toutesMissions;
     _chartData = MockProviderData.chartData;
     _recentRevenus = MockProviderData.recentRevenus;
     _planningSemaine = MockProviderData.planningSemaine;
@@ -70,6 +60,7 @@ class ProviderDashboardProvider extends ChangeNotifier {
     String? email,
     String? phone,
     String? specialite,
+    String? ville,
     String? description,
   }) {
     _profile = _profile.copyWith(
@@ -78,8 +69,28 @@ class ProviderDashboardProvider extends ChangeNotifier {
       email: email,
       phone: phone,
       specialite: specialite,
+      ville: ville,
       description: description,
     );
+    notifyListeners();
+  }
+
+  void updateCompetences(List<String> competences) {
+    _profile = _profile.copyWith(competences: competences);
+    notifyListeners();
+  }
+
+  void addCertification(Certification certification) {
+    _profile = _profile.copyWith(
+        certifications: [..._profile.certifications, certification]);
+    notifyListeners();
+  }
+
+  void removeCertification(int index) {
+    final next = List.of(_profile.certifications);
+    if (index < 0 || index >= next.length) return;
+    next.removeAt(index);
+    _profile = _profile.copyWith(certifications: next);
     notifyListeners();
   }
 
@@ -111,6 +122,51 @@ class ProviderDashboardProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Disponibilité d'un jour précis : l'exception ponctuelle si elle existe,
+  /// sinon le motif hebdomadaire par défaut.
+  bool isAvailableOn(DateTime date) {
+    final override = _dateOverrides[_dateKey(date)];
+    if (override != null) return override;
+    final weekday = date.weekday - 1; // 0 = lundi
+    if (weekday < 0 || weekday >= _disponibilites.length) return true;
+    return _disponibilites[weekday].actif;
+  }
+
+  bool hasPendingAvailabilityChanges = false;
+  Map<String, bool> _savedOverridesSnapshot = {};
+
+  void toggleAvailabilityDay(DateTime date) {
+    _dateOverrides[_dateKey(date)] = !isAvailableOn(date);
+    hasPendingAvailabilityChanges = true;
+    notifyListeners();
+  }
+
+  void bulkSetAvailability(DateTime anyDayInMonth, bool available) {
+    final firstDay = DateTime(anyDayInMonth.year, anyDayInMonth.month, 1);
+    final daysInMonth =
+        DateTime(anyDayInMonth.year, anyDayInMonth.month + 1, 0).day;
+    for (var i = 0; i < daysInMonth; i++) {
+      final day = firstDay.add(Duration(days: i));
+      _dateOverrides[_dateKey(day)] = available;
+    }
+    hasPendingAvailabilityChanges = true;
+    notifyListeners();
+  }
+
+  void saveAvailabilityChanges() {
+    _savedOverridesSnapshot = Map.of(_dateOverrides);
+    hasPendingAvailabilityChanges = false;
+    notifyListeners();
+  }
+
+  void cancelAvailabilityChanges() {
+    _dateOverrides
+      ..clear()
+      ..addAll(_savedOverridesSnapshot);
+    hasPendingAvailabilityChanges = false;
+    notifyListeners();
+  }
+
   void marquerNotificationLue(String id) {
     final idx = _notifications.indexWhere((n) => n.id == id);
     if (idx == -1) return;
@@ -126,43 +182,6 @@ class ProviderDashboardProvider extends ChangeNotifier {
       _notifications[i] = _notifications[i].copyWith(lu: true);
     }
     _notificationsNonLues = 0;
-    notifyListeners();
-  }
-
-  void accepterMission(String id) {
-    final idx = _toutesMissions.indexWhere((m) => m.id == id);
-    if (idx == -1) return;
-    _toutesMissions[idx] = _toutesMissions[idx].copyWith(statut: MissionStatus.confirmed);
-    _missionsDuJour = _toutesMissions.where(
-      (m) => m.date.year == DateTime.now().year &&
-          m.date.month == DateTime.now().month &&
-          m.date.day == DateTime.now().day
-    ).toList();
-    notifyListeners();
-  }
-
-  void completerMission(String id) {
-    final idx = _toutesMissions.indexWhere((m) => m.id == id);
-    if (idx == -1) return;
-    _toutesMissions[idx] = _toutesMissions[idx].copyWith(statut: MissionStatus.completed);
-    _missionsDuJour = _toutesMissions.where(
-      (m) => m.date.year == DateTime.now().year &&
-          m.date.month == DateTime.now().month &&
-          m.date.day == DateTime.now().day
-    ).toList();
-    _profile = _profile.copyWith(missionsRealisees: _profile.missionsRealisees + 1);
-    notifyListeners();
-  }
-
-  void annulerMission(String id) {
-    final idx = _toutesMissions.indexWhere((m) => m.id == id);
-    if (idx == -1) return;
-    _toutesMissions[idx] = _toutesMissions[idx].copyWith(statut: MissionStatus.cancelled);
-    _missionsDuJour = _toutesMissions.where(
-      (m) => m.date.year == DateTime.now().year &&
-          m.date.month == DateTime.now().month &&
-          m.date.day == DateTime.now().day
-    ).toList();
     notifyListeners();
   }
 }

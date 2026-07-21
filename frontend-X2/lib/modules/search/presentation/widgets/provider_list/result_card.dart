@@ -18,7 +18,6 @@ class ResultCard extends StatelessWidget {
   final Color avatarBgColor;
   final bool isSelected;
   final VoidCallback onTap;
-  final VoidCallback onReserve;
 
   const ResultCard({
     super.key,
@@ -37,76 +36,64 @@ class ResultCard extends StatelessWidget {
     required this.avatarBgColor,
     required this.isSelected,
     required this.onTap,
-    required this.onReserve,
   });
 
   @override
   Widget build(BuildContext context) {
     return _HoverButton(
       onTap: onTap,
-      builder: (isHovered) => AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.ease,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color:
-                isHovered ? const Color(0xFF2563EB) : const Color(0xFFE8ECF2),
-            width: isHovered ? 1.5 : 1,
-          ),
-          boxShadow: isHovered || isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [],
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Avatar
-            _buildAvatar(),
-            const SizedBox(width: 14),
-            // Info
-            Expanded(child: _buildInfo()),
-            const SizedBox(width: 14),
-            // Bouton Réserver aligné en bas
-            SizedBox(
-              height: 140,
-              child: Align(
-                alignment: Alignment.bottomRight,
-                child: _HoverButton(
-                  onTap: onReserve,
-                  builder: (isHovered) => AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: isHovered
-                          ? const Color(0xFF1D4ED8)
-                          : const Color(0xFF2563EB),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'Réserver',
-                      style: GoogleFonts.sora(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
+      builder: (isHovered) => LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 420;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.ease,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isHovered
+                    ? const Color(0xFF2563EB)
+                    : const Color(0xFFE8ECF2),
+                width: isHovered ? 1.5 : 1,
               ),
+              boxShadow: isHovered || isSelected
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : [],
             ),
-          ],
-        ),
+            child: isCompact ? _buildCompactLayout() : _buildWideLayout(),
+          );
+        },
       ),
+    );
+  }
+
+  Widget _buildWideLayout() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildAvatar(),
+        const SizedBox(width: 14),
+        Expanded(child: _buildInfo()),
+      ],
+    );
+  }
+
+  Widget _buildCompactLayout() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildAvatar(),
+        const SizedBox(width: 14),
+        Expanded(child: _buildInfo()),
+      ],
     );
   }
 

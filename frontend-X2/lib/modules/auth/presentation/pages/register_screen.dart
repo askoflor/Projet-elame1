@@ -503,7 +503,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   width: 22,
                                   child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
                                 )
-                              : Text(context.tr('auth.registerButton'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                              : Text(
+                                  context.tr(_role == UserRole.prestataire
+                                      ? 'auth.registerPrestataireButton'
+                                      : 'auth.registerClientButton'),
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                                ),
                         )),
                       ),
                     ),

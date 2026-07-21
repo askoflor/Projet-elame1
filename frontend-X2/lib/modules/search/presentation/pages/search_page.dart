@@ -5,8 +5,6 @@ import '../../../../core/localization/translation_provider.dart';
 import '../../../../modules/home/presentation/widgets/header/nav_bar.dart';
 import '../widgets/filters/filters_panel.dart';
 import '../widgets/provider_list/result_card.dart';
-import '../widgets/search_bar/search_bar_widget.dart';
-import '../../../../core/widgets/app_back_button.dart';
 import '../../data/models/mock_providers.dart';
 import '../../domain/entities/provider_model.dart';
 
@@ -69,23 +67,14 @@ class _SearchPageState extends State<SearchPage> {
             Expanded(
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    _buildBackButton(),
-                    const SizedBox(height: 8),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: SearchBarWidget(),
-                    ),
-                    const SizedBox(height: 24),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
-                      child: Divider(height: 1, color: Color(0xFFE8ECF2)),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildSearchPage(),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 16),
+                      _buildSearchPage(),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -113,7 +102,7 @@ class _SearchPageState extends State<SearchPage> {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildFiltersPanel(),
+            SizedBox(width: 300, child: _buildFiltersPanel()),
             const SizedBox(width: 20),
             Expanded(child: _buildResultsList()),
           ],
@@ -138,66 +127,52 @@ class _SearchPageState extends State<SearchPage> {
     final providers = _filteredProviders;
 
     if (providers.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.only(right: 16),
-        child: Column(
-          children: [
-            _buildResultsHeader(),
-            const SizedBox(height: 40),
-            Text(
-              'Aucun prestataire trouvé pour cette catégorie',
-              style: GoogleFonts.dmSans(
-                fontSize: 13,
-                color: const Color(0xFF64748B),
-              ),
+      return Column(
+        children: [
+          _buildResultsHeader(),
+          const SizedBox(height: 40),
+          Text(
+            'Aucun prestataire trouvé pour cette catégorie',
+            style: GoogleFonts.dmSans(
+              fontSize: 13,
+              color: const Color(0xFF64748B),
             ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(right: 16),
-      child: Column(
-        children: [
-          _buildResultsHeader(),
-          const SizedBox(height: 12),
-          ...providers.asMap().entries.map((entry) {
-            final provider = entry.value;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: ResultCard(
-                isCertified: provider.isCertified,
-                initials: provider.initials,
-                name: provider.name,
-                specialty: provider.specialty,
-                location: provider.location,
-                interventions: provider.interventions,
-                isAvailable: provider.isAvailable,
-                tags: provider.tags,
-                rating: provider.rating,
-                reviewCount: provider.reviewCount,
-                price: provider.price,
-                avatarColor: provider.avatarColor,
-                avatarBgColor: provider.avatarBgColor,
-                isSelected: selectedIndex == entry.key,
-                onTap: () {
-                  setState(() => selectedIndex = entry.key);
-                  context.push('/profil', extra: provider);
-                },
-                onReserve: () => context.push('/reservation', extra: provider),
-              ),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBackButton() {
-    return const Align(
-      alignment: Alignment.centerLeft,
-      child: AppBackButton(),
+    return Column(
+      children: [
+        _buildResultsHeader(),
+        const SizedBox(height: 12),
+        ...providers.asMap().entries.map((entry) {
+          final provider = entry.value;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: ResultCard(
+              isCertified: provider.isCertified,
+              initials: provider.initials,
+              name: provider.name,
+              specialty: provider.specialty,
+              location: provider.location,
+              interventions: provider.interventions,
+              isAvailable: provider.isAvailable,
+              tags: provider.tags,
+              rating: provider.rating,
+              reviewCount: provider.reviewCount,
+              price: provider.price,
+              avatarColor: provider.avatarColor,
+              avatarBgColor: provider.avatarBgColor,
+              isSelected: selectedIndex == entry.key,
+              onTap: () {
+                setState(() => selectedIndex = entry.key);
+                context.push('/profil', extra: provider);
+              },
+            ),
+          );
+        }),
+      ],
     );
   }
 

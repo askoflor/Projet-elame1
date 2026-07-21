@@ -1,3 +1,5 @@
+import 'certification.dart';
+
 class ProviderProfile {
   final String id;
   final String nom;
@@ -17,7 +19,7 @@ class ProviderProfile {
   final String pays;
   final List<String> competences;
   final String description;
-  final String certifications;
+  final List<Certification> certifications;
   final DateTime dateInscription;
   final bool disponible;
 
@@ -40,7 +42,7 @@ class ProviderProfile {
     this.pays = '',
     this.competences = const [],
     this.description = '',
-    this.certifications = '',
+    this.certifications = const [],
     DateTime? dateInscription,
     this.disponible = true,
   }) : dateInscription = dateInscription ?? DateTime.now();
@@ -67,7 +69,7 @@ class ProviderProfile {
     String? pays,
     List<String>? competences,
     String? description,
-    String? certifications,
+    List<Certification>? certifications,
     DateTime? dateInscription,
     bool? disponible,
   }) {

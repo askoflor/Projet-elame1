@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/localization/translation_provider.dart';
 import '../../../../../core/widgets/micro_interactions.dart';
+import '../../../../../core/utils/hour_range_formatter.dart';
 import '../../../state/provider_dashboard_state.dart';
-import '../../../domain/mission.dart';
+import '../../../../intervention/domain/intervention.dart';
+import '../../../../intervention/state/intervention_provider.dart';
+import '../../../../intervention/presentation/widgets/chiffrage_modal.dart';
 
 class DashboardContent extends StatelessWidget {
   const DashboardContent({super.key});
@@ -12,105 +14,75 @@ class DashboardContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ProviderDashboardProvider>();
+    final interventions = context.watch<InterventionProvider>();
     final tr = context.tr;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildHeader(context, provider, tr),
+        _buildHeader(context, provider, interventions, tr),
         const SizedBox(height: 20),
-        _buildMetricsGrid(context, provider, tr),
+        _buildMetricsGrid(context, provider, interventions, tr),
         const SizedBox(height: 24),
-        _buildMissionsSection(context, provider, tr),
+        _buildInterventionsSection(context, interventions, tr),
         const SizedBox(height: 20),
-        _buildBottomRow(context, provider, tr),
+        _buildBottomRow(context, provider, interventions, tr),
       ],
     );
   }
 
-  Widget _buildHeader(BuildContext context, ProviderDashboardProvider provider, String Function(String) tr) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildHeader(BuildContext context, ProviderDashboardProvider provider,
+      InterventionProvider interventions, String Function(String) tr) {
+    final aChiffrer = interventions.enAttente.length;
+    final headline = aChiffrer > 0
+        ? 'Vous avez $aChiffrer intervention${aChiffrer > 1 ? 's' : ''} à chiffrer'
+        : 'Aucune intervention en attente';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              tr('provider.greeting'),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1E293B),
-                fontFamily: 'Sora',
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              tr('provider.greetingSub'),
-              style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF64748B),
-                fontFamily: 'DM Sans',
-              ),
-            ),
-          ],
+        Text(
+          tr('provider.greeting'),
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1E293B),
+            fontFamily: 'Sora',
+          ),
         ),
-        Row(
-          children: [
-            _buildQuickAction(context, Icons.calendar_today_rounded, tr('provider.planningComplet'), () {}),
-            const SizedBox(width: 8),
-            _buildQuickAction(context, Icons.add_rounded, tr('provider.nouvelleMission'), () {}),
-          ],
+        const SizedBox(height: 4),
+        Text(
+          headline,
+          style: const TextStyle(
+            fontSize: 13,
+            color: Color(0xFF64748B),
+            fontFamily: 'DM Sans',
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildQuickAction(BuildContext context, IconData icon, String label, VoidCallback onTap) {
-    return PointerCursor(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-          decoration: BoxDecoration(
-            color: const Color(0xFF2563EB),
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF2563EB).withOpacity(0.25),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 16, color: Colors.white),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                  fontFamily: 'DM Sans',
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMetricsGrid(BuildContext context, ProviderDashboardProvider provider, String Function(String) tr) {
+  Widget _buildMetricsGrid(BuildContext context, ProviderDashboardProvider provider,
+      InterventionProvider interventions, String Function(String) tr) {
     final p = provider.profile;
+    final aChiffrer = interventions.enAttente.length;
     final metrics = [
-      _MetricData(tr('provider.metricMissions'), '${provider.missionsDuJourCount}', tr('provider.changeMissions'), Icons.rocket_launch_rounded, const Color(0xFF2563EB)),
-      _MetricData(tr('provider.metricRevenus'), '${p.revenuMensuel.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]} ')} FCFA', tr('provider.changeRevenus'), Icons.trending_up_rounded, const Color(0xFF16A34A)),
-      _MetricData(tr('provider.metricRealisees'), '${p.missionsRealisees}', tr('provider.changeRealisees'), Icons.task_alt_rounded, const Color(0xFFF59E0B)),
-      _MetricData(tr('provider.metricSatisfaction'), '${p.tauxSatisfaction.toStringAsFixed(0)}%', '${p.note}/5', Icons.emoji_emotions_rounded, const Color(0xFF8B5CF6)),
+      _MetricData('À chiffrer', '$aChiffrer', tr('provider.changeMissions'),
+          Icons.business_center_rounded, const Color(0xFFF97316),
+          chartWidth: aChiffrer == 0 ? 0.05 : (aChiffrer / (aChiffrer + 5)).clamp(0.1, 1.0)),
+      _MetricData(
+          tr('provider.metricRevenus'),
+          '${interventions.montantCeMois.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]} ')} FCFA',
+          tr('provider.changeRevenus'),
+          Icons.monetization_on_rounded,
+          const Color(0xFF16A34A),
+          chartWidth: 0.72),
+      _MetricData(tr('provider.metricRealisees'), '${interventions.terminees.length}',
+          tr('provider.changeRealisees'), Icons.check_circle_rounded, const Color(0xFF2563EB),
+          chartWidth: 0.85),
+      _MetricData(tr('provider.metricSatisfaction'), '${p.tauxSatisfaction.toStringAsFixed(0)}%',
+          null, Icons.favorite_rounded, const Color(0xFF8B5CF6),
+          chartWidth: p.tauxSatisfaction / 100),
     ];
 
     return LayoutBuilder(
@@ -123,7 +95,7 @@ class DashboardContent extends StatelessWidget {
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 1.6,
+            childAspectRatio: 1.35,
           ),
           itemCount: metrics.length,
           itemBuilder: (context, index) => _buildMetricCard(metrics[index]),
@@ -148,7 +120,6 @@ class DashboardContent extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -171,6 +142,7 @@ class DashboardContent extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 10),
           Text(
             data.value,
             style: const TextStyle(
@@ -180,21 +152,42 @@ class DashboardContent extends StatelessWidget {
               fontFamily: 'Sora',
             ),
           ),
-          Text(
-            data.change,
-            style: TextStyle(
-              fontSize: 11,
-              color: data.color,
-              fontFamily: 'DM Sans',
-              fontWeight: FontWeight.w500,
+          if (data.change != null)
+            Text(
+              data.change!,
+              style: TextStyle(
+                fontSize: 11,
+                color: data.color,
+                fontFamily: 'DM Sans',
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
+          if (data.chartWidth != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              height: 5,
+              decoration: BoxDecoration(color: const Color(0xFFE8ECF2), borderRadius: BorderRadius.circular(3)),
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: data.chartWidth!.clamp(0.0, 1.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(3),
+                    gradient: LinearGradient(colors: [data.color, data.color.withOpacity(0.6)]),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildMissionsSection(BuildContext context, ProviderDashboardProvider provider, String Function(String) tr) {
+  Widget _buildInterventionsSection(
+      BuildContext context, InterventionProvider interventions, String Function(String) tr) {
+    final mesMissions = interventions.all;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -211,33 +204,17 @@ class DashboardContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                tr('provider.missionsJour'),
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1E293B),
-                  fontFamily: 'Sora',
-                ),
-              ),
-              TextButton(
-                onPressed: () => context.read<ProviderDashboardProvider>().setSelectedIndex(2),
-                child: Text(
-                  tr('provider.voirTout'),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF2563EB),
-                    fontFamily: 'DM Sans',
-                  ),
-                ),
-              ),
-            ],
+          Text(
+            tr('provider.missionsJour'),
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1E293B),
+              fontFamily: 'Sora',
+            ),
           ),
-          const SizedBox(height: 12),
-          if (provider.missionsDuJour.isEmpty)
+          const SizedBox(height: 14),
+          if (mesMissions.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 20),
               child: Center(
@@ -254,23 +231,17 @@ class DashboardContent extends StatelessWidget {
           else
             LayoutBuilder(
               builder: (context, constraints) {
-                if (constraints.maxWidth < 600) {
+                if (constraints.maxWidth < 700) {
                   return Column(
-                    children: provider.missionsDuJour
-                        .map((m) => Padding(
+                    children: mesMissions
+                        .map((i) => Padding(
                               padding: const EdgeInsets.only(bottom: 8),
-                              child: _buildMobileMissionCard(m, context, provider),
+                              child: _buildMobileInterventionCard(i, context),
                             ))
                         .toList(),
                   );
                 }
-                return Column(
-                  children: [
-                    _buildTableHeader(tr),
-                    const Divider(color: Color(0xFFE8ECF2)),
-                    ...provider.missionsDuJour.map((m) => _buildTableRow(m, context, provider)),
-                  ],
-                );
+                return _buildMissionsDataTable(context, mesMissions, constraints.maxWidth);
               },
             ),
         ],
@@ -278,58 +249,61 @@ class DashboardContent extends StatelessWidget {
     );
   }
 
-  Widget _buildTableHeader(String Function(String) tr) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          _tableCell(tr('provider.colClient'), 0.2, isHeader: true),
-          _tableCell(tr('provider.colService'), 0.2, isHeader: true),
-          _tableCell(tr('provider.colHeure'), 0.15, isHeader: true),
-          _tableCell(tr('provider.colMontant'), 0.15, isHeader: true),
-          _tableCell(tr('provider.colStatut'), 0.15, isHeader: true),
-          _tableCell('', 0.15),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTableRow(Mission mission, BuildContext context, ProviderDashboardProvider provider) {
+  Widget _buildMissionsDataTable(BuildContext context, List<Intervention> mesMissions, double maxWidth) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1)),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE8ECF2)),
       ),
-      child: Row(
-        children: [
-          _tableCell(mission.clientNomComplet, 0.2),
-          _tableCell(mission.service, 0.2),
-          _tableCell('${mission.heureDebut.hour.toString().padLeft(2, '0')}:${mission.heureDebut.minute.toString().padLeft(2, '0')}', 0.15),
-          _tableCell('${mission.montant.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]} ')} FCFA', 0.15),
-          _tableCell('', 0.15, child: _buildStatusBadge(mission.statut)),
-          _tableCell('', 0.15, child: _buildRowActions(mission, context, provider)),
-        ],
-      ),
-    );
-  }
-
-  Widget _tableCell(String text, double flex, {bool isHeader = false, Widget? child}) {
-    return Expanded(
-      flex: (flex * 100).round(),
-      child: child ??
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: isHeader ? FontWeight.w600 : FontWeight.w400,
-              color: isHeader ? const Color(0xFF94A3B8) : const Color(0xFF475569),
-              fontFamily: 'DM Sans',
-            ),
+      clipBehavior: Clip.antiAlias,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minWidth: maxWidth),
+          child: DataTable(
+            headingRowColor: WidgetStateProperty.all(const Color(0xFFFAFAFA)),
+            columnSpacing: 20,
+            columns: const [
+              DataColumn(label: Text('Client', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
+              DataColumn(label: Text('Service', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
+              DataColumn(label: Text('Date', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
+              DataColumn(label: Text('Montant', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
+              DataColumn(label: Text('Statut', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
+              DataColumn(label: Text('')),
+            ],
+            rows: mesMissions.map((i) => DataRow(cells: [
+                  DataCell(SizedBox(
+                    width: 150,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(i.clientNom, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E293B), fontFamily: 'DM Sans')),
+                        Text('${i.reference} · ${i.adresse}', style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontFamily: 'DM Sans'), overflow: TextOverflow.ellipsis),
+                      ],
+                    ),
+                  )),
+                  DataCell(Text(i.service, style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B), fontFamily: 'DM Sans'))),
+                  DataCell(Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('${i.date.day}/${i.date.month}/${i.date.year}', style: const TextStyle(fontSize: 12, color: Color(0xFF475569), fontFamily: 'DM Sans')),
+                      Text(formatHourRanges(i.heures), style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontFamily: 'DM Sans')),
+                    ],
+                  )),
+                  DataCell(Text(i.montant == null ? '—' : '${i.montant!.toStringAsFixed(0)} FCFA', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E293B), fontFamily: 'DM Sans'))),
+                  DataCell(buildInterventionStatusBadge(i.statut)),
+                  DataCell(_buildRowActions(i, context)),
+                ])).toList(),
           ),
+        ),
+      ),
     );
   }
 
-  Widget _buildMobileMissionCard(Mission mission, BuildContext context, ProviderDashboardProvider provider) {
+  Widget _buildMobileInterventionCard(Intervention i, BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -342,16 +316,22 @@ class DashboardContent extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                mission.clientNomComplet,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1E293B),
-                  fontFamily: 'Sora',
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      i.clientNom,
+                      style: const TextStyle(
+                          fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1E293B), fontFamily: 'Sora'),
+                    ),
+                    Text('${i.reference} · ${i.adresse}',
+                        style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontFamily: 'DM Sans'),
+                        overflow: TextOverflow.ellipsis),
+                  ],
                 ),
               ),
-              _buildStatusBadge(mission.statut),
+              buildInterventionStatusBadge(i.statut),
             ],
           ),
           const SizedBox(height: 6),
@@ -359,11 +339,9 @@ class DashboardContent extends StatelessWidget {
             children: [
               const Icon(Icons.work_outline, size: 13, color: Color(0xFF64748B)),
               const SizedBox(width: 4),
-              Text(mission.service, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontFamily: 'DM Sans')),
+              Text(i.service, style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontFamily: 'DM Sans')),
               const Spacer(),
-              const Icon(Icons.access_time, size: 13, color: Color(0xFF64748B)),
-              const SizedBox(width: 4),
-              Text('${mission.heureDebut.hour.toString().padLeft(2, '0')}:${mission.heureDebut.minute.toString().padLeft(2, '0')}',
+              Text('${i.date.day}/${i.date.month}/${i.date.year} · ${formatHourRanges(i.heures)}',
                   style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontFamily: 'DM Sans')),
             ],
           ),
@@ -371,9 +349,9 @@ class DashboardContent extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('${mission.montant.toStringAsFixed(0)} FCFA',
+              Text(i.montant == null ? '—' : '${i.montant!.toStringAsFixed(0)} FCFA',
                   style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF16A34A), fontFamily: 'Sora')),
-              _buildRowActions(mission, context, provider),
+              _buildRowActions(i, context),
             ],
           ),
         ],
@@ -381,50 +359,40 @@ class DashboardContent extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge(MissionStatus status) {
-    final data = switch (status) {
-      MissionStatus.confirmed => ('Confirmé', const Color(0xFF16A34A), const Color(0xFFDCFCE7)),
-      MissionStatus.pending => ('En attente', const Color(0xFFF59E0B), const Color(0xFFFEF3C7)),
-      MissionStatus.completed => ('Terminé', const Color(0xFF64748B), const Color(0xFFF1F5F9)),
-      MissionStatus.cancelled => ('Annulé', const Color(0xFFEF4444), const Color(0xFFFEE2E2)),
-    };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: data.$3,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        data.$1,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: data.$2,
-          fontFamily: 'DM Sans',
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRowActions(Mission mission, BuildContext context, ProviderDashboardProvider provider) {
-    if (mission.statut == MissionStatus.pending) {
+  Widget _buildRowActions(Intervention i, BuildContext context) {
+    if (i.statut == InterventionStatus.attente) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _actionButton(Icons.check_circle_outline, const Color(0xFF16A34A), () {
-            provider.accepterMission(mission.id);
-          }),
+          ElevatedButton.icon(
+            onPressed: () => ChiffrageModal.show(context, i),
+            icon: const Icon(Icons.phone_outlined, size: 14),
+            label: const Text('Chiffrer', style: TextStyle(fontSize: 12)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2563EB),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              minimumSize: const Size(0, 30),
+            ),
+          ),
           const SizedBox(width: 4),
-          _actionButton(Icons.cancel_outlined, const Color(0xFFEF4444), () {
-            provider.annulerMission(mission.id);
-          }),
+          _actionButton(Icons.cancel_outlined, const Color(0xFFEF4444),
+              () => context.read<InterventionProvider>().annuler(i.reference)),
         ],
       );
     }
-    if (mission.statut == MissionStatus.confirmed) {
-      return _actionButton(Icons.task_alt_rounded, const Color(0xFF2563EB), () {
-        provider.completerMission(mission.id);
-      });
+    if (i.statut == InterventionStatus.encours) {
+      return OutlinedButton(
+        onPressed: () => context.read<InterventionProvider>().terminer(i.reference),
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          minimumSize: const Size(0, 30),
+        ),
+        child: const Text('Terminer', style: TextStyle(fontSize: 12)),
+      );
+    }
+    if (i.statut == InterventionStatus.terminee) {
+      return const Text('Clôturée', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontFamily: 'DM Sans'));
     }
     return const SizedBox.shrink();
   }
@@ -445,7 +413,8 @@ class DashboardContent extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomRow(BuildContext context, ProviderDashboardProvider provider, String Function(String) tr) {
+  Widget _buildBottomRow(BuildContext context, ProviderDashboardProvider provider,
+      InterventionProvider interventions, String Function(String) tr) {
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth < 600) {
@@ -453,7 +422,7 @@ class DashboardContent extends StatelessWidget {
             children: [
               _buildAvailabilityCard(provider, tr),
               const SizedBox(height: 12),
-              _buildRequestsCard(context, provider, tr),
+              _buildRequestsCard(context, interventions, tr),
             ],
           );
         }
@@ -461,7 +430,7 @@ class DashboardContent extends StatelessWidget {
           children: [
             Expanded(child: _buildAvailabilityCard(provider, tr)),
             const SizedBox(width: 12),
-            Expanded(child: _buildRequestsCard(context, provider, tr)),
+            Expanded(child: _buildRequestsCard(context, interventions, tr)),
           ],
         );
       },
@@ -510,7 +479,7 @@ class DashboardContent extends StatelessWidget {
               Switch(
                 value: p.disponible,
                 onChanged: (_) => provider.toggleDisponibilite(),
-                activeColor: const Color(0xFF16A34A),
+                activeThumbColor: const Color(0xFF16A34A),
                 inactiveThumbColor: const Color(0xFFEF4444),
               ),
             ],
@@ -539,8 +508,9 @@ class DashboardContent extends StatelessWidget {
     );
   }
 
-  Widget _buildRequestsCard(BuildContext context, ProviderDashboardProvider provider, String Function(String) tr) {
-    final demandes = provider.missionsEnAttente;
+  Widget _buildRequestsCard(
+      BuildContext context, InterventionProvider interventions, String Function(String) tr) {
+    final demandes = interventions.enAttente;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -576,13 +546,16 @@ class DashboardContent extends StatelessWidget {
               ),
             )
           else
-            ...demandes.map((m) => _buildRequestItem(m, context, provider)),
+            ...demandes.map((i) => _buildRequestItem(i, context)),
         ],
       ),
     );
   }
 
-  Widget _buildRequestItem(Mission mission, BuildContext context, ProviderDashboardProvider provider) {
+  Widget _buildRequestItem(Intervention i, BuildContext context) {
+    final tr = context.tr;
+    final isUrgent = i.urgence != 'Planifié';
+    final montantLabel = i.montant != null ? '${i.montant!.toStringAsFixed(0)} FCFA' : 'Montant à définir';
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: const BoxDecoration(
@@ -590,17 +563,17 @@ class DashboardContent extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: const Color(0xFFEFF6FF),
-            child: Text(
-              mission.clientInitiales,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF2563EB),
-                fontFamily: 'Sora',
-              ),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isUrgent ? const Color(0xFFFFF7ED) : const Color(0xFFEFF6FF),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isUrgent ? Icons.warning_amber_rounded : Icons.work_outline_rounded,
+              size: 16,
+              color: isUrgent ? const Color(0xFFF97316) : const Color(0xFF2563EB),
             ),
           ),
           const SizedBox(width: 10),
@@ -609,7 +582,7 @@ class DashboardContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  mission.service,
+                  isUrgent ? 'Mission urgente – ${i.clientNom}' : 'Nouvelle mission – ${i.clientNom}',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -618,7 +591,7 @@ class DashboardContent extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${mission.clientNomComplet} · ${mission.montant.toStringAsFixed(0)} FCFA',
+                  '${i.service} · $montantLabel',
                   style: const TextStyle(
                     fontSize: 11,
                     color: Color(0xFF94A3B8),
@@ -628,21 +601,57 @@ class DashboardContent extends StatelessWidget {
               ],
             ),
           ),
-          _actionButton(Icons.check_circle_outline, const Color(0xFF16A34A), () {
-            provider.accepterMission(mission.id);
-          }),
+          const SizedBox(width: 6),
+          ElevatedButton(
+            onPressed: () => ChiffrageModal.show(context, i),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2563EB),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              minimumSize: const Size(0, 30),
+            ),
+            child: Text(isUrgent ? tr('provider.accepter') : tr('provider.voir'), style: const TextStyle(fontSize: 12)),
+          ),
         ],
       ),
     );
   }
 }
 
+/// Badge de statut réutilisé par les tableaux d'intervention (dashboard,
+/// missions, historique).
+Widget buildInterventionStatusBadge(InterventionStatus status) {
+  final data = switch (status) {
+    InterventionStatus.attente => ('En attente', const Color(0xFFF59E0B), const Color(0xFFFEF3C7)),
+    InterventionStatus.encours => ('En cours', const Color(0xFF2563EB), const Color(0xFFDBEAFE)),
+    InterventionStatus.terminee => ('Terminée', const Color(0xFF16A34A), const Color(0xFFDCFCE7)),
+    InterventionStatus.annulee => ('Annulée', const Color(0xFF64748B), const Color(0xFFF1F5F9)),
+  };
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+    decoration: BoxDecoration(
+      color: data.$3,
+      borderRadius: BorderRadius.circular(6),
+    ),
+    child: Text(
+      data.$1,
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+        color: data.$2,
+        fontFamily: 'DM Sans',
+      ),
+    ),
+  );
+}
+
 class _MetricData {
   final String label;
   final String value;
-  final String change;
+  final String? change;
   final IconData icon;
   final Color color;
+  final double? chartWidth;
 
-  const _MetricData(this.label, this.value, this.change, this.icon, this.color);
+  const _MetricData(this.label, this.value, this.change, this.icon, this.color, {this.chartWidth});
 }

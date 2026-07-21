@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../../core/localization/translation_provider.dart';
 import '../../../state/provider_dashboard_state.dart';
+import '../../../../intervention/domain/intervention.dart';
+import '../../../../intervention/state/intervention_provider.dart';
 
 const Color _primary = Color(0xFF2563EB);
 const Color _textPrimary = Color(0xFF1E293B);
@@ -19,6 +21,7 @@ class StatistiquesContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ProviderDashboardProvider>();
+    final interventions = context.watch<InterventionProvider>();
     final tr = context.tr;
 
     return Column(
@@ -26,9 +29,9 @@ class StatistiquesContent extends StatelessWidget {
       children: [
         _buildHeader(tr),
         const SizedBox(height: 20),
-        _buildPerfCards(provider, tr),
+        _buildPerfCards(provider, interventions, tr),
         const SizedBox(height: 24),
-        _buildStatsGrid(provider, tr),
+        _buildStatsGrid(provider, interventions, tr),
       ],
     );
   }
@@ -50,7 +53,7 @@ class StatistiquesContent extends StatelessWidget {
     );
   }
 
-  Widget _buildPerfCards(ProviderDashboardProvider provider, String Function(String) tr) {
+  Widget _buildPerfCards(ProviderDashboardProvider provider, InterventionProvider interventions, String Function(String) tr) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = constraints.maxWidth > 700 ? 4 : 2;
@@ -65,7 +68,7 @@ class StatistiquesContent extends StatelessWidget {
           ),
           children: [
             _perfCard(tr('provider.tauxSucces'), '${((provider.profile.missionsRealisees / math.max(provider.profile.missionsTotal, 1)) * 100).toStringAsFixed(1)}%', Icons.verified_rounded, _success, 0.91),
-            _perfCard(tr('provider.tauxCompletion'), '${((provider.missionsConfirmes.length / math.max(provider.missionsCount, 1)) * 100).toStringAsFixed(1)}%', Icons.task_alt_rounded, _primary, 0.78),
+            _perfCard(tr('provider.tauxCompletion'), '${((interventions.enCours.length / math.max(interventions.all.length, 1)) * 100).toStringAsFixed(1)}%', Icons.task_alt_rounded, _primary, 0.78),
             _perfCard(tr('provider.satisfaction'), '${provider.profile.tauxSatisfaction.toStringAsFixed(0)}%', Icons.emoji_emotions_rounded, _warning, 0.97),
             _perfCard(tr('provider.noteMoyenne'), provider.profile.note.toStringAsFixed(1), Icons.star_rounded, _purple, 0.96),
           ],
@@ -108,13 +111,14 @@ class StatistiquesContent extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsGrid(ProviderDashboardProvider provider, String Function(String) tr) {
+  Widget _buildStatsGrid(ProviderDashboardProvider provider, InterventionProvider interventions, String Function(String) tr) {
     final p = provider.profile;
+    final annulees = interventions.all.where((i) => i.statut == InterventionStatus.annulee).length;
     final stats = [
       _StatItem(tr('provider.totalMissions'), '${p.missionsTotal}', Icons.work_history_rounded, _primary),
-      _StatItem(tr('provider.missionsRealisees'), '${p.missionsRealisees}', Icons.task_alt_rounded, _success),
-      _StatItem(tr('provider.missionsEnAttente'), '${provider.missionsEnAttente.length}', Icons.pending_actions_rounded, _warning),
-      _StatItem(tr('provider.missionsAnnulees'), '${provider.missionsAnnulees.length}', Icons.cancel_outlined, const Color(0xFFEF4444)),
+      _StatItem(tr('provider.missionsRealisees'), '${interventions.terminees.length}', Icons.task_alt_rounded, _success),
+      _StatItem(tr('provider.missionsEnAttente'), '${interventions.enAttente.length}', Icons.pending_actions_rounded, _warning),
+      _StatItem(tr('provider.missionsAnnulees'), '$annulees', Icons.cancel_outlined, const Color(0xFFEF4444)),
       _StatItem(tr('provider.nombreClients'), '24', Icons.people_rounded, const Color(0xFF06B6D4)),
       _StatItem(tr('provider.tauxFidelite'), '92%', Icons.favorite_rounded, const Color(0xFFEC4899)),
       _StatItem(tr('provider.tempsMoyen'), '2.5 h', Icons.access_time_rounded, _purple),

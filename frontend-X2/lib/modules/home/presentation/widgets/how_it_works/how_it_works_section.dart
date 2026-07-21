@@ -73,54 +73,80 @@ class HowItWorksSection extends StatelessWidget {
       },
     ];
 
-    return Stack(
-      children: [
-        // Ligne de connexion en arrière plan
-        Positioned(
-          top: 27,
-          left: 0,
-          right: 0,
-          child: Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 700;
+        final isTablet = !isMobile && constraints.maxWidth < 1000;
+
+        final items = steps.map((step) {
+          return SlideOnHover(
+            offset: const Offset(0, -0.04),
+            child: StepItem(
+              stepNumber: step['number'] as int,
+              title: step['title'] as String,
+              description: step['description'] as String,
+              isActive: step['isActive'] as bool,
+            ),
+          );
+        }).toList();
+
+        if (isMobile) {
+          return Column(
             children: [
-              const SizedBox(width: 128),
-              Expanded(
-                child: Container(
-                  height: 2,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(0xFF2563EB),
-                        Color(0xFF2563EB),
-                        Color(0xFFF97316),
-                        Color(0xFFF97316),
-                      ],
-                      stops: [0.0, 0.33, 0.66, 1.0],
+              for (final item in items) ...[
+                item,
+                const SizedBox(height: 24),
+              ],
+            ],
+          );
+        }
+
+        if (isTablet) {
+          return Wrap(
+            spacing: 24,
+            runSpacing: 24,
+            children: items.map((item) => SizedBox(width: 280, child: item)).toList(),
+          );
+        }
+
+        return Stack(
+          children: [
+            // Ligne de connexion en arrière plan
+            Positioned(
+              top: 27,
+              left: 0,
+              right: 0,
+              child: Row(
+                children: [
+                  const SizedBox(width: 128),
+                  Expanded(
+                    child: Container(
+                      height: 2,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFF2563EB),
+                            Color(0xFF2563EB),
+                            Color(0xFFF97316),
+                            Color(0xFFF97316),
+                          ],
+                          stops: [0.0, 0.33, 0.66, 1.0],
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 128),
+                ],
               ),
-              const SizedBox(width: 128),
-            ],
-          ),
-        ),
-        // Steps au dessus
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: steps.map((step) {
-            return Expanded(
-              child: SlideOnHover(
-                offset: const Offset(0, -0.04),
-                child: StepItem(
-                  stepNumber: step['number'] as int,
-                  title: step['title'] as String,
-                  description: step['description'] as String,
-                  isActive: step['isActive'] as bool,
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+            ),
+            // Steps au dessus
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: items.map((item) => Expanded(child: item)).toList(),
+            ),
+          ],
+        );
+      },
     );
   }
 }

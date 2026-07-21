@@ -1,34 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../../core/localization/translation_provider.dart';
 import '../../../../core/widgets/micro_interactions.dart';
-import '../../domain/reservation.dart';
+import '../../../../core/utils/hour_range_formatter.dart';
+import '../../../intervention/domain/intervention.dart';
+import '../../../provider/presentation/widgets/dashboard/dashboard_content.dart' show buildInterventionStatusBadge;
 
 const Color _primary = Color(0xFF2563EB);
 const Color _textPrimary = Color(0xFF1E293B);
 const Color _textSecondary = Color(0xFF64748B);
 const Color _textMuted = Color(0xFF94A3B8);
 const Color _success = Color(0xFF16A34A);
-const Color _warning = Color(0xFFF59E0B);
-const Color _error = Color(0xFFEF4444);
 
 class ReservationCard extends StatelessWidget {
-  final Reservation reservation;
+  final Intervention intervention;
   final VoidCallback onTap;
-  final VoidCallback? onCancel;
+  final VoidCallback? onPay;
+  final VoidCallback? onRate;
 
   const ReservationCard({
     super.key,
-    required this.reservation,
+    required this.intervention,
     required this.onTap,
-    this.onCancel,
+    this.onPay,
+    this.onRate,
   });
 
   @override
   Widget build(BuildContext context) {
-    final tr = context.tr;
-    final r = reservation;
-    final statusData = _statusData(r.statut);
+    final i = intervention;
 
     return PointerCursor(
       child: GestureDetector(
@@ -40,16 +38,12 @@ class ReservationCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: const Color(0xFFE8ECF2)),
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
+              BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 6, offset: const Offset(0, 2)),
             ],
           ),
           child: Row(
             children: [
-              _buildProviderAvatar(r),
+              _buildProviderAvatar(i),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -59,35 +53,19 @@ class ReservationCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
-                          child: Text(
-                            r.serviceName,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: _textPrimary,
-                              fontFamily: 'Sora',
-                            ),
-                          ),
+                          child: Text(i.service, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _textPrimary, fontFamily: 'Sora')),
                         ),
-                        _buildStatusBadge(statusData),
+                        buildInterventionStatusBadge(i.statut),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      r.providerName,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: _textSecondary,
-                        fontFamily: 'DM Sans',
-                      ),
-                    ),
+                    Text(i.providerName, style: const TextStyle(fontSize: 12, color: _textSecondary, fontFamily: 'DM Sans')),
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        _infoChip(Icons.calendar_today_rounded, r.formattedDate),
+                        _infoChip(Icons.calendar_today_rounded, '${i.date.day}/${i.date.month}/${i.date.year}'),
                         const SizedBox(width: 8),
-                        if (r.heureSlot.isNotEmpty)
-                          _infoChip(Icons.access_time_rounded, r.heureSlot),
+                        _infoChip(Icons.access_time_rounded, formatHourRanges(i.heures)),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -95,36 +73,10 @@ class ReservationCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '${r.montant.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]} ')} FCFA',
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: _success,
-                            fontFamily: 'Sora',
-                          ),
+                          i.montant == null ? '—' : '${i.montant!.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]} ')} FCFA',
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: _success, fontFamily: 'Sora'),
                         ),
-                        if (onCancel != null)
-                          PointerCursor(
-                            child: GestureDetector(
-                              onTap: onCancel,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: _error.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  tr('historique.annuler'),
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    color: _error,
-                                    fontFamily: 'DM Sans',
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
+                        _buildAction(context, i),
                       ],
                     ),
                   ],
@@ -138,18 +90,39 @@ class ReservationCard extends StatelessWidget {
     );
   }
 
-  Widget _buildProviderAvatar(Reservation r) {
+  Widget _buildAction(BuildContext context, Intervention i) {
+    switch (i.statut) {
+      case InterventionStatus.attente:
+        return const Text('En attente de l\'appel', style: TextStyle(fontSize: 11, color: _textMuted, fontFamily: 'DM Sans'));
+      case InterventionStatus.encours:
+        return _actionButton('Payer', const Color(0xFFF97316), onPay);
+      case InterventionStatus.terminee:
+        return _actionButton('Noter', _primary, onRate);
+      case InterventionStatus.annulee:
+        return const SizedBox.shrink();
+    }
+  }
+
+  Widget _actionButton(String label, Color color, VoidCallback? onTap) {
+    return PointerCursor(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(6)),
+          child: Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white, fontFamily: 'DM Sans')),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProviderAvatar(Intervention i) {
     return CircleAvatar(
       radius: 22,
       backgroundColor: _primary.withOpacity(0.1),
       child: Text(
-        r.providerInitials,
-        style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          color: _primary,
-          fontFamily: 'Sora',
-        ),
+        i.providerName.isNotEmpty ? i.providerName[0] : '?',
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _primary, fontFamily: 'Sora'),
       ),
     );
   }
@@ -160,39 +133,8 @@ class ReservationCard extends StatelessWidget {
       children: [
         Icon(icon, size: 12, color: _textMuted),
         const SizedBox(width: 3),
-        Text(
-          text,
-          style: const TextStyle(fontSize: 11, color: _textMuted, fontFamily: 'DM Sans'),
-        ),
+        Text(text, style: const TextStyle(fontSize: 11, color: _textMuted, fontFamily: 'DM Sans')),
       ],
     );
-  }
-
-  Widget _buildStatusBadge((String, Color, Color) data) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: data.$3,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        data.$1,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: data.$2,
-          fontFamily: 'DM Sans',
-        ),
-      ),
-    );
-  }
-
-  (String, Color, Color) _statusData(ReservationStatus status) {
-    return switch (status) {
-      ReservationStatus.pending => ('En attente', _warning, const Color(0xFFFEF3C7)),
-      ReservationStatus.confirmed => ('Confirmée', _primary, const Color(0xFFEFF6FF)),
-      ReservationStatus.completed => ('Terminée', _success, const Color(0xFFDCFCE7)),
-      ReservationStatus.cancelled => ('Annulée', _error, const Color(0xFFFEE2E2)),
-    };
   }
 }

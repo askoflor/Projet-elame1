@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../../core/localization/translation_provider.dart';
 import '../../../../../core/widgets/micro_interactions.dart';
-import '../../../state/provider_dashboard_state.dart';
-import '../../../domain/mission.dart';
+import '../../../../../core/utils/hour_range_formatter.dart';
+import '../../../../intervention/domain/intervention.dart';
+import '../../../../intervention/state/intervention_provider.dart';
+import '../../../../intervention/presentation/widgets/chiffrage_modal.dart';
+import '../dashboard/dashboard_content.dart' show buildInterventionStatusBadge;
 
 const Color _primary = Color(0xFF2563EB);
 const Color _textPrimary = Color(0xFF1E293B);
 const Color _textSecondary = Color(0xFF64748B);
 const Color _textMuted = Color(0xFF94A3B8);
-const Color _border = Color(0xFFE8ECF2);
+const Color _borderColor = Color(0xFFE8ECF2);
 const Color _success = Color(0xFF16A34A);
 const Color _warning = Color(0xFFF59E0B);
 const Color _error = Color(0xFFEF4444);
@@ -26,7 +29,7 @@ class _MissionsContentState extends State<MissionsContent> {
   String _searchQuery = '';
   final _searchController = TextEditingController();
 
-  final _filters = ['Toutes', 'Confirmées', 'En attente', 'Terminées', 'Annulées'];
+  final _filters = ['Toutes', 'En attente', 'En cours', 'Terminées', 'Annulées'];
 
   @override
   void dispose() {
@@ -34,55 +37,52 @@ class _MissionsContentState extends State<MissionsContent> {
     super.dispose();
   }
 
-  List<Mission> _filteredMissions(ProviderDashboardProvider provider) {
-    var missions = provider.toutesMissions;
+  List<Intervention> _filteredInterventions(InterventionProvider provider) {
+    var items = provider.all;
     switch (_selectedFilter) {
       case 1:
-        missions = missions.where((m) => m.statut == MissionStatus.confirmed).toList();
+        items = items.where((i) => i.statut == InterventionStatus.attente).toList();
         break;
       case 2:
-        missions = missions.where((m) => m.statut == MissionStatus.pending).toList();
+        items = items.where((i) => i.statut == InterventionStatus.encours).toList();
         break;
       case 3:
-        missions = missions.where((m) => m.statut == MissionStatus.completed).toList();
+        items = items.where((i) => i.statut == InterventionStatus.terminee).toList();
         break;
       case 4:
-        missions = missions.where((m) => m.statut == MissionStatus.cancelled).toList();
+        items = items.where((i) => i.statut == InterventionStatus.annulee).toList();
         break;
     }
     if (_searchQuery.isNotEmpty) {
       final q = _searchQuery.toLowerCase();
-      missions = missions.where((m) =>
-          m.clientNomComplet.toLowerCase().contains(q) ||
-          m.service.toLowerCase().contains(q)).toList();
+      items = items
+          .where((i) => i.clientNom.toLowerCase().contains(q) || i.service.toLowerCase().contains(q))
+          .toList();
     }
-    return missions;
+    return items;
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<ProviderDashboardProvider>();
+    final provider = context.watch<InterventionProvider>();
     final tr = context.tr;
-    final missions = _filteredMissions(provider);
+    final items = _filteredInterventions(provider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildHeader(tr, provider),
         const SizedBox(height: 16),
-        _buildFilters(tr),
+        _buildFilters(),
         const SizedBox(height: 16),
         _buildSearchBar(tr),
         const SizedBox(height: 16),
-        if (missions.isEmpty)
-          _buildEmptyState(tr)
-        else
-          _buildMissionsList(missions, context, provider, tr),
+        if (items.isEmpty) _buildEmptyState(tr) else _buildInterventionsList(items, context),
       ],
     );
   }
 
-  Widget _buildHeader(String Function(String) tr, ProviderDashboardProvider provider) {
+  Widget _buildHeader(String Function(String) tr, InterventionProvider provider) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -91,27 +91,22 @@ class _MissionsContentState extends State<MissionsContent> {
           children: [
             Text(
               tr('provider.mesMissions'),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-                color: _textPrimary,
-                fontFamily: 'Sora',
-              ),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: _textPrimary, fontFamily: 'Sora'),
             ),
             const SizedBox(height: 4),
             Text(
-              '${provider.missionsCount} ${tr('provider.missionsTotal')}',
+              '${provider.all.length} ${tr('provider.missionsTotal')}',
               style: const TextStyle(fontSize: 13, color: _textSecondary, fontFamily: 'DM Sans'),
             ),
           ],
         ),
         Row(
           children: [
-            _buildStatBadge(tr('provider.confirmees'), provider.missionsConfirmes.length, _success),
+            _buildStatBadge('En attente', provider.enAttente.length, _warning),
             const SizedBox(width: 8),
-            _buildStatBadge(tr('provider.enAttente'), provider.missionsEnAttente.length, _warning),
+            _buildStatBadge('En cours', provider.enCours.length, _primary),
             const SizedBox(width: 8),
-            _buildStatBadge(tr('provider.terminees'), provider.missionsTerminees.length, _textMuted),
+            _buildStatBadge(tr('provider.terminees'), provider.terminees.length, _textMuted),
           ],
         ),
       ],
@@ -121,31 +116,17 @@ class _MissionsContentState extends State<MissionsContent> {
   Widget _buildStatBadge(String label, int count, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-      ),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
       child: Column(
         children: [
-          Text(
-            '$count',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: color,
-              fontFamily: 'Sora',
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(fontSize: 10, color: color, fontFamily: 'DM Sans'),
-          ),
+          Text('$count', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: color, fontFamily: 'Sora')),
+          Text(label, style: TextStyle(fontSize: 10, color: color, fontFamily: 'DM Sans')),
         ],
       ),
     );
   }
 
-  Widget _buildFilters(String Function(String) tr) {
+  Widget _buildFilters() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -162,9 +143,7 @@ class _MissionsContentState extends State<MissionsContent> {
                   decoration: BoxDecoration(
                     color: isSelected ? _primary : Colors.white,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isSelected ? _primary : _border,
-                    ),
+                    border: Border.all(color: isSelected ? _primary : _borderColor),
                   ),
                   child: Text(
                     filter,
@@ -187,11 +166,7 @@ class _MissionsContentState extends State<MissionsContent> {
   Widget _buildSearchBar(String Function(String) tr) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _border),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: _borderColor)),
       child: Row(
         children: [
           const Icon(Icons.search_rounded, size: 18, color: _textMuted),
@@ -226,10 +201,7 @@ class _MissionsContentState extends State<MissionsContent> {
   Widget _buildEmptyState(String Function(String) tr) {
     return Container(
       padding: const EdgeInsets.all(40),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
       child: Center(
         child: Column(
           children: [
@@ -245,48 +217,47 @@ class _MissionsContentState extends State<MissionsContent> {
     );
   }
 
-  Widget _buildMissionsList(List<Mission> missions, BuildContext context, ProviderDashboardProvider provider, String Function(String) tr) {
+  Widget _buildInterventionsList(List<Intervention> items, BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth < 600) {
           return Column(
-            children: missions.map((m) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: _buildMobileMissionCard(m, context, provider),
-            )).toList(),
+            children: items
+                .map((i) => Padding(padding: const EdgeInsets.only(bottom: 8), child: _buildMobileCard(i, context)))
+                .toList(),
           );
         }
         return Container(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2)),
-            ],
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2))],
           ),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
               headingRowColor: WidgetStateProperty.all(const Color(0xFFFAFAFA)),
               columnSpacing: 24,
-              columns: [
-                DataColumn(label: _headerText(tr('provider.colClient'))),
-                DataColumn(label: _headerText(tr('provider.colService'))),
-                DataColumn(label: _headerText(tr('provider.colDate'))),
-                DataColumn(label: _headerText(tr('provider.colHeure'))),
-                DataColumn(label: _headerText(tr('provider.colMontant'))),
-                DataColumn(label: _headerText(tr('provider.colStatut'))),
-                DataColumn(label: _headerText('')),
+              columns: const [
+                DataColumn(label: _HeaderText('Client')),
+                DataColumn(label: _HeaderText('Service')),
+                DataColumn(label: _HeaderText('Date')),
+                DataColumn(label: _HeaderText('Créneaux')),
+                DataColumn(label: _HeaderText('Montant')),
+                DataColumn(label: _HeaderText('Statut')),
+                DataColumn(label: _HeaderText('')),
               ],
-              rows: missions.map((m) => DataRow(cells: [
-                DataCell(_cellText(m.clientNomComplet)),
-                DataCell(_cellText(m.service)),
-                DataCell(_cellText('${m.date.day}/${m.date.month}/${m.date.year}')),
-                DataCell(_cellText('${m.heureDebut.hour.toString().padLeft(2, '0')}:${m.heureDebut.minute.toString().padLeft(2, '0')}')),
-                DataCell(_cellText('${m.montant.toStringAsFixed(0)} FCFA', bold: true)),
-                DataCell(_buildStatusBadge(m.statut)),
-                DataCell(_buildRowActions(m, context, provider)),
-              ])).toList(),
+              rows: items
+                  .map((i) => DataRow(cells: [
+                        DataCell(_CellText('${i.clientNom}\n${i.reference}')),
+                        DataCell(_CellText(i.service)),
+                        DataCell(_CellText('${i.date.day}/${i.date.month}/${i.date.year}')),
+                        DataCell(_CellText(formatHourRanges(i.heures))),
+                        DataCell(_CellText(i.montant == null ? '—' : '${i.montant!.toStringAsFixed(0)} FCFA', bold: true)),
+                        DataCell(buildInterventionStatusBadge(i.statut)),
+                        DataCell(_buildRowActions(i, context)),
+                      ]))
+                  .toList(),
             ),
           ),
         );
@@ -294,36 +265,33 @@ class _MissionsContentState extends State<MissionsContent> {
     );
   }
 
-  Widget _buildMobileMissionCard(Mission mission, BuildContext context, ProviderDashboardProvider provider) {
+  Widget _buildMobileCard(Intervention i, BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _border),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: _borderColor)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(mission.clientNomComplet, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _textPrimary, fontFamily: 'Sora')),
-              _buildStatusBadge(mission.statut),
+              Text(i.clientNom, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _textPrimary, fontFamily: 'Sora')),
+              buildInterventionStatusBadge(i.statut),
             ],
           ),
           const SizedBox(height: 8),
-          _infoRow(Icons.work_outline, mission.service),
+          _infoRow(Icons.work_outline, i.service),
           const SizedBox(height: 4),
-          _infoRow(Icons.calendar_today, '${mission.date.day}/${mission.date.month}/${mission.date.year}'),
+          _infoRow(Icons.calendar_today, '${i.date.day}/${i.date.month}/${i.date.year}'),
           const SizedBox(height: 4),
-          _infoRow(Icons.access_time, '${mission.heureDebut.hour.toString().padLeft(2, '0')}:${mission.heureDebut.minute.toString().padLeft(2, '0')}'),
+          _infoRow(Icons.access_time, formatHourRanges(i.heures)),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('${mission.montant.toStringAsFixed(0)} FCFA', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: _success, fontFamily: 'Sora')),
-              _buildRowActions(mission, context, provider),
+              Text(i.montant == null ? '—' : '${i.montant!.toStringAsFixed(0)} FCFA',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: _success, fontFamily: 'Sora')),
+              _buildRowActions(i, context),
             ],
           ),
         ],
@@ -341,41 +309,22 @@ class _MissionsContentState extends State<MissionsContent> {
     );
   }
 
-  Widget _headerText(String text) {
-    return Text(text, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _textMuted, fontFamily: 'DM Sans'));
-  }
-
-  Widget _cellText(String text, {bool bold = false}) {
-    return Text(text, style: TextStyle(fontSize: 12, fontWeight: bold ? FontWeight.w600 : FontWeight.w400, color: _textPrimary, fontFamily: 'DM Sans'));
-  }
-
-  Widget _buildStatusBadge(MissionStatus status) {
-    final data = switch (status) {
-      MissionStatus.confirmed => ('Confirmée', _success, const Color(0xFFDCFCE7)),
-      MissionStatus.pending => ('En attente', _warning, const Color(0xFFFEF3C7)),
-      MissionStatus.completed => ('Terminée', _textMuted, const Color(0xFFF1F5F9)),
-      MissionStatus.cancelled => ('Annulée', _error, const Color(0xFFFEE2E2)),
-    };
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(color: data.$3, borderRadius: BorderRadius.circular(6)),
-      child: Text(data.$1, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: data.$2, fontFamily: 'DM Sans')),
-    );
-  }
-
-  Widget _buildRowActions(Mission mission, BuildContext context, ProviderDashboardProvider provider) {
-    if (mission.statut == MissionStatus.pending) {
+  Widget _buildRowActions(Intervention i, BuildContext context) {
+    if (i.statut == InterventionStatus.attente) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _actionButton(Icons.check_circle_outline, _success, () => provider.accepterMission(mission.id)),
+          _actionButton(Icons.request_quote_outlined, _primary, () => ChiffrageModal.show(context, i)),
           const SizedBox(width: 4),
-          _actionButton(Icons.cancel_outlined, _error, () => provider.annulerMission(mission.id)),
+          _actionButton(Icons.cancel_outlined, _error, () => context.read<InterventionProvider>().annuler(i.reference)),
         ],
       );
     }
-    if (mission.statut == MissionStatus.confirmed) {
-      return _actionButton(Icons.task_alt_rounded, _primary, () => provider.completerMission(mission.id));
+    if (i.statut == InterventionStatus.encours) {
+      return _actionButton(Icons.task_alt_rounded, _primary, () => context.read<InterventionProvider>().terminer(i.reference));
+    }
+    if (i.statut == InterventionStatus.terminee) {
+      return const Text('Clôturée', style: TextStyle(fontSize: 11, color: _textMuted, fontFamily: 'DM Sans'));
     }
     return const SizedBox.shrink();
   }
@@ -392,4 +341,21 @@ class _MissionsContentState extends State<MissionsContent> {
       ),
     );
   }
+}
+
+class _HeaderText extends StatelessWidget {
+  final String text;
+  const _HeaderText(this.text);
+  @override
+  Widget build(BuildContext context) =>
+      Text(text, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _textMuted, fontFamily: 'DM Sans'));
+}
+
+class _CellText extends StatelessWidget {
+  final String text;
+  final bool bold;
+  const _CellText(this.text, {this.bold = false});
+  @override
+  Widget build(BuildContext context) =>
+      Text(text, style: TextStyle(fontSize: 12, fontWeight: bold ? FontWeight.w600 : FontWeight.w400, color: _textPrimary, fontFamily: 'DM Sans'));
 }

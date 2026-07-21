@@ -5,8 +5,8 @@ import '../../../../core/localization/translation_provider.dart';
 import '../../../../core/widgets/micro_interactions.dart';
 import '../../../../core/widgets/app_back_button.dart';
 import '../../../home/presentation/widgets/header/nav_bar.dart';
-import '../../state/reservation_history_provider.dart';
-import '../../domain/reservation.dart';
+import '../../../intervention/domain/intervention.dart';
+import '../../../intervention/state/intervention_provider.dart';
 import '../widgets/reservation_card.dart';
 import '../widgets/reservation_detail_sheet.dart';
 
@@ -28,7 +28,7 @@ class _HistoriquePageState extends State<HistoriquePage> {
   String _searchQuery = '';
   final _searchController = TextEditingController();
 
-  final _filters = ['Toutes', 'Actives', 'Terminées', 'Annulées'];
+  final _filters = ['Toutes', 'En attente', 'En cours', 'Terminées'];
 
   @override
   void dispose() {
@@ -36,24 +36,31 @@ class _HistoriquePageState extends State<HistoriquePage> {
     super.dispose();
   }
 
-  List<Reservation> _filtered(ReservationHistoryProvider provider) {
-    if (_searchQuery.isNotEmpty) {
-      return provider.filtrer(query: _searchQuery);
-    }
+  List<Intervention> _filtered(InterventionProvider provider) {
+    var items = provider.all;
     switch (_selectedFilter) {
-      case 0: return provider.all;
-      case 1: return provider.actives;
-      case 2: return provider.terminees;
-      case 3: return provider.annulees;
-      default: return provider.all;
+      case 1:
+        items = items.where((i) => i.statut == InterventionStatus.attente).toList();
+        break;
+      case 2:
+        items = items.where((i) => i.statut == InterventionStatus.encours).toList();
+        break;
+      case 3:
+        items = items.where((i) => i.statut == InterventionStatus.terminee).toList();
+        break;
     }
+    if (_searchQuery.isNotEmpty) {
+      final q = _searchQuery.toLowerCase();
+      items = items.where((i) => i.providerName.toLowerCase().contains(q) || i.service.toLowerCase().contains(q) || i.reference.toLowerCase().contains(q)).toList();
+    }
+    return items;
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<ReservationHistoryProvider>();
+    final provider = context.watch<InterventionProvider>();
     final tr = context.tr;
-    final reservations = _filtered(provider);
+    final interventions = _filtered(provider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -67,18 +74,15 @@ class _HistoriquePageState extends State<HistoriquePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: AppBackButton(),
-                    ),
+                    const Align(alignment: Alignment.centerLeft, child: AppBackButton()),
                     const SizedBox(height: 12),
                     _buildHeader(tr, provider),
                     const SizedBox(height: 16),
                     _buildSearchBar(tr),
                     const SizedBox(height: 12),
-                    _buildFilters(tr),
+                    _buildFilters(),
                     const SizedBox(height: 16),
-                    Expanded(child: _buildList(reservations, provider, tr)),
+                    Expanded(child: _buildList(interventions, tr)),
                   ],
                 ),
               ),
@@ -89,29 +93,25 @@ class _HistoriquePageState extends State<HistoriquePage> {
     );
   }
 
-  Widget _buildHeader(String Function(String) tr, ReservationHistoryProvider provider) {
+  Widget _buildHeader(String Function(String) tr, InterventionProvider provider) {
+    final enAttente = provider.enAttente.length;
+    final enCours = provider.enCours.length;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              tr('historique.title'),
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: _textPrimary, fontFamily: 'Sora'),
-            ),
+            Text(tr('historique.title'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: _textPrimary, fontFamily: 'Sora')),
             const SizedBox(height: 4),
-            Text(
-              '${provider.all.length} ${tr('historique.total')}',
-              style: const TextStyle(fontSize: 13, color: _textSecondary, fontFamily: 'DM Sans'),
-            ),
+            Text('${provider.all.length} ${tr('historique.total')}', style: const TextStyle(fontSize: 13, color: _textSecondary, fontFamily: 'DM Sans')),
           ],
         ),
         Row(
           children: [
-            _statChip('${provider.countActives}', tr('historique.actives'), const Color(0xFF2563EB)),
+            _statChip('$enAttente', 'en attente', const Color(0xFFF59E0B)),
             const SizedBox(width: 6),
-            _statChip('${provider.countTerminees}', tr('historique.terminees'), const Color(0xFF16A34A)),
+            _statChip('$enCours', 'en cours', _primary),
           ],
         ),
       ],
@@ -134,11 +134,7 @@ class _HistoriquePageState extends State<HistoriquePage> {
   Widget _buildSearchBar(String Function(String) tr) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _border),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: _border)),
       child: Row(
         children: [
           const Icon(Icons.search_rounded, size: 18, color: _textMuted),
@@ -170,7 +166,7 @@ class _HistoriquePageState extends State<HistoriquePage> {
     );
   }
 
-  Widget _buildFilters(String Function(String) tr) {
+  Widget _buildFilters() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -189,15 +185,7 @@ class _HistoriquePageState extends State<HistoriquePage> {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: isSelected ? _primary : _border),
                   ),
-                  child: Text(
-                    filter,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: isSelected ? Colors.white : _textSecondary,
-                      fontFamily: 'DM Sans',
-                    ),
-                  ),
+                  child: Text(filter, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: isSelected ? Colors.white : _textSecondary, fontFamily: 'DM Sans')),
                 ),
               ),
             ),
@@ -207,8 +195,8 @@ class _HistoriquePageState extends State<HistoriquePage> {
     );
   }
 
-  Widget _buildList(List<Reservation> reservations, ReservationHistoryProvider provider, String Function(String) tr) {
-    if (reservations.isEmpty) {
+  Widget _buildList(List<Intervention> interventions, String Function(String) tr) {
+    if (interventions.isEmpty) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -222,69 +210,46 @@ class _HistoriquePageState extends State<HistoriquePage> {
     }
 
     return ListView.builder(
-      itemCount: reservations.length,
+      itemCount: interventions.length,
       padding: EdgeInsets.zero,
       itemBuilder: (context, index) {
-        final r = reservations[index];
+        final i = interventions[index];
         return Padding(
           padding: const EdgeInsets.only(bottom: 10),
           child: ReservationCard(
-            reservation: r,
-            onTap: () => _showDetail(r, provider, tr),
-            onCancel: r.annulable
-                ? () => _confirmCancel(r, provider, tr)
-                : null,
+            intervention: i,
+            onTap: () => _showDetail(i),
+            onPay: i.statut == InterventionStatus.encours ? () => context.push('/paiement', extra: i) : null,
+            onRate: i.statut == InterventionStatus.terminee ? () => _toastNote() : null,
           ),
         );
       },
     );
   }
 
-  void _showDetail(Reservation r, ReservationHistoryProvider provider, String Function(String) tr) {
+  void _toastNote() {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Notation de l\'intervention')));
+  }
+
+  void _showDetail(Intervention i) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => ReservationDetailSheet(
-        reservation: r,
-        onCancel: r.annulable
+        intervention: i,
+        onPay: i.statut == InterventionStatus.encours
             ? () {
                 Navigator.pop(context);
-                _confirmCancel(r, provider, tr);
+                context.push('/paiement', extra: i);
               }
             : null,
-      ),
-    );
-  }
-
-  void _confirmCancel(Reservation r, ReservationHistoryProvider provider, String Function(String) tr) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(tr('historique.confirmerAnnulation'), style: const TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w600)),
-        content: Text('${tr('historique.annulationMessage')} "${r.serviceName}" ?', style: const TextStyle(fontFamily: 'DM Sans')),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(tr('historique.non'), style: const TextStyle(color: _textSecondary, fontFamily: 'DM Sans')),
-          ),
-          TextButton(
-            onPressed: () {
-              provider.annulerReservation(r.id);
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(tr('historique.reservationAnnulee'), style: const TextStyle(fontFamily: 'DM Sans')),
-                  backgroundColor: const Color(0xFFEF4444),
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-              );
-            },
-            child: Text(tr('historique.ouiAnnuler'), style: const TextStyle(color: Color(0xFFEF4444), fontFamily: 'DM Sans')),
-          ),
-        ],
+        onRate: i.statut == InterventionStatus.terminee
+            ? () {
+                Navigator.pop(context);
+                _toastNote();
+              }
+            : null,
       ),
     );
   }

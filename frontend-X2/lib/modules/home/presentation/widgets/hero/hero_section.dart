@@ -101,14 +101,19 @@ class HeroSection extends StatelessWidget {
   }
 
   Widget _buildSubtitle() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 186),
-      child: Text(
-        'Plombiers, électriciens, frigoristes, techniciens et bien plus près de chez vous.',
-        textAlign: TextAlign.center,
-        style: GoogleFonts.dmSans(
-          fontSize: 17,
-          color: Colors.white.withOpacity(0.75),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 620),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            'Plombiers, électriciens, frigoristes, techniciens et bien plus près de chez vous.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.dmSans(
+              fontSize: 17,
+              color: Colors.white.withOpacity(0.75),
+            ),
+          ),
         ),
       ),
     );
@@ -122,11 +127,11 @@ class HeroSection extends StatelessWidget {
       {'value': '< 30 min', 'label': 'Temps de réponse'},
     ];
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Wrap(
+      alignment: WrapAlignment.center,
       children: stats.map((stat) {
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
           child: Column(
             children: [
               Text(

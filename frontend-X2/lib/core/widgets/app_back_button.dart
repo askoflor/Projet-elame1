@@ -37,7 +37,14 @@ class AppBackButton extends StatelessWidget {
             size: 20,
           ),
         ),
-        onPressed: onPressed ?? () => context.pop(),
+        onPressed: onPressed ??
+            () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/');
+              }
+            },
       ),
     );
   }

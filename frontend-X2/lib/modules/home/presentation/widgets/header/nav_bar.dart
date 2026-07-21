@@ -18,7 +18,6 @@ class _NavBarState extends State<NavBar> {
     'Accueil',
     'Recherche',
     'Profil',
-    'Réservation',
     'Paiement',
     'Espace Client',
     'Prestataire',
@@ -175,8 +174,6 @@ class _NavBarState extends State<NavBar> {
         return 'Profil';
       case '/paiement':
         return 'Paiement';
-      case '/reservation':
-        return 'Réservation';
       case '/espace-client':
         return 'Espace Client';
       case '/prestataire':
@@ -196,9 +193,6 @@ class _NavBarState extends State<NavBar> {
         break;
       case 'Profil':
         context.go('/profil');
-        break;
-      case 'Réservation':
-        context.go('/reservation');
         break;
       case 'Paiement':
         context.go('/paiement');

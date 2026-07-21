@@ -52,22 +52,33 @@ class _SearchBarState extends State<SearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 63,
-      constraints: const BoxConstraints(maxWidth: 680),
-      margin: const EdgeInsets.symmetric(horizontal: 126),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.25),
-            blurRadius: 60,
-            offset: const Offset(0, 20),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 700;
+        return Container(
+          constraints: const BoxConstraints(maxWidth: 680),
+          margin: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 24),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.25),
+                blurRadius: 60,
+                offset: const Offset(0, 20),
+              ),
+            ],
           ),
-        ],
-      ),
+          child: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+        );
+      },
+    );
+  }
+
+  Widget _buildDesktopLayout() {
+    return SizedBox(
+      height: 63,
       child: Row(
         children: [
           // Service
@@ -107,6 +118,44 @@ class _SearchBarState extends State<SearchBar> {
           _buildSearchButton(),
         ],
       ),
+    );
+  }
+
+  Widget _buildMobileLayout() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          child: _buildDropdown(
+            value: _selectedService,
+            hint: 'Quel service recherchez-vous ?',
+            icon: Icons.search,
+            items: _services,
+            onChanged: (val) => setState(() => _selectedService = val),
+          ),
+        ),
+        const Divider(height: 1, color: Color(0xFFE2E8F0)),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          child: _buildDropdown(
+            value: _selectedCity,
+            hint: 'Votre localisation',
+            icon: Icons.location_on_outlined,
+            items: _cities,
+            onChanged: (val) => setState(() => _selectedCity = val),
+          ),
+        ),
+        const Divider(height: 1, color: Color(0xFFE2E8F0)),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          child: _buildDatePicker(),
+        ),
+        const SizedBox(height: 10),
+        Center(child: _buildSearchButton()),
+        const SizedBox(height: 2),
+      ],
     );
   }
 

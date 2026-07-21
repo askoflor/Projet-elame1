@@ -15,6 +15,7 @@ import '../modules/provider/presentation/pages/provider_dashboard_screen.dart';
 import '../modules/payment/presentation/pages/payment_page.dart';
 import '../modules/profile/presentation/pages/profile_screen.dart';
 import '../modules/search/domain/entities/provider_model.dart';
+import '../modules/booking/domain/booking_entry_args.dart';
 import '../modules/historique/presentation/pages/historique_page.dart';
 class AppRouter {
   static GoRouter router(AuthProvider authProvider) {
@@ -60,10 +61,12 @@ class AppRouter {
           path: AppConstants.bookingRoute,
           builder: (context, state) {
             final extra = state.extra;
-            if (extra is int) {
-              return BookingPage(initialServiceIndex: extra);
+            if (extra is BookingEntryArgs) {
+              return BookingPage(provider: extra.provider, initialDate: extra.date, initialHours: extra.hours);
             }
-            return BookingPage(provider: extra is ProviderModel ? extra : null);
+            // La réservation ne devrait être atteinte que depuis le calendrier
+            // du profil (BookingEntryArgs) ; on retombe sur l'accueil sinon.
+            return const HomePage();
           },
         ),
         GoRoute(

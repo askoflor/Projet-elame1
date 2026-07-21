@@ -14,52 +14,70 @@ class AppFooter extends StatelessWidget {
       padding: const EdgeInsets.only(top: 48, bottom: 24),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          children: [
-            _buildFooterGrid(context),
-            const SizedBox(height: 40),
-            _buildFooterBottom(context),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 700;
+            return Column(
+              children: [
+                _buildFooterGrid(context, isMobile),
+                const SizedBox(height: 40),
+                _buildFooterBottom(context, isMobile),
+              ],
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _buildFooterGrid(BuildContext context) {
+  Widget _buildFooterGrid(BuildContext context, bool isMobile) {
+    final servicesColumn = _buildColumn(context.tr('footer.servicesTitle'), [
+      _FooterLink('Électricité', '/recherche'),
+      _FooterLink(context.tr('footer.plomberie'), '/recherche'),
+      _FooterLink(context.tr('footer.climatisation'), '/recherche'),
+      _FooterLink(context.tr('footer.maintenance'), '/recherche'),
+      _FooterLink(context.tr('footer.jardinage'), '/recherche'),
+    ]);
+    final entrepriseColumn = _buildColumn(context.tr('footer.entrepriseTitle'), [
+      _FooterLink('À propos', '/'),
+      _FooterLink(context.tr('footer.devenirPrestataire'), '/register'),
+      _FooterLink(context.tr('footer.partenaires'), '/'),
+      _FooterLink(context.tr('footer.blog'), '/'),
+      _FooterLink(context.tr('footer.presse'), '/'),
+    ]);
+    final supportColumn = _buildColumn(context.tr('footer.supportTitle'), [
+      _FooterLink(context.tr('footer.faq'), '/'),
+      _FooterLink(context.tr('footer.contact'), '/'),
+      _FooterLink(context.tr('footer.conditions'), '/'),
+      _FooterLink('Confidentialité', '/'),
+      _FooterLink(context.tr('footer.cookies'), '/'),
+    ]);
+
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildBrand(),
+          const SizedBox(height: 28),
+          servicesColumn,
+          const SizedBox(height: 24),
+          entrepriseColumn,
+          const SizedBox(height: 24),
+          supportColumn,
+        ],
+      );
+    }
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(flex: 2, child: _buildBrand()),
         const SizedBox(width: 40),
-        Expanded(
-          child: _buildColumn(context.tr('footer.servicesTitle'), [
-            _FooterLink('Électricité', '/recherche'),
-            _FooterLink(context.tr('footer.plomberie'), '/recherche'),
-            _FooterLink(context.tr('footer.climatisation'), '/recherche'),
-            _FooterLink(context.tr('footer.maintenance'), '/recherche'),
-            _FooterLink(context.tr('footer.jardinage'), '/recherche'),
-          ]),
-        ),
+        Expanded(child: servicesColumn),
         const SizedBox(width: 40),
-        Expanded(
-          child: _buildColumn(context.tr('footer.entrepriseTitle'), [
-            _FooterLink('À propos', '/'),
-            _FooterLink(context.tr('footer.devenirPrestataire'), '/register'),
-            _FooterLink(context.tr('footer.partenaires'), '/'),
-            _FooterLink(context.tr('footer.blog'), '/'),
-            _FooterLink(context.tr('footer.presse'), '/'),
-          ]),
-        ),
+        Expanded(child: entrepriseColumn),
         const SizedBox(width: 40),
-        Expanded(
-          child: _buildColumn(context.tr('footer.supportTitle'), [
-            _FooterLink(context.tr('footer.faq'), '/'),
-            _FooterLink(context.tr('footer.contact'), '/'),
-            _FooterLink(context.tr('footer.conditions'), '/'),
-            _FooterLink('Confidentialité', '/'),
-            _FooterLink(context.tr('footer.cookies'), '/'),
-          ]),
-        ),
+        Expanded(child: supportColumn),
       ],
     );
   }
@@ -147,7 +165,15 @@ class AppFooter extends StatelessWidget {
     );
   }
 
-  Widget _buildFooterBottom(BuildContext context) {
+  Widget _buildFooterBottom(BuildContext context, bool isMobile) {
+    final copyright = Text(
+      '© 2025 ServiceConnect. Tous droits réservés.',
+      style: GoogleFonts.dmSans(fontSize: 12, color: Colors.white.withOpacity(0.4)),
+    );
+    final availableOn = Text(
+      context.tr('footer.availableOn'),
+      style: GoogleFonts.dmSans(fontSize: 12, color: Colors.white.withOpacity(0.4)),
+    );
     return Container(
       padding: const EdgeInsets.only(top: 24),
       decoration: BoxDecoration(
@@ -155,25 +181,19 @@ class AppFooter extends StatelessWidget {
           top: BorderSide(color: Colors.white.withOpacity(0.1), width: 1),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            '© 2025 ServiceConnect. Tous droits réservés.',
-            style: GoogleFonts.dmSans(
-              fontSize: 12,
-              color: Colors.white.withOpacity(0.4),
+      child: isMobile
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [copyright, const SizedBox(height: 8), availableOn],
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(child: copyright),
+                const SizedBox(width: 12),
+                Flexible(child: availableOn),
+              ],
             ),
-          ),
-          Text(
-            context.tr('footer.availableOn'),
-            style: GoogleFonts.dmSans(
-              fontSize: 12,
-              color: Colors.white.withOpacity(0.4),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

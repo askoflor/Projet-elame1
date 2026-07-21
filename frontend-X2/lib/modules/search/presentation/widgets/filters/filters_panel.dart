@@ -61,7 +61,7 @@ class _FiltersPanelState extends State<FiltersPanel> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 300,
+      width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,

@@ -82,12 +82,15 @@ class TestimonialCard extends StatelessWidget {
         ),
         const SizedBox(width: 10),
         // Nom
-        Text(
-          name,
-          style: GoogleFonts.sora(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF1E293B),
+        Flexible(
+          child: Text(
+            name,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.sora(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF1E293B),
+            ),
           ),
         ),
       ],

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../domain/provider_profile.dart';
-import '../../domain/mission.dart';
+import '../../domain/certification.dart';
 import '../../domain/revenue.dart';
 import '../../domain/planning.dart';
 import '../../domain/notification_model.dart';
@@ -11,7 +11,7 @@ class MockProviderData {
     nom: 'Mensah',
     prenom: 'Kofi',
     email: 'kofi.mensah@email.com',
-    phone: '+225 01 02 03 04 05',
+    phone: '+237 6 99 12 34 56',
     specialite: 'Électricien',
     note: 4.8,
     missionsRealisees: 142,
@@ -20,114 +20,17 @@ class MockProviderData {
     revenuMensuel: 1250000,
     revenuTotal: 18500000,
     adresse: '15 Rue des Artisans',
-    ville: 'Abidjan',
-    pays: 'Côte d\'Ivoire',
+    ville: 'Douala',
+    pays: 'Cameroun',
     competences: ['Installation électrique', 'Tableaux électriques', 'Dépannage urgent', 'Câblage réseau', 'Domotique'],
     description: 'Électricien professionnel avec plus de 8 ans d\'expérience. Spécialisé dans l\'installation électrique résidentielle et industrielle, la maintenance et le dépannage.',
-    certifications: 'Certifié EDF – Norme NF C 15-100',
+    certifications: [
+      Certification(titre: 'Certification Électricien Pro', organisme: 'CAMTEL', dateFin: DateTime(2026, 3, 1)),
+      Certification(titre: 'Habilitation Électrique', organisme: 'CAMTEL', dateFin: DateTime(2026, 1, 1)),
+    ],
     dateInscription: DateTime(2023, 1, 15),
     disponible: true,
   );
-
-  static List<Mission> get missionsDuJour {
-    final today = DateTime.now();
-    return [
-      Mission(
-        id: 'M001',
-        clientNom: 'Kouamé',
-        clientPrenom: 'Alima',
-        service: 'Installation électrique',
-        date: today,
-        heureDebut: DateTime(today.year, today.month, today.day, 8, 0),
-        heureFin: DateTime(today.year, today.month, today.day, 10, 0),
-        montant: 25000,
-        adresse: '15 Rue des Jardins, Cocody',
-        description: 'Installation complète du tableau électrique et câblage des prises.',
-        statut: MissionStatus.confirmed,
-      ),
-      Mission(
-        id: 'M002',
-        clientNom: 'Traoré',
-        clientPrenom: 'Paul',
-        service: 'Câblage réseau',
-        date: today,
-        heureDebut: DateTime(today.year, today.month, today.day, 11, 0),
-        heureFin: DateTime(today.year, today.month, today.day, 13, 0),
-        montant: 18000,
-        adresse: '45 Avenue Kennedy, Plateau',
-        description: 'Câblage réseau pour bureau 5 postes de travail.',
-        statut: MissionStatus.confirmed,
-      ),
-      Mission(
-        id: 'M003',
-        clientNom: 'Diallo',
-        clientPrenom: 'Fatou',
-        service: 'Dépannage urgent',
-        date: today,
-        heureDebut: DateTime(today.year, today.month, today.day, 15, 0),
-        heureFin: DateTime(today.year, today.month, today.day, 17, 0),
-        montant: 35000,
-        adresse: '8 Boulevard de la Paix, Marcory',
-        description: 'Court-circuit général. Remplissage du disjoncteur et vérification réseau.',
-        statut: MissionStatus.pending,
-      ),
-    ];
-  }
-
-  static List<Mission> get toutesMissions {
-    final today = DateTime.now();
-    return [
-      ...missionsDuJour,
-      Mission(
-        id: 'M004',
-        clientNom: 'Koné',
-        clientPrenom: 'Moussa',
-        service: 'Installation domotique',
-        date: today.subtract(const Duration(days: 1)),
-        heureDebut: DateTime(today.year, today.month, today.day - 1, 9, 0),
-        heureFin: DateTime(today.year, today.month, today.day - 1, 12, 0),
-        montant: 45000,
-        adresse: '12 Rue de la Paix, Yopougon',
-        statut: MissionStatus.completed,
-      ),
-      Mission(
-        id: 'M005',
-        clientNom: 'Soro',
-        clientPrenom: 'Aminata',
-        service: 'Réparation éclairage',
-        date: today.subtract(const Duration(days: 2)),
-        heureDebut: DateTime(today.year, today.month, today.day - 2, 14, 0),
-        heureFin: DateTime(today.year, today.month, today.day - 2, 16, 0),
-        montant: 12000,
-        adresse: '5 Rue des Fleurs, Treichville',
-        statut: MissionStatus.completed,
-      ),
-      Mission(
-        id: 'M006',
-        clientNom: 'Bamba',
-        clientPrenom: 'Ibrahim',
-        service: 'Mise aux normes',
-        date: today.add(const Duration(days: 3)),
-        heureDebut: DateTime(today.year, today.month, today.day + 3, 8, 0),
-        heureFin: DateTime(today.year, today.month, today.day + 3, 17, 0),
-        montant: 85000,
-        adresse: '22 Rue des Entreprises, Zone 4',
-        statut: MissionStatus.pending,
-      ),
-      Mission(
-        id: 'M007',
-        clientNom: 'Touré',
-        clientPrenom: 'Mariam',
-        service: 'Dépannage urgence',
-        date: today.subtract(const Duration(days: 3)),
-        heureDebut: DateTime(today.year, today.month, today.day - 3, 20, 0),
-        heureFin: DateTime(today.year, today.month, today.day - 3, 22, 0),
-        montant: 0,
-        adresse: '3 Rue Secours, Adjamé',
-        statut: MissionStatus.cancelled,
-      ),
-    ];
-  }
 
   static RevenueSummary get revenueSummary {
     return RevenueSummary(
@@ -224,16 +127,18 @@ class MockProviderData {
     return PlanningSemaine(debutSemaine: debutSemaine, jours: jours);
   }
 
+  // La plateforme est réservable 24h/24, 7j/7 par défaut : aucune pause,
+  // aucun jour de repos codé en dur (le prestataire peut ensuite ajuster).
   static List<DisponibiliteSemaine> get disponibilites {
-    return [
-      DisponibiliteSemaine(jourSemaine: 0, debut: const TimeOfDay(hour: 8, minute: 0), fin: const TimeOfDay(hour: 17, minute: 0), actif: true),
-      DisponibiliteSemaine(jourSemaine: 1, debut: const TimeOfDay(hour: 8, minute: 0), fin: const TimeOfDay(hour: 18, minute: 0), actif: true),
-      DisponibiliteSemaine(jourSemaine: 2, debut: const TimeOfDay(hour: 8, minute: 0), fin: const TimeOfDay(hour: 18, minute: 0), actif: true),
-      DisponibiliteSemaine(jourSemaine: 3, debut: const TimeOfDay(hour: 8, minute: 0), fin: const TimeOfDay(hour: 18, minute: 0), actif: true),
-      DisponibiliteSemaine(jourSemaine: 4, debut: const TimeOfDay(hour: 8, minute: 0), fin: const TimeOfDay(hour: 17, minute: 0), actif: true),
-      DisponibiliteSemaine(jourSemaine: 5, debut: const TimeOfDay(hour: 9, minute: 0), fin: const TimeOfDay(hour: 13, minute: 0), actif: true),
-      DisponibiliteSemaine(jourSemaine: 6, debut: const TimeOfDay(hour: 0, minute: 0), fin: const TimeOfDay(hour: 0, minute: 0), actif: false),
-    ];
+    return List.generate(
+      7,
+      (i) => DisponibiliteSemaine(
+        jourSemaine: i,
+        debut: const TimeOfDay(hour: 0, minute: 0),
+        fin: const TimeOfDay(hour: 23, minute: 59),
+        actif: true,
+      ),
+    );
   }
 
   static List<ProviderNotification> get notifications {
