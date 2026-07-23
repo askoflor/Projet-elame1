@@ -32,7 +32,7 @@ class CategoryCard extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.ease,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
@@ -59,19 +59,20 @@ class CategoryCard extends StatelessWidget {
                   ],
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Icône
               Container(
-                width: 48,
-                height: 48,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
                   color: bgColor,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: iconColor, size: 20),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               // Nom
               Text(
                 name,
@@ -81,6 +82,7 @@ class CategoryCard extends StatelessWidget {
                   color: const Color(0xFF1E293B),
                 ),
                 textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 2),
               // Compteur
@@ -91,6 +93,7 @@ class CategoryCard extends StatelessWidget {
                   color: const Color(0xFF94A3B8),
                 ),
                 textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

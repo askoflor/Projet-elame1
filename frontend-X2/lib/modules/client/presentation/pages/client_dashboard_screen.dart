@@ -10,10 +10,42 @@ import '../../../../core/utils/hour_range_formatter.dart';
 import '../../../auth/domain/auth_provider.dart';
 import '../../../intervention/domain/intervention.dart';
 import '../../../intervention/state/intervention_provider.dart';
+import '../../../intervention/presentation/widgets/notation_dialog.dart';
 import '../../../provider/presentation/widgets/dashboard/dashboard_content.dart' show buildInterventionStatusBadge;
+import '../../../../core/widgets/axis_line_chart.dart';
 
-class ClientDashboardScreen extends StatelessWidget {
+class ClientDashboardScreen extends StatefulWidget {
   const ClientDashboardScreen({super.key});
+
+  @override
+  State<ClientDashboardScreen> createState() => _ClientDashboardScreenState();
+}
+
+class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
+  DateTime? _selectedDate;
+  static const _windowDays = 7;
+
+  DateTime _defaultDate(List<Intervention> all) {
+    if (all.isEmpty) return DateTime.now();
+    final dates = all.map((i) => DateTime(i.date.year, i.date.month, i.date.day)).toList()..sort();
+    return dates.last;
+  }
+
+  DateTimeRange _rangeForDate(DateTime date) {
+    final end = DateTime(date.year, date.month, date.day);
+    return DateTimeRange(start: end.subtract(const Duration(days: _windowDays - 1)), end: end);
+  }
+
+  Future<void> _pickDate(BuildContext context, List<Intervention> all) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      firstDate: DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 1),
+      initialDate: _selectedDate ?? _defaultDate(all),
+    );
+    if (picked != null) setState(() => _selectedDate = picked);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +70,7 @@ class ClientDashboardScreen extends StatelessWidget {
                           const SizedBox(height: 20),
                           _buildHeader(context),
                           const SizedBox(height: 28),
-                          _buildStatsGrid(context),
+                          _buildTrendsSection(context),
                           const SizedBox(height: 28),
                           _buildInterventionsTableSection(context),
                           const SizedBox(height: 40),
@@ -77,161 +109,136 @@ class ClientDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsGrid(BuildContext context) {
-    final interventions = context.watch<InterventionProvider>().all;
-    final total = interventions.length;
-    final enCours = interventions.where((i) => i.statut == InterventionStatus.encours).length;
-    final depense = interventions
-        .where((i) => i.montant != null && i.statut != InterventionStatus.annulee)
-        .fold<double>(0, (sum, i) => sum + i.montant!);
-    final depenseFormatted = depense.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]} ');
+  Widget _buildTrendsSection(BuildContext context) {
+    final all = context.watch<InterventionProvider>().all;
+    final selected = _selectedDate ?? _defaultDate(all);
+    final range = _rangeForDate(selected);
+    final taskSeries = _taskSeries(all, range);
+    final expenseSeries = _expenseSeries(all, range);
+    final enCoursSeries = _enCoursSeries(all, range);
 
     return StaggeredFadeIn(
-      staggerDelay: const Duration(milliseconds: 100),
+      staggerDelay: const Duration(milliseconds: 120),
       children: [
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final cards = [
-              _buildStatCard(
-                context,
-                icon: Icons.build_rounded,
-                value: '$total',
-                label: context.tr('client.interventionsTotales'),
-                color: const Color(0xFF2563EB),
-                bgColor: const Color(0xFFEFF4FF),
-                badge: context.tr('client.plusCeMois'),
-                badgeUp: true,
-                chartWidth: total == 0 ? 0.05 : (total / (total + 5)).clamp(0.1, 1.0),
-              ),
-              _buildStatCard(
-                context,
-                icon: Icons.access_time_rounded,
-                value: '$enCours',
-                label: context.tr('client.enCours'),
-                color: const Color(0xFFF97316),
-                bgColor: const Color(0xFFFFF7ED),
-                badge: context.tr('client.activesBadge'),
-                badgeUp: true,
-                chartWidth: enCours == 0 ? 0.05 : (enCours / (enCours + 3)).clamp(0.1, 1.0),
-              ),
-              _buildStatCard(
-                context,
-                icon: Icons.payments_rounded,
-                value: depenseFormatted,
-                label: context.tr('client.fcfaDepenses'),
-                color: const Color(0xFF059669),
-                bgColor: const Color(0xFFECFDF5),
-                badge: context.tr('client.ceMois'),
-                badgeUp: true,
-                chartWidth: depense == 0 ? 0.05 : 0.55,
-              ),
-              _buildStatCard(
-                context,
-                icon: Icons.star_rounded,
-                value: '4.8',
-                label: context.tr('client.noteMoyenne'),
-                color: const Color(0xFF7C3AED),
-                bgColor: const Color(0xFFF3F0FF),
-                chartWidth: 0.96,
-              ),
-            ];
-            final crossAxisCount = constraints.maxWidth > 700 ? 4 : (constraints.maxWidth > 460 ? 2 : 1);
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: crossAxisCount == 1 ? 2.2 : 1.35,
-              ),
-              itemCount: cards.length,
-              itemBuilder: (context, index) => cards[index],
-            );
-          },
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 12,
+              runSpacing: 8,
+              children: [
+                Text('Évolution', style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
+                OutlinedButton.icon(
+                  onPressed: () => _pickDate(context, all),
+                  icon: const Icon(Icons.calendar_today_rounded, size: 14),
+                  label: Text(_fmtDate(selected), style: const TextStyle(fontSize: 12)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final tasksChart = _buildChartCard(context.tr('client.tachesAttribuees'), taskSeries, const Color(0xFF2563EB), 5);
+                final expenseChart = _buildChartCard(context.tr('client.fcfaDepenses'), expenseSeries, const Color(0xFF059669), 10000, isCurrency: true);
+                final enCoursChart = _buildChartCard(context.tr('client.enCours'), enCoursSeries, const Color(0xFFF97316), 5);
+                final charts = [tasksChart, expenseChart, enCoursChart];
+                if (constraints.maxWidth > 1100) {
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (var i = 0; i < charts.length; i++) ...[
+                        if (i > 0) const SizedBox(width: 16),
+                        Expanded(child: charts[i]),
+                      ],
+                    ],
+                  );
+                }
+                return Column(
+                  children: [
+                    for (var i = 0; i < charts.length; i++) ...[
+                      if (i > 0) const SizedBox(height: 16),
+                      charts[i],
+                    ],
+                  ],
+                );
+              },
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildStatCard(BuildContext context, {
-    required IconData icon,
-    required String value,
-    required String label,
-    required Color color,
-    required Color bgColor,
-    String? badge,
-    bool badgeUp = false,
-    double? chartWidth,
-  }) {
-    return SlideOnHover(
-      offset: const Offset(0, -0.04),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE8ECF2), width: 1),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2)),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(10)),
-                  child: Icon(icon, color: color, size: 20),
-                ),
-                if (badge != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: badgeUp ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      badge,
-                      style: GoogleFonts.dmSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: badgeUp ? const Color(0xFF059669) : const Color(0xFFEF4444),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(value, style: GoogleFonts.sora(fontSize: 28, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
-            const SizedBox(height: 4),
-            Text(label, style: GoogleFonts.dmSans(fontSize: 13, color: const Color(0xFF64748B))),
-            if (chartWidth != null) ...[
-              const SizedBox(height: 12),
-              Container(
-                height: 6,
-                decoration: BoxDecoration(color: const Color(0xFFE8ECF2), borderRadius: BorderRadius.circular(3)),
-                child: FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: chartWidth.clamp(0.0, 1.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(3),
-                      gradient: LinearGradient(colors: [color, color.withOpacity(0.6)]),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
+  Widget _buildChartCard(String title, List<MapEntry<DateTime, double>> series, Color color, double step, {bool isCurrency = false}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE8ECF2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
+          const SizedBox(height: 8),
+          AxisLineChart(
+            points: series,
+            color: color,
+            yStep: step,
+            height: 190,
+            yLabelFormatter: isCurrency ? (v) => v >= 1000 ? '${(v / 1000).toStringAsFixed(0)}k' : v.toStringAsFixed(0) : null,
+          ),
+        ],
       ),
     );
+  }
+
+  String _fmtDate(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+
+  List<DateTime> _daysIn(DateTimeRange range) {
+    final days = <DateTime>[];
+    var d = DateTime(range.start.year, range.start.month, range.start.day);
+    final end = DateTime(range.end.year, range.end.month, range.end.day);
+    while (!d.isAfter(end)) {
+      days.add(d);
+      d = d.add(const Duration(days: 1));
+    }
+    if (days.isEmpty) days.add(end);
+    return days;
+  }
+
+  List<MapEntry<DateTime, double>> _taskSeries(List<Intervention> all, DateTimeRange range) {
+    return _daysIn(range).map((day) {
+      final count = all.where((i) {
+        final d = DateTime(i.date.year, i.date.month, i.date.day);
+        return !d.isAfter(day);
+      }).length;
+      return MapEntry(day, count.toDouble());
+    }).toList();
+  }
+
+  List<MapEntry<DateTime, double>> _expenseSeries(List<Intervention> all, DateTimeRange range) {
+    return _daysIn(range).map((day) {
+      final sum = all.where((i) {
+        final d = DateTime(i.date.year, i.date.month, i.date.day);
+        return !d.isAfter(day) && i.montant != null && i.statut != InterventionStatus.annulee;
+      }).fold<double>(0, (s, i) => s + i.montant!);
+      return MapEntry(day, sum);
+    }).toList();
+  }
+
+  List<MapEntry<DateTime, double>> _enCoursSeries(List<Intervention> all, DateTimeRange range) {
+    return _daysIn(range).map((day) {
+      final count = all.where((i) {
+        final d = DateTime(i.date.year, i.date.month, i.date.day);
+        return !d.isAfter(day) && i.statut == InterventionStatus.encours;
+      }).length;
+      return MapEntry(day, count.toDouble());
+    }).toList();
   }
 
   Widget _buildInterventionsTableSection(BuildContext context) {
@@ -243,26 +250,9 @@ class ClientDashboardScreen extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  context.tr('client.mesInterventions'),
-                  style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B)),
-                ),
-                HoverWrap(
-                  scale: 1.05,
-                  child: PointerCursor(
-                    child: TextButton(
-                      onPressed: () => context.push('/historique'),
-                      child: Text(
-                        context.tr('client.voirTout'),
-                        style: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF2563EB)),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            Text(
+              context.tr('client.mesInterventions'),
+              style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B)),
             ),
             const SizedBox(height: 16),
             if (interventions.isEmpty)
@@ -350,7 +340,14 @@ class ClientDashboardScreen extends StatelessWidget {
         );
       case InterventionStatus.terminee:
         return OutlinedButton(
-          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Notation de l\'intervention'))),
+          onPressed: () async {
+            final result = await NotationDialog.show(context, i.providerName);
+            if (result != null && context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Merci pour votre note (${result.rating}/5) !')),
+              );
+            }
+          },
           style: OutlinedButton.styleFrom(minimumSize: const Size(0, 32)),
           child: const Text('Noter', style: TextStyle(fontSize: 12)),
         );

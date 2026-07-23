@@ -91,7 +91,8 @@ class AuthProvider extends ChangeNotifier {
     String prenom,
     String email,
     String password,
-    String role, {
+    String role,
+    String telephone, {
     String? specialite,
     DateTime? dateNaissance,
   }) async {
@@ -107,6 +108,7 @@ class AuthProvider extends ChangeNotifier {
         email,
         password,
         role,
+        telephone,
         specialite: specialite,
         dateNaissance: dateNaissance,
       );

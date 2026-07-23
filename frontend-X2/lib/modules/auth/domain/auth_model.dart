@@ -4,6 +4,7 @@ class UserModel {
   final String nom;
   final String prenom;
   final String role;
+  final String? telephone;
   final String? specialite;
   final DateTime? dateNaissance;
 
@@ -13,6 +14,7 @@ class UserModel {
     required this.nom,
     required this.prenom,
     required this.role,
+    this.telephone,
     this.specialite,
     this.dateNaissance,
   });
@@ -23,6 +25,7 @@ class UserModel {
         nom: json['nom'] ?? '',
         prenom: json['prenom'] ?? '',
         role: json['role'] ?? 'USER',
+        telephone: json['telephone'] as String?,
         specialite: json['specialite'] as String?,
         dateNaissance: json['dateNaissance'] != null
             ? DateTime.tryParse(json['dateNaissance'] as String)

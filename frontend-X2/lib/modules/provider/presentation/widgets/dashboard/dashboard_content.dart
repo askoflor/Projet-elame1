@@ -7,9 +7,74 @@ import '../../../state/provider_dashboard_state.dart';
 import '../../../../intervention/domain/intervention.dart';
 import '../../../../intervention/state/intervention_provider.dart';
 import '../../../../intervention/presentation/widgets/chiffrage_modal.dart';
+import '../../../../../core/widgets/axis_line_chart.dart';
 
-class DashboardContent extends StatelessWidget {
+class DashboardContent extends StatefulWidget {
   const DashboardContent({super.key});
+
+  @override
+  State<DashboardContent> createState() => _DashboardContentState();
+}
+
+class _DashboardContentState extends State<DashboardContent> {
+  DateTime? _selectedDate;
+  static const _windowDays = 7;
+
+  DateTime _defaultDate(List<Intervention> all) {
+    if (all.isEmpty) return DateTime.now();
+    final dates = all.map((i) => DateTime(i.date.year, i.date.month, i.date.day)).toList()..sort();
+    return dates.last;
+  }
+
+  DateTimeRange _rangeForDate(DateTime date) {
+    final end = DateTime(date.year, date.month, date.day);
+    return DateTimeRange(start: end.subtract(const Duration(days: _windowDays - 1)), end: end);
+  }
+
+  Future<void> _pickDate(BuildContext context, List<Intervention> all) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      firstDate: DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 1),
+      initialDate: _selectedDate ?? _defaultDate(all),
+    );
+    if (picked != null) setState(() => _selectedDate = picked);
+  }
+
+  List<DateTime> _daysIn(DateTimeRange range) {
+    final days = <DateTime>[];
+    var d = DateTime(range.start.year, range.start.month, range.start.day);
+    final end = DateTime(range.end.year, range.end.month, range.end.day);
+    while (!d.isAfter(end)) {
+      days.add(d);
+      d = d.add(const Duration(days: 1));
+    }
+    if (days.isEmpty) days.add(end);
+    return days;
+  }
+
+  List<MapEntry<DateTime, double>> _gainSeries(List<Intervention> all, DateTimeRange range) {
+    return _daysIn(range).map((day) {
+      final sum = all.where((i) {
+        final d = DateTime(i.date.year, i.date.month, i.date.day);
+        return !d.isAfter(day) && i.montant != null && i.statut != InterventionStatus.annulee;
+      }).fold<double>(0, (s, i) => s + i.montant!);
+      return MapEntry(day, sum);
+    }).toList();
+  }
+
+  List<MapEntry<DateTime, double>> _missionsSeries(List<Intervention> all, DateTimeRange range) {
+    return _daysIn(range).map((day) {
+      final count = all.where((i) {
+        final d = DateTime(i.date.year, i.date.month, i.date.day);
+        return !d.isAfter(day) && i.statut == InterventionStatus.terminee;
+      }).length;
+      return MapEntry(day, count.toDouble());
+    }).toList();
+  }
+
+  String _fmtDate(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +87,7 @@ class DashboardContent extends StatelessWidget {
       children: [
         _buildHeader(context, provider, interventions, tr),
         const SizedBox(height: 20),
-        _buildMetricsGrid(context, provider, interventions, tr),
+        _buildMetricsSection(context, interventions, tr),
         const SizedBox(height: 24),
         _buildInterventionsSection(context, interventions, tr),
         const SizedBox(height: 20),
@@ -62,123 +127,126 @@ class DashboardContent extends StatelessWidget {
     );
   }
 
-  Widget _buildMetricsGrid(BuildContext context, ProviderDashboardProvider provider,
-      InterventionProvider interventions, String Function(String) tr) {
-    final p = provider.profile;
-    final aChiffrer = interventions.enAttente.length;
-    final metrics = [
-      _MetricData('À chiffrer', '$aChiffrer', tr('provider.changeMissions'),
-          Icons.business_center_rounded, const Color(0xFFF97316),
-          chartWidth: aChiffrer == 0 ? 0.05 : (aChiffrer / (aChiffrer + 5)).clamp(0.1, 1.0)),
-      _MetricData(
-          tr('provider.metricRevenus'),
-          '${interventions.montantCeMois.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]} ')} FCFA',
-          tr('provider.changeRevenus'),
-          Icons.monetization_on_rounded,
-          const Color(0xFF16A34A),
-          chartWidth: 0.72),
-      _MetricData(tr('provider.metricRealisees'), '${interventions.terminees.length}',
-          tr('provider.changeRealisees'), Icons.check_circle_rounded, const Color(0xFF2563EB),
-          chartWidth: 0.85),
-      _MetricData(tr('provider.metricSatisfaction'), '${p.tauxSatisfaction.toStringAsFixed(0)}%',
-          null, Icons.favorite_rounded, const Color(0xFF8B5CF6),
-          chartWidth: p.tauxSatisfaction / 100),
-    ];
+  Widget _buildMetricsSection(BuildContext context, InterventionProvider interventions, String Function(String) tr) {
+    final all = interventions.all;
+    final selected = _selectedDate ?? _defaultDate(all);
+    final range = _rangeForDate(selected);
+    final gainSeries = _gainSeries(all, range);
+    final missionsSeries = _missionsSeries(all, range);
+    final enCoursCount = interventions.enCours.length;
+    final enCoursRatio = enCoursCount == 0 ? 0.05 : (enCoursCount / (enCoursCount + 3)).clamp(0.1, 1.0);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 700 ? 4 : (constraints.maxWidth > 500 ? 2 : 1);
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.35,
-          ),
-          itemCount: metrics.length,
-          itemBuilder: (context, index) => _buildMetricCard(metrics[index]),
-        );
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 12,
+          runSpacing: 8,
+          children: [
+            const Text(
+              'Aperçu',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF1E293B), fontFamily: 'Sora'),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => _pickDate(context, all),
+              icon: const Icon(Icons.calendar_today_rounded, size: 14),
+              label: Text(_fmtDate(selected), style: const TextStyle(fontSize: 12)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final gainChart = _buildChartCard(tr('provider.metricRevenus'), gainSeries, const Color(0xFF16A34A), 10000, isCurrency: true);
+            final missionsChart = _buildChartCard(tr('provider.metricRealisees'), missionsSeries, const Color(0xFF2563EB), 5);
+            final enCoursCard = _buildProgressCard('Tâches en cours', '$enCoursCount', enCoursRatio.toDouble(), const Color(0xFFF97316));
+            final cards = [gainChart, missionsChart, enCoursCard];
+            if (constraints.maxWidth > 1100) {
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var i = 0; i < cards.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 16),
+                      Expanded(child: cards[i]),
+                    ],
+                  ],
+                ),
+              );
+            }
+            return Column(
+              children: [
+                for (var i = 0; i < cards.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 16),
+                  cards[i],
+                ],
+              ],
+            );
+          },
+        ),
+      ],
     );
   }
 
-  Widget _buildMetricCard(_MetricData data) {
+  Widget _buildChartCard(String title, List<MapEntry<DateTime, double>> series, Color color, double step, {bool isCurrency = false}) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE8ECF2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                data.label,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: Color(0xFF64748B),
-                  fontFamily: 'DM Sans',
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(6),
+          Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF64748B), fontFamily: 'DM Sans')),
+          const SizedBox(height: 8),
+          AxisLineChart(
+            points: series,
+            color: color,
+            yStep: step,
+            height: 190,
+            yLabelFormatter: isCurrency ? (v) => v >= 1000 ? '${(v / 1000).toStringAsFixed(0)}k' : v.toStringAsFixed(0) : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressCard(String title, String value, double ratio, Color color) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE8ECF2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF64748B), fontFamily: 'DM Sans')),
+          const SizedBox(height: 12),
+          Text(value, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: Color(0xFF1E293B), fontFamily: 'Sora')),
+          const SizedBox(height: 12),
+          Container(
+            height: 8,
+            decoration: BoxDecoration(color: const Color(0xFFE8ECF2), borderRadius: BorderRadius.circular(4)),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: ratio.clamp(0.0, 1.0),
+              child: Container(
                 decoration: BoxDecoration(
-                  color: data.color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(data.icon, size: 16, color: data.color),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            data.value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1E293B),
-              fontFamily: 'Sora',
-            ),
-          ),
-          if (data.change != null)
-            Text(
-              data.change!,
-              style: TextStyle(
-                fontSize: 11,
-                color: data.color,
-                fontFamily: 'DM Sans',
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          if (data.chartWidth != null) ...[
-            const SizedBox(height: 8),
-            Container(
-              height: 5,
-              decoration: BoxDecoration(color: const Color(0xFFE8ECF2), borderRadius: BorderRadius.circular(3)),
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: data.chartWidth!.clamp(0.0, 1.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(3),
-                    gradient: LinearGradient(colors: [data.color, data.color.withOpacity(0.6)]),
-                  ),
+                  borderRadius: BorderRadius.circular(4),
+                  gradient: LinearGradient(colors: [color, color.withOpacity(0.6)]),
                 ),
               ),
             ),
-          ],
+          ),
         ],
       ),
     );
@@ -645,13 +713,3 @@ Widget buildInterventionStatusBadge(InterventionStatus status) {
   );
 }
 
-class _MetricData {
-  final String label;
-  final String value;
-  final String? change;
-  final IconData icon;
-  final Color color;
-  final double? chartWidth;
-
-  const _MetricData(this.label, this.value, this.change, this.icon, this.color, {this.chartWidth});
-}

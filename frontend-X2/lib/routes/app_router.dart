@@ -16,7 +16,7 @@ import '../modules/payment/presentation/pages/payment_page.dart';
 import '../modules/profile/presentation/pages/profile_screen.dart';
 import '../modules/search/domain/entities/provider_model.dart';
 import '../modules/booking/domain/booking_entry_args.dart';
-import '../modules/historique/presentation/pages/historique_page.dart';
+
 class AppRouter {
   static GoRouter router(AuthProvider authProvider) {
     return GoRouter(
@@ -84,10 +84,6 @@ class AppRouter {
         GoRoute(
           path: AppConstants.providerDashboardRouteFull,
           builder: (context, state) => const ProviderDashboardScreen(),
-        ),
-        GoRoute(
-          path: AppConstants.historiqueRoute,
-          builder: (context, state) => const HistoriquePage(),
         ),
       ],
     );

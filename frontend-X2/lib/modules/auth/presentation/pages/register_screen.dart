@@ -21,11 +21,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nomController = TextEditingController();
   final _prenomController = TextEditingController();
+  final _telephoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _nomFocus = FocusNode();
   final _prenomFocus = FocusNode();
+  final _telephoneFocus = FocusNode();
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
   final _confirmFocus = FocusNode();
@@ -53,11 +55,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     _nomController.dispose();
     _prenomController.dispose();
+    _telephoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _nomFocus.dispose();
     _prenomFocus.dispose();
+    _telephoneFocus.dispose();
     _emailFocus.dispose();
     _passwordFocus.dispose();
     _confirmFocus.dispose();
@@ -107,6 +111,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _emailController.text.trim(),
       _passwordController.text,
       _role == UserRole.prestataire ? 'PRESTATAIRE' : 'CLIENT',
+      _telephoneController.text.trim(),
       specialite: _role == UserRole.prestataire ? _specialiteController.text.trim() : null,
       dateNaissance: _role == UserRole.prestataire ? _dateNaissance : null,
     );
@@ -313,11 +318,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       labelText: context.tr('auth.prenomLabel'),
                       prefixIcon: const Icon(Icons.person_outline),
                     ),
-                    onFieldSubmitted: (_) => _emailFocus.requestFocus(),
+                    onFieldSubmitted: (_) => _telephoneFocus.requestFocus(),
                     validator: (v) => (v == null || v.isEmpty) ? context.tr('auth.required') : null,
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 18),
+            TextFormField(
+              controller: _telephoneController,
+              focusNode: _telephoneFocus,
+              keyboardType: TextInputType.phone,
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(
+                labelText: context.tr('auth.telephoneLabel'),
+                prefixIcon: const Icon(Icons.phone_outlined),
+                hintText: '+237 6XX XXX XXX',
+              ),
+              onFieldSubmitted: (_) => _emailFocus.requestFocus(),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) return context.tr('auth.telephoneEmptyError');
+                final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
+                if (digits.length < 8) return context.tr('auth.telephoneInvalid');
+                return null;
+              },
             ),
             if (_role == UserRole.prestataire) ...[
               const SizedBox(height: 16),

@@ -156,6 +156,9 @@ class _CategoriesSectionState extends State<CategoriesSection> {
         } else if (constraints.maxWidth < 900) {
           crossAxisCount = 3;
         }
+        final childAspectRatio = crossAxisCount == 2
+            ? 0.95
+            : (crossAxisCount == 3 ? 1.3 : 224 / 135);
 
         return GridView.builder(
           shrinkWrap: true,
@@ -164,7 +167,7 @@ class _CategoriesSectionState extends State<CategoriesSection> {
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 224 / 135,
+            childAspectRatio: childAspectRatio,
           ),
           itemCount: categories.length,
           itemBuilder: (context, index) {

@@ -86,11 +86,17 @@ class _ChiffrageModalState extends State<ChiffrageModal> {
     final commission = _montant * 0.05;
     final net = _montant - commission;
 
+    final screenSize = MediaQuery.of(context).size;
+
     return Dialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 460),
+        constraints: BoxConstraints(
+          maxWidth: 460,
+          maxHeight: screenSize.height - 48,
+        ),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -162,41 +168,49 @@ class _ChiffrageModalState extends State<ChiffrageModal> {
                 decoration: const InputDecoration(hintText: 'Ex. 25000'),
               ),
               const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _label('Durée estimée'),
-                        DropdownButtonFormField<String>(
-                          initialValue: _dureeSelectionnee,
-                          items: _durees
-                              .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-                              .toList(),
-                          onChanged: (v) => setState(() => _dureeSelectionnee = v ?? _dureeSelectionnee),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final dureeField = Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _label('Durée estimée'),
+                      DropdownButtonFormField<String>(
+                        initialValue: _dureeSelectionnee,
+                        items: _durees
+                            .map((d) => DropdownMenuItem(value: d, child: Text(d)))
+                            .toList(),
+                        onChanged: (v) => setState(() => _dureeSelectionnee = v ?? _dureeSelectionnee),
+                      ),
+                    ],
+                  );
+                  final dateField = Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _label('Date confirmée'),
+                      InkWell(
+                        onTap: _pickDate,
+                        child: InputDecorator(
+                          decoration: const InputDecoration(),
+                          child: Text(
+                              '${_dateConfirmee.day}/${_dateConfirmee.month}/${_dateConfirmee.year}'),
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _label('Date confirmée'),
-                        InkWell(
-                          onTap: _pickDate,
-                          child: InputDecorator(
-                            decoration: const InputDecoration(),
-                            child: Text(
-                                '${_dateConfirmee.day}/${_dateConfirmee.month}/${_dateConfirmee.year}'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                      ),
+                    ],
+                  );
+
+                  if (constraints.maxWidth < 340) {
+                    return Column(
+                      children: [dureeField, const SizedBox(height: 14), dateField],
+                    );
+                  }
+                  return Row(
+                    children: [
+                      Expanded(child: dureeField),
+                      const SizedBox(width: 10),
+                      Expanded(child: dateField),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 14),
               _label('Note pour le client (optionnel)'),

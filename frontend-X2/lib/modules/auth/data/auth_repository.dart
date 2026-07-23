@@ -34,7 +34,8 @@ class AuthRepository {
     String prenom,
     String email,
     String password,
-    String role, {
+    String role,
+    String telephone, {
     String? specialite,
     DateTime? dateNaissance,
   }) async {
@@ -45,6 +46,7 @@ class AuthRepository {
         'email': email,
         'password': password,
         'role': role,
+        'telephone': telephone,
       };
       if (specialite != null) data['specialite'] = specialite;
       if (dateNaissance != null) {
