@@ -36,6 +36,20 @@ services:
       db:
         condition: service_healthy
 
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in .env}
+    volumes:
+      - ${MINIO_HOST_PATH:-/opt/projet-elame/minio-data}:/data
+
   frontend:
     build:
       context: ./frontend-X2
