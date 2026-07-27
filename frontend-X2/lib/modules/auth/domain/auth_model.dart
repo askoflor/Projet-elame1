@@ -7,6 +7,7 @@ class UserModel {
   final String? telephone;
   final String? specialite;
   final DateTime? dateNaissance;
+  final bool emailVerified;
 
   const UserModel({
     required this.id,
@@ -17,7 +18,20 @@ class UserModel {
     this.telephone,
     this.specialite,
     this.dateNaissance,
+    this.emailVerified = false,
   });
+
+  UserModel copyWith({String? nom, String? prenom, String? telephone}) => UserModel(
+        id: id,
+        email: email,
+        nom: nom ?? this.nom,
+        prenom: prenom ?? this.prenom,
+        role: role,
+        telephone: telephone ?? this.telephone,
+        specialite: specialite,
+        dateNaissance: dateNaissance,
+        emailVerified: emailVerified,
+      );
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
         id: json['id']?.toString() ?? '',
@@ -30,6 +44,7 @@ class UserModel {
         dateNaissance: json['dateNaissance'] != null
             ? DateTime.tryParse(json['dateNaissance'] as String)
             : null,
+        emailVerified: json['emailVerified'] as bool? ?? false,
       );
 }
 

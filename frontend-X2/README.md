@@ -1,6 +1,6 @@
-# frontend-X2 — Frontend Flutter Web « ServiceConnect »
+# frontend-X2 — Frontend Flutter Web « NZELA-SERVICE »
 
-`frontend-X2` est l'application **Flutter** qui sert de frontend web à **ServiceConnect**, une plateforme de mise en relation entre clients et prestataires de services techniques (électricité, plomberie, climatisation, jardinage, peinture, etc.), avec recherche géographique, réservation, paiement mobile (Orange Money / MTN MoMo / Wave) et deux tableaux de bord dédiés (client et prestataire). La cible de déploiement principale est le **web**, packagée dans un conteneur Docker servi par Nginx ; l'application peut aussi être compilée pour Android/iOS/desktop via les dossiers de scaffolding Flutter standard, mais ce n'est pas l'usage prévu dans ce projet.
+`frontend-X2` est l'application **Flutter** qui sert de frontend web à **NZELA-SERVICE**, une plateforme de mise en relation entre clients et prestataires de services techniques (électricité, plomberie, climatisation, jardinage, peinture, etc.), avec recherche géographique, réservation, paiement mobile (Orange Money / MTN MoMo / Wave) et deux tableaux de bord dédiés (client et prestataire). La cible de déploiement principale est le **web**, packagée dans un conteneur Docker servi par Nginx ; l'application peut aussi être compilée pour Android/iOS/desktop via les dossiers de scaffolding Flutter standard, mais ce n'est pas l'usage prévu dans ce projet.
 
 Le backend réel est un projet Spring Boot séparé (`../Backend`) qui n'expose pas encore de véritables endpoints REST : l'application tourne donc aujourd'hui avec des données et un serveur d'authentification **mockés** (voir `lib/core/config/app_config.dart`, drapeau `useMockBackend`).
 
@@ -240,8 +240,8 @@ Deux implémentations indépendantes et redondantes d'un **serveur d'authentific
 
 ### web/
 
-- **`web/index.html`** — Page HTML hôte de l'app Flutter Web. Définit le `<base href>` (remplacé au build via `--base-href`), les métadonnées (description « ServiceConnect - Trouvez des professionnels de confiance pres de chez vous »), les icônes iOS/favicon, le titre d'onglet (« ServiceConnect - Plateforme de Services ») et charge `flutter_bootstrap.js` en asynchrone — c'est le template standard généré par `flutter create`, avec les métadonnées personnalisées pour la marque ServiceConnect.
-- **`web/manifest.json`** — Manifeste PWA : nom `frontend_flutter` (non renommé en « ServiceConnect » — incohérence avec `index.html`), couleurs de thème bleues (`#0175C2`, couleur Flutter par défaut, non alignée avec `AppTheme.primary` `#1A73E8`), icônes standard (192/512, plus variantes maskable).
+- **`web/index.html`** — Page HTML hôte de l'app Flutter Web. Définit le `<base href>` (remplacé au build via `--base-href`), les métadonnées (description « NZELA-SERVICE - Trouvez des professionnels de confiance pres de chez vous »), les icônes iOS/favicon, le titre d'onglet (« NZELA-SERVICE - Plateforme de Services ») et charge `flutter_bootstrap.js` en asynchrone — c'est le template standard généré par `flutter create`, avec les métadonnées personnalisées pour la marque NZELA-SERVICE.
+- **`web/manifest.json`** — Manifeste PWA : nom `NZELA-SERVICE`, couleurs de thème alignées sur le bleu dominant de l'interface (`#2563EB` — à noter que `AppTheme.primary` définit `#1A73E8`, une nuance légèrement différente, peu utilisée en pratique dans le reste du code), icônes standard (192/512, plus variantes maskable).
 - **`web/favicon.png`, `web/icons/*.png`** — Assets d'icônes binaires standards générés par `flutter create` (non modifiés avec un branding personnalisé visible).
 
 ### assets/
@@ -273,7 +273,7 @@ Dans ce projet, **la cible de déploiement réelle est le web** (voir `Dockerfil
 
 Éléments de personnalisation repérés lors d'une inspection rapide (le reste étant la configuration par défaut de `flutter create`) :
 
-- **`android/app/src/main/AndroidManifest.xml`** : label d'application `frontend_flutter` (non renommé « ServiceConnect »), une seule activité standard (`MainActivity`), aucune permission particulière déclarée (seule la `<queries>` standard pour `ACTION_PROCESS_TEXT`, ajoutée automatiquement par le plugin texte de Flutter). Rien de notable côté package name dans ce fichier (à vérifier côté `build.gradle` si un identifiant d'application spécifique est nécessaire, non inspecté ici).
+- **`android/app/src/main/AndroidManifest.xml`** : label d'application `NZELA-SERVICE`, une seule activité standard (`MainActivity`), aucune permission particulière déclarée (seule la `<queries>` standard pour `ACTION_PROCESS_TEXT`, ajoutée automatiquement par le plugin texte de Flutter). Rien de notable côté package name dans ce fichier (à vérifier côté `build.gradle` si un identifiant d'application spécifique est nécessaire, non inspecté ici).
 - **`macos/Runner/DebugProfile.entitlements`** et **`Release.entitlements`** : entitlements standards du template macOS (`app-sandbox` actif, `network.server` et `allow-jit` autorisés en debug uniquement) — pas de permission système additionnelle (caméra, contacts, etc.) ajoutée pour ce projet.
 
 Le fichier interne `.metadata` à la racine (non détaillé plus avant) est un fichier généré et maintenu automatiquement par les outils Flutter pour le suivi de version du SDK ; il ne doit pas être édité manuellement.
@@ -317,7 +317,7 @@ Constats factuels relevés en lisant le code, sans jugement de valeur :
 - **Paiement et réservation entièrement simulés côté client** : `payment_page.dart` ne fait aucun appel réseau réel — le succès du paiement est garanti après un simple délai artificiel de 2 secondes, et la référence de réservation est générée aléatoirement côté client.
 - **Fichiers avec chemins absolus propres à une machine de développeur** : `serve_app.ps1` et `.vscode/settings.json` contiennent tous deux un chemin `C:\Users\ngounou tomy\Downloads\frontend-tmp\...` qui ne correspond pas à l'environnement d'un autre développeur clonant le dépôt.
 - **Fichiers de logs (`flutter_*.log`)** laissés à la racine du dossier (ignorés par Git mais toujours présents sur disque) — nettoyage possible sans impact.
-- **`web/manifest.json`** garde le nom générique `frontend_flutter` et les couleurs de thème Flutter par défaut (`#0175C2`), non alignées avec le titre « ServiceConnect » utilisé dans `web/index.html` ni avec la couleur primaire réelle de l'app (`AppTheme.primary`, `#1A73E8`).
+- **`web/manifest.json`** utilise désormais le nom `NZELA-SERVICE` et le bleu dominant de l'interface (`#2563EB`) comme couleur de thème, cohérent avec le titre utilisé dans `web/index.html`.
 - **`AppTheme.darkTheme`** est défini mais jamais utilisé (l'app est câblée uniquement sur `AppTheme.lightTheme` dans `app.dart` et `main_register.dart`).
 - **`lib/main_register.dart`** est un point d'entrée de développement pour prévisualiser isolément l'écran d'inscription ; il n'est pas utilisé par le `Dockerfile` (qui build `lib/main.dart` implicitement via `flutter build web`) mais reste présent dans le dépôt.
 - **`lib/modules/dashboard/`** (route `/dashboard`) semble être un écran placeholder résiduel du scaffolding initial, distinct et non lié aux vrais dashboards client/prestataire déployés en production applicative.

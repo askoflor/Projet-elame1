@@ -100,6 +100,22 @@ class AuthRepository {
     }
   }
 
+  Future<UserModel?> updateProfile({String? nom, String? prenom, String? telephone}) async {
+    try {
+      final response = await _dio.put(
+        AppConfig.meEndpoint,
+        data: {
+          if (nom != null) 'nom': nom,
+          if (prenom != null) 'prenom': prenom,
+          if (telephone != null) 'telephone': telephone,
+        },
+      );
+      return UserModel.fromJson(response.data);
+    } catch (_) {
+      return null;
+    }
+  }
+
   String _handleDioError(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:

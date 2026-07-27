@@ -1,8 +1,8 @@
 {
   "app": {
-    "title": "ServiceConnect",
-    "logo1": "Service",
-    "logo2": "Connect",
+    "title": "NZELA-SERVICE",
+    "logo1": "NZELA-",
+    "logo2": "SERVICE",
     "loading": "Chargement..."
   },
   "nav": {
@@ -202,7 +202,7 @@
     "conditions": "Conditions",
     "confidentialite": "Confidentialité",
     "cookies": "Cookies",
-    "copyright": "© 2025 ServiceConnect. Tous droits réservés.",
+    "copyright": "© 2025 NZELA-SERVICE. Tous droits réservés.",
     "availableOn": "Disponible sur iOS & Android"
   },
   "booking": {

@@ -114,9 +114,8 @@ class AuthProvider extends ChangeNotifier {
       );
 
       if (result.success) {
-        await StorageService.clearAll();
-        _user = null;
-        _status = AuthStatus.unauthenticated;
+        _user = result.user;
+        _status = AuthStatus.authenticated;
         notifyListeners();
         return true;
       } else {
@@ -132,6 +131,16 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+  }
+
+  Future<bool> updateProfile({String? nom, String? prenom, String? telephone}) async {
+    final updated = await _repository.updateProfile(nom: nom, prenom: prenom, telephone: telephone);
+    if (updated != null) {
+      _user = updated;
+      notifyListeners();
+      return true;
+    }
+    return false;
   }
 
   Future<String?> forgotPassword(String email) async {

@@ -14,14 +14,18 @@ class _NavBarState extends State<NavBar> {
   bool get isLoggedIn =>
       context.watch<AuthProvider>().isAuthenticated;
 
-  final List<String> allMenuItems = [
-    'Accueil',
-    'Recherche',
-    'Profil',
-    'Paiement',
-    'Espace Client',
-    'Prestataire',
-  ];
+  List<String> get allMenuItems {
+    final auth = context.watch<AuthProvider>();
+    final items = ['Accueil', 'Recherche', 'Profil', 'Paiement'];
+    if (auth.isAuthenticated) {
+      if (auth.user?.role == 'PRESTATAIRE') {
+        items.add('Prestataire');
+      } else if (auth.user?.role == 'CLIENT') {
+        items.add('Espace Client');
+      }
+    }
+    return items;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +65,7 @@ class _NavBarState extends State<NavBar> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (!isLoggedIn) _buildButtons(),
+                    if (!isLoggedIn) _buildButtons() else _buildUserMenu(),
                   ],
                 ),
               ),
@@ -95,11 +99,11 @@ class _NavBarState extends State<NavBar> {
             ),
             children: [
               TextSpan(
-                text: 'Service',
+                text: 'NZELA-',
                 style: TextStyle(color: Color(0xFF2563EB)),
               ),
               TextSpan(
-                text: 'Connect',
+                text: 'SERVICE',
                 style: TextStyle(color: Color(0xFFF97316)),
               ),
             ],
@@ -274,6 +278,75 @@ class _NavBarState extends State<NavBar> {
     );
   }
 
+  Widget _buildUserMenu() {
+    final user = context.watch<AuthProvider>().user;
+    final nom = user?.nom ?? '';
+    final prenom = user?.prenom ?? '';
+    final displayName = '$prenom $nom'.trim();
+    final initiales = (prenom.isNotEmpty ? prenom[0] : '') + (nom.isNotEmpty ? nom[0] : '');
+
+    return PopupMenuButton<String>(
+      tooltip: '',
+      offset: const Offset(0, 40),
+      onSelected: (value) {
+        if (value == 'profil') {
+          context.go('/profil');
+        } else if (value == 'logout') {
+          context.read<AuthProvider>().logout();
+          context.go('/');
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'profil',
+          child: Row(
+            children: [
+              const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF64748B)),
+              const SizedBox(width: 10),
+              const Text('Mon profil', style: TextStyle(fontSize: 13, fontFamily: 'Sora')),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'logout',
+          child: Row(
+            children: [
+              const Icon(Icons.logout_rounded, size: 18, color: Color(0xFFEF4444)),
+              const SizedBox(width: 10),
+              const Text('Déconnexion', style: TextStyle(fontSize: 13, fontFamily: 'Sora', color: Color(0xFFEF4444))),
+            ],
+          ),
+        ),
+      ],
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: const Color(0xFF2563EB),
+              child: Text(
+                initiales.toUpperCase().isEmpty ? '?' : initiales.toUpperCase(),
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white, fontFamily: 'Sora'),
+              ),
+            ),
+            const SizedBox(width: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 120),
+              child: Text(
+                displayName.isEmpty ? 'Mon compte' : displayName,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF1E293B), fontFamily: 'Sora'),
+              ),
+            ),
+            const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF64748B)),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildMobileMenu(String currentItem) {
     return IconButton(
       onPressed: () {
@@ -318,9 +391,40 @@ class _NavBarState extends State<NavBar> {
                 const SizedBox(width: 8),
                 Expanded(child: _buildInscriptionButton()),
               ],
-            ),
+            )
+          else
+            _buildMobileUserRow(),
         ],
       ),
+    );
+  }
+
+  Widget _buildMobileUserRow() {
+    final user = context.watch<AuthProvider>().user;
+    final displayName = '${user?.prenom ?? ''} ${user?.nom ?? ''}'.trim();
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              context.go('/profil');
+            },
+            icon: const Icon(Icons.person_outline_rounded, size: 16),
+            label: Text(displayName.isEmpty ? 'Mon profil' : displayName, overflow: TextOverflow.ellipsis),
+          ),
+        ),
+        const SizedBox(width: 8),
+        OutlinedButton(
+          onPressed: () {
+            Navigator.pop(context);
+            context.read<AuthProvider>().logout();
+            context.go('/');
+          },
+          style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFEF4444)),
+          child: const Icon(Icons.logout_rounded, size: 16),
+        ),
+      ],
     );
   }
 }

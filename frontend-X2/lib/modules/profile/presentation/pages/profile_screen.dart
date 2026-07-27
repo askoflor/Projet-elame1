@@ -9,6 +9,7 @@ import '../../../../core/widgets/hour_slot_grid.dart';
 import '../../../../core/constants/referentials.dart';
 import '../../../home/presentation/widgets/header/nav_bar.dart';
 import '../../../auth/domain/auth_provider.dart';
+import '../../../auth/domain/auth_model.dart';
 import '../../../provider/state/provider_dashboard_state.dart';
 import '../../../provider/domain/certification.dart';
 import '../../../intervention/state/intervention_provider.dart';
@@ -16,6 +17,7 @@ import '../../../search/domain/entities/provider_model.dart';
 import '../../../search/data/models/mock_providers.dart';
 import '../../../booking/domain/booking_entry_args.dart';
 import '../../domain/profile_view_data.dart';
+import '../widgets/realisations_carousel.dart';
 
 class ProfileScreen extends StatefulWidget {
   final ProviderModel? provider;
@@ -28,8 +30,14 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late bool _ownerMode;
+  late bool _isClientOwner;
   late ProviderModel _visitorProvider;
   bool _editing = false;
+
+  bool _editingClient = false;
+  final _clientNomController = TextEditingController();
+  final _clientPrenomController = TextEditingController();
+  final _clientTelController = TextEditingController();
 
   DateTime _visibleMonth = DateTime(DateTime.now().year, DateTime.now().month);
   DateTime? _selectedDay;
@@ -50,6 +58,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     final auth = context.read<AuthProvider>();
     _ownerMode = widget.provider == null && auth.user?.role == 'PRESTATAIRE';
+    _isClientOwner = widget.provider == null && auth.user?.role == 'CLIENT';
+    if (_isClientOwner) {
+      _clientNomController.text = auth.user?.nom ?? '';
+      _clientPrenomController.text = auth.user?.prenom ?? '';
+      _clientTelController.text = auth.user?.telephone ?? '';
+    }
     _visitorProvider = widget.provider ?? mockProviders[0];
     if (_ownerMode) {
       final profile = context.read<ProviderDashboardProvider>().profile;
@@ -72,6 +86,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _skillInputController.dispose();
     _certTitleController.dispose();
     _certOrgController.dispose();
+    _clientNomController.dispose();
+    _clientPrenomController.dispose();
+    _clientTelController.dispose();
     super.dispose();
   }
 
@@ -105,8 +122,207 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  Future<void> _saveClientProfile() async {
+    final auth = context.read<AuthProvider>();
+    final success = await auth.updateProfile(
+      nom: _clientNomController.text.trim(),
+      prenom: _clientPrenomController.text.trim(),
+      telephone: _clientTelController.text.trim(),
+    );
+    if (!mounted) return;
+    setState(() => _editingClient = false);
+    _toast(success ? 'Profil mis à jour' : 'Une erreur est survenue, réessayez');
+  }
+
+  Widget _buildClientOwnerScaffold(BuildContext context) {
+    final user = context.watch<AuthProvider>().user;
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const NavBar(),
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 560),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Align(alignment: Alignment.centerLeft, child: AppBackButton()),
+                          const SizedBox(height: 20),
+                          _buildClientProfileCard(user),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClientProfileCard(UserModel? user) {
+    final nom = user?.nom ?? '';
+    final prenom = user?.prenom ?? '';
+    final email = user?.email ?? '';
+    final emailVerified = user?.emailVerified ?? false;
+    final initiales = ((prenom.isNotEmpty ? prenom[0] : '') + (nom.isNotEmpty ? nom[0] : '')).toUpperCase();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE8ECF2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 32,
+                backgroundColor: const Color(0xFF2563EB),
+                child: Text(
+                  initiales.isEmpty ? '?' : initiales,
+                  style: GoogleFonts.sora(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('$prenom $nom'.trim(),
+                        style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
+                    const SizedBox(height: 4),
+                    Text('Compte client', style: GoogleFonts.dmSans(fontSize: 13, color: const Color(0xFF64748B))),
+                  ],
+                ),
+              ),
+              if (!_editingClient)
+                OutlinedButton.icon(
+                  onPressed: () => setState(() => _editingClient = true),
+                  icon: const Icon(Icons.edit_outlined, size: 16),
+                  label: const Text('Modifier'),
+                ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          const Divider(color: Color(0xFFE8ECF2)),
+          const SizedBox(height: 20),
+          if (_editingClient) ...[
+            _buildTextField('Prénom', _clientPrenomController),
+            const SizedBox(height: 14),
+            _buildTextField('Nom', _clientNomController),
+            const SizedBox(height: 14),
+            _buildTextField('Téléphone', _clientTelController, keyboardType: TextInputType.phone),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      setState(() {
+                        _editingClient = false;
+                        _clientNomController.text = nom;
+                        _clientPrenomController.text = prenom;
+                        _clientTelController.text = user?.telephone ?? '';
+                      });
+                    },
+                    child: const Text('Annuler'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _saveClientProfile,
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), foregroundColor: Colors.white),
+                    child: const Text('Enregistrer'),
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            _buildInfoRow(Icons.email_outlined, 'Email', email, trailing: _buildVerifiedBadge(emailVerified)),
+            const SizedBox(height: 14),
+            _buildInfoRow(Icons.phone_outlined, 'Téléphone', user?.telephone ?? 'Non renseigné'),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller, {TextInputType? keyboardType}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            isDense: true,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value, {Widget? trailing}) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: const Color(0xFF94A3B8)),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: GoogleFonts.dmSans(fontSize: 11, color: const Color(0xFF94A3B8))),
+              const SizedBox(height: 2),
+              Text(value, style: GoogleFonts.dmSans(fontSize: 14, color: const Color(0xFF1E293B))),
+            ],
+          ),
+        ),
+        if (trailing != null) trailing,
+      ],
+    );
+  }
+
+  Widget _buildVerifiedBadge(bool verified) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: verified ? const Color(0xFFDCFCE7) : const Color(0xFFFEF3C7),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        verified ? 'Vérifié' : 'Non vérifié',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: verified ? const Color(0xFF16A34A) : const Color(0xFFB45309),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isClientOwner) {
+      return _buildClientOwnerScaffold(context);
+    }
     final providerDash = _ownerMode ? context.watch<ProviderDashboardProvider>() : null;
     final data = _ownerMode
         ? ProfileViewData.fromProviderProfile(providerDash!.profile)
@@ -130,6 +346,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildProfileCard(data, providerDash),
                     const SizedBox(height: 16),
                     _buildAboutSection(data, providerDash),
+                    const SizedBox(height: 16),
+                    const RealisationsCarousel(),
                     const SizedBox(height: 16),
                     _buildSkillsSection(data, providerDash),
                     const SizedBox(height: 16),
@@ -183,6 +401,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: Column(
                               children: [
                                 _buildAboutSection(data, providerDash),
+                                const SizedBox(height: 16),
+                                const RealisationsCarousel(),
                                 const SizedBox(height: 16),
                                 _buildCalendarSection(providerName),
                                 const SizedBox(height: 16),

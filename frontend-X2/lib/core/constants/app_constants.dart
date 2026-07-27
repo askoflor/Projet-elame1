@@ -20,6 +20,9 @@ class AppConstants {
   static const String profileRoute = '/profil';
   static const String clientDashboardRouteFull = '/espace-client';
   static const String providerDashboardRouteFull = '/prestataire';
+  static const String aProposRoute = '/a-propos';
+  static const String faqRoute = '/faq';
+  static const String confidentialiteRoute = '/confidentialite';
 
   // Messages
   static const String loginError = 'Email ou mot de passe incorrect';

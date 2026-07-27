@@ -117,10 +117,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
 
     if (success && mounted) {
-      final route = _role == UserRole.prestataire
-          ? AppConstants.providerLoginRoute
-          : AppConstants.clientLoginRoute;
-      context.go(route);
+      context.go(AppConstants.profileRoute);
     }
   }
 

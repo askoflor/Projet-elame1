@@ -16,6 +16,9 @@ import '../modules/payment/presentation/pages/payment_page.dart';
 import '../modules/profile/presentation/pages/profile_screen.dart';
 import '../modules/search/domain/entities/provider_model.dart';
 import '../modules/booking/domain/booking_entry_args.dart';
+import '../modules/static/presentation/pages/about_page.dart';
+import '../modules/static/presentation/pages/faq_page.dart';
+import '../modules/static/presentation/pages/privacy_policy_page.dart';
 
 class AppRouter {
   static GoRouter router(AuthProvider authProvider) {
@@ -84,6 +87,18 @@ class AppRouter {
         GoRoute(
           path: AppConstants.providerDashboardRouteFull,
           builder: (context, state) => const ProviderDashboardScreen(),
+        ),
+        GoRoute(
+          path: AppConstants.aProposRoute,
+          builder: (context, state) => const AboutPage(),
+        ),
+        GoRoute(
+          path: AppConstants.faqRoute,
+          builder: (context, state) => const FaqPage(),
+        ),
+        GoRoute(
+          path: AppConstants.confidentialiteRoute,
+          builder: (context, state) => const PrivacyPolicyPage(),
         ),
       ],
     );

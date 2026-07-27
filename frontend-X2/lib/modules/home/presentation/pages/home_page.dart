@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/header/nav_bar.dart';
 import '../widgets/hero/hero_section.dart';
+import '../widgets/activity_banner/activity_banner_section.dart';
 import '../widgets/categories/categories_section.dart';
 import '../widgets/how_it_works/how_it_works_section.dart';
 import '../widgets/testimonials/testimonials_section.dart';
@@ -30,6 +31,7 @@ class HomePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     const HeroSection(),
+                    const ActivityBannerSection(),
                     const CategoriesSection(),
                     const HowItWorksSection(),
                     const PartnersSection(),

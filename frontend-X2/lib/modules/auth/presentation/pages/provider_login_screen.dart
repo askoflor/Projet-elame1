@@ -42,7 +42,7 @@ class _ProviderLoginScreenState extends State<ProviderLoginScreen> {
     );
 
     if (success && mounted) {
-      context.go(AppConstants.providerDashboardRoute);
+      context.go(AppConstants.providerDashboardRouteFull);
     }
   }
 

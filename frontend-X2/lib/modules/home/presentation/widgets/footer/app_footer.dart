@@ -39,17 +39,17 @@ class AppFooter extends StatelessWidget {
       _FooterLink(context.tr('footer.jardinage'), '/recherche'),
     ]);
     final entrepriseColumn = _buildColumn(context.tr('footer.entrepriseTitle'), [
-      _FooterLink('À propos', '/'),
+      _FooterLink('À propos', '/a-propos'),
       _FooterLink(context.tr('footer.devenirPrestataire'), '/register'),
       _FooterLink(context.tr('footer.partenaires'), '/'),
       _FooterLink(context.tr('footer.blog'), '/'),
       _FooterLink(context.tr('footer.presse'), '/'),
     ]);
     final supportColumn = _buildColumn(context.tr('footer.supportTitle'), [
-      _FooterLink(context.tr('footer.faq'), '/'),
+      _FooterLink(context.tr('footer.faq'), '/faq'),
       _FooterLink(context.tr('footer.contact'), '/'),
       _FooterLink(context.tr('footer.conditions'), '/'),
-      _FooterLink('Confidentialité', '/'),
+      _FooterLink(context.tr('footer.confidentialite'), '/confidentialite'),
       _FooterLink(context.tr('footer.cookies'), '/'),
     ]);
 
@@ -96,11 +96,11 @@ class AppFooter extends StatelessWidget {
             ),
             children: [
               TextSpan(
-                text: 'Service',
+                text: 'NZELA-',
                 style: TextStyle(color: Colors.white),
               ),
               TextSpan(
-                text: 'Connect',
+                text: 'SERVICE',
                 style: TextStyle(color: Color(0xFFF97316)),
               ),
             ],
@@ -167,7 +167,7 @@ class AppFooter extends StatelessWidget {
 
   Widget _buildFooterBottom(BuildContext context, bool isMobile) {
     final copyright = Text(
-      '© 2025 ServiceConnect. Tous droits réservés.',
+      '© 2025 NZELA-SERVICE. Tous droits réservés.',
       style: GoogleFonts.dmSans(fontSize: 12, color: Colors.white.withOpacity(0.4)),
     );
     final availableOn = Text(

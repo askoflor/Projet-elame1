@@ -45,7 +45,7 @@ class TestimonialsSection extends StatelessWidget {
         'initials': 'PC',
         'name': 'Pierre Chevalier',
         'text':
-            '"Intervention rapide et propre. L\'électricien est arrivé en 25 minutes. Je recommande vivement ServiceConnect pour tout dépannage urgent."',
+            '"Intervention rapide et propre. L\'électricien est arrivé en 25 minutes. Je recommande vivement NZELA-SERVICE pour tout dépannage urgent."',
         'service': 'Service Électricité · Il y a 3 jours',
         'avatarColor': const Color(0xFF2563EB),
         'avatarBgColor': const Color(0xFFDBEAFE),

@@ -42,7 +42,7 @@ class _ClientLoginScreenState extends State<ClientLoginScreen> {
     );
 
     if (success && mounted) {
-      context.go(AppConstants.clientDashboardRoute);
+      context.go(AppConstants.clientDashboardRouteFull);
     }
   }
 

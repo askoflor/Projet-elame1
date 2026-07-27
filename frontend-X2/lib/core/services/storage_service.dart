@@ -4,8 +4,8 @@ import '../constants/app_constants.dart';
 class StorageService {
   static const _storage = FlutterSecureStorage(
     webOptions: WebOptions(
-      dbName: 'serviceconnect_storage',
-      publicKey: 'serviceconnect_key',
+      dbName: 'nzela_service_storage',
+      publicKey: 'nzela_service_key',
     ),
   );
 
