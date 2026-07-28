@@ -6,7 +6,10 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: validate
+      # "update" le temps que le projet n'ait pas d'outil de migration versionnee
+      # (Flyway/Liquibase). A repasser en "validate" une fois celui-ci en place,
+      # pour eviter que Hibernate modifie le schema de production automatiquement.
+      ddl-auto: update
     show-sql: false
 
 server:
