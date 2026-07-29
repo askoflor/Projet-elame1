@@ -26,6 +26,8 @@ class AuthRepository {
     } on DioException catch (e) {
       final message = _handleDioError(e);
       return AuthResult(success: false, errorMessage: message);
+    } catch (e) {
+      return AuthResult(success: false, errorMessage: 'Reponse du serveur inattendue ($e)');
     }
   }
 
@@ -69,6 +71,8 @@ class AuthRepository {
     } on DioException catch (e) {
       final message = _handleDioError(e);
       return AuthResult(success: false, errorMessage: message);
+    } catch (e) {
+      return AuthResult(success: false, errorMessage: 'Reponse du serveur inattendue ($e)');
     }
   }
 

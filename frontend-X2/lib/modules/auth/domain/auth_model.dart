@@ -41,11 +41,25 @@ class UserModel {
         role: json['role'] ?? 'USER',
         telephone: json['telephone'] as String?,
         specialite: json['specialite'] as String?,
-        dateNaissance: json['dateNaissance'] != null
-            ? DateTime.tryParse(json['dateNaissance'] as String)
-            : null,
+        dateNaissance: _parseDate(json['dateNaissance']),
         emailVerified: json['emailVerified'] as bool? ?? false,
       );
+
+  /// Tolerant a plusieurs representations possibles d'une date renvoyee par
+  /// le backend (chaine ISO "2000-01-31", ou tableau [annee, mois, jour] si
+  /// jamais la serialisation Jackson cote serveur change), pour ne jamais
+  /// faire echouer tout le parsing de l'utilisateur sur ce seul champ.
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    if (value is String) return DateTime.tryParse(value);
+    if (value is List && value.length >= 3) {
+      final y = value[0] as int?;
+      final m = value[1] as int?;
+      final d = value[2] as int?;
+      if (y != null && m != null && d != null) return DateTime(y, m, d);
+    }
+    return null;
+  }
 }
 
 class AuthResult {
