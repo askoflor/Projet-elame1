@@ -60,9 +60,26 @@ public class User implements UserDetails {
 
     private LocalDate dateNaissance;
 
+    private String quartier;
+
+    /** Photo de profil encodee en base64 (data URI), stockee directement en base. */
+    @Column(name = "photo_url", columnDefinition = "LONGTEXT")
+    private String photoUrl;
+
     @Column(name = "email_verified", nullable = false)
     @Builder.Default
     private boolean emailVerified = false;
+
+    /**
+     * Bascule manuellement par un administrateur (via la base de donnees) une
+     * fois le profil du prestataire verifie. Conditionne l'affichage du badge
+     * "Certifie" sur son profil public. columnDefinition force un DEFAULT SQL
+     * pour que l'ajout de cette colonne sur une table users deja peuplee ne
+     * casse pas les lignes existantes (evite un NOT NULL sans defaut).
+     */
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    @Builder.Default
+    private boolean certifie = false;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

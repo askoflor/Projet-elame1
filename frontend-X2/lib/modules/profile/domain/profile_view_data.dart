@@ -1,3 +1,4 @@
+import '../../auth/domain/auth_model.dart';
 import '../../provider/domain/provider_profile.dart';
 import '../../search/domain/entities/provider_model.dart';
 
@@ -84,14 +85,20 @@ class ProfileViewData {
     );
   }
 
-  factory ProfileViewData.fromProviderProfile(ProviderProfile p) {
+  /// [realUser] et [certifie] proviennent du compte reellement inscrit
+  /// (AuthProvider) : nom, metier et badge "Certifie" doivent refleter les
+  /// informations d'inscription reelles plutot que le profil de demonstration
+  /// (competences, calendrier, avis...) qui reste mocke.
+  factory ProfileViewData.fromProviderProfile(ProviderProfile p, {UserModel? realUser, bool certifie = false}) {
+    final realName = realUser != null ? '${realUser.prenom} ${realUser.nom}'.trim() : '';
+    final realSpecialty = realUser?.specialite;
     return ProfileViewData(
-      initials: p.initiales,
-      name: p.nomComplet,
-      specialty: p.specialite,
+      initials: realName.isNotEmpty ? _initialsFromName(realName) : p.initiales,
+      name: realName.isNotEmpty ? realName : p.nomComplet,
+      specialty: (realSpecialty != null && realSpecialty.isNotEmpty) ? realSpecialty : p.specialite,
       ville: p.ville,
       isAvailable: p.disponible,
-      isCertified: p.certifications.isNotEmpty,
+      isCertified: certifie,
       formattedInterventions: '${p.missionsRealisees}',
       formattedRating: p.note.toStringAsFixed(1),
       successRate: '${p.tauxSatisfaction.toStringAsFixed(0)}%',
@@ -107,5 +114,12 @@ class ProfileViewData {
       reviewCount: 0,
       reviews: const [],
     );
+  }
+
+  static String _initialsFromName(String fullName) {
+    final parts = fullName.trim().split(RegExp(r'\s+')).where((s) => s.isNotEmpty).toList();
+    if (parts.isEmpty) return '?';
+    if (parts.length == 1) return parts.first[0].toUpperCase();
+    return (parts.first[0] + parts.last[0]).toUpperCase();
   }
 }

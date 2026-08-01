@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/translation_provider.dart';
 import '../../../../core/widgets/micro_interactions.dart';
 import '../../../home/presentation/widgets/header/nav_bar.dart';
-import '../../../../core/widgets/app_back_button.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/utils/hour_range_formatter.dart';
 import '../../../auth/domain/auth_provider.dart';
@@ -66,8 +65,6 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Align(alignment: Alignment.centerLeft, child: AppBackButton()),
-                          const SizedBox(height: 20),
                           _buildHeader(context),
                           const SizedBox(height: 28),
                           _buildTrendsSection(context),

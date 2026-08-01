@@ -1,10 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/utils/data_uri.dart';
 import '../../../../core/localization/translation_provider.dart';
 import '../../../../core/widgets/micro_interactions.dart';
-import '../../../../core/widgets/app_back_button.dart';
 import '../../../../core/widgets/hour_slot_grid.dart';
 import '../../../../core/constants/referentials.dart';
 import '../../../home/presentation/widgets/header/nav_bar.dart';
@@ -38,6 +40,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _clientNomController = TextEditingController();
   final _clientPrenomController = TextEditingController();
   final _clientTelController = TextEditingController();
+  String? _selectedQuartier;
+  String? _pendingPhotoDataUri;
 
   DateTime _visibleMonth = DateTime(DateTime.now().year, DateTime.now().month);
   DateTime? _selectedDay;
@@ -63,6 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _clientNomController.text = auth.user?.nom ?? '';
       _clientPrenomController.text = auth.user?.prenom ?? '';
       _clientTelController.text = auth.user?.telephone ?? '';
+      _selectedQuartier = Referentials.quartiers.contains(auth.user?.quartier) ? auth.user!.quartier : null;
     }
     _visitorProvider = widget.provider ?? mockProviders[0];
     if (_ownerMode) {
@@ -97,10 +102,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _enterEditMode(ProviderDashboardProvider providerDash) {
+    final authUser = context.read<AuthProvider>().user;
+    final realName = authUser != null ? '${authUser.prenom} ${authUser.nom}'.trim() : '';
     setState(() {
       _editing = true;
-      _nameController.text = providerDash.profile.nomComplet;
-      _selectedMetier = providerDash.profile.specialite;
+      _nameController.text = realName.isNotEmpty ? realName : providerDash.profile.nomComplet;
+      _selectedMetier = (authUser?.specialite != null && Referentials.metiers.contains(authUser!.specialite))
+          ? authUser.specialite!
+          : providerDash.profile.specialite;
       _selectedVille = providerDash.profile.ville;
     });
   }
@@ -128,10 +137,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
       nom: _clientNomController.text.trim(),
       prenom: _clientPrenomController.text.trim(),
       telephone: _clientTelController.text.trim(),
+      quartier: _selectedQuartier,
+      photoUrl: _pendingPhotoDataUri,
     );
     if (!mounted) return;
-    setState(() => _editingClient = false);
+    setState(() {
+      _editingClient = false;
+      _pendingPhotoDataUri = null;
+    });
     _toast(success ? 'Profil mis à jour' : 'Une erreur est survenue, réessayez');
+  }
+
+  /// Selectionne une nouvelle photo et la garde en attente localement : elle
+  /// n'est envoyee au serveur qu'au moment ou l'utilisateur clique sur
+  /// "Enregistrer", en meme temps que le reste du formulaire.
+  Future<void> _pickProfilePhoto() async {
+    try {
+      final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 70);
+      if (picked == null) return;
+      final bytes = await picked.readAsBytes();
+      if (bytes.lengthInBytes > 1600 * 1024) {
+        _toast('Image trop volumineuse (max ~1,5 Mo). Choisissez une photo plus légère.');
+        return;
+      }
+      final ext = picked.name.toLowerCase().endsWith('.png') ? 'png' : 'jpeg';
+      setState(() {
+        _pendingPhotoDataUri = 'data:image/$ext;base64,${base64Encode(bytes)}';
+      });
+    } catch (_) {
+      _toast('Impossible de charger cette image');
+    }
   }
 
   Widget _buildClientOwnerScaffold(BuildContext context) {
@@ -153,9 +188,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Align(alignment: Alignment.centerLeft, child: AppBackButton()),
-                          const SizedBox(height: 20),
                           _buildClientProfileCard(user),
+                          const SizedBox(height: 16),
+                          const RealisationsCarousel(editable: true),
                         ],
                       ),
                     ),
@@ -175,6 +210,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final email = user?.email ?? '';
     final emailVerified = user?.emailVerified ?? false;
     final initiales = ((prenom.isNotEmpty ? prenom[0] : '') + (nom.isNotEmpty ? nom[0] : '')).toUpperCase();
+    final photoBytes = decodeDataUri(_pendingPhotoDataUri ?? user?.photoUrl);
 
     return Container(
       width: double.infinity,
@@ -189,13 +225,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 32,
-                backgroundColor: const Color(0xFF2563EB),
-                child: Text(
-                  initiales.isEmpty ? '?' : initiales,
-                  style: GoogleFonts.sora(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
-                ),
+              Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 32,
+                    backgroundColor: const Color(0xFF2563EB),
+                    backgroundImage: photoBytes != null ? MemoryImage(photoBytes) : null,
+                    child: photoBytes == null
+                        ? Text(
+                            initiales.isEmpty ? '?' : initiales,
+                            style: GoogleFonts.sora(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
+                          )
+                        : null,
+                  ),
+                  if (_editingClient)
+                    Positioned(
+                      right: -2,
+                      bottom: -2,
+                      child: GestureDetector(
+                        onTap: _pickProfilePhoto,
+                        child: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF2563EB),
+                            shape: BoxShape.circle,
+                            border: Border.fromBorderSide(BorderSide(color: Colors.white, width: 2)),
+                          ),
+                          child: const Icon(Icons.camera_alt_rounded, size: 12, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -226,6 +286,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildTextField('Nom', _clientNomController),
             const SizedBox(height: 14),
             _buildTextField('Téléphone', _clientTelController, keyboardType: TextInputType.phone),
+            const SizedBox(height: 14),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Quartier', style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
+                const SizedBox(height: 6),
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedQuartier,
+                  isExpanded: true,
+                  hint: const Text('Sélectionnez un quartier'),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  items: Referentials.quartiers
+                      .map((q) => DropdownMenuItem(value: q, child: Text(q)))
+                      .toList(),
+                  onChanged: (v) => setState(() => _selectedQuartier = v),
+                ),
+              ],
+            ),
             const SizedBox(height: 20),
             Row(
               children: [
@@ -234,9 +315,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: () {
                       setState(() {
                         _editingClient = false;
+                        _pendingPhotoDataUri = null;
                         _clientNomController.text = nom;
                         _clientPrenomController.text = prenom;
                         _clientTelController.text = user?.telephone ?? '';
+                        _selectedQuartier = Referentials.quartiers.contains(user?.quartier) ? user!.quartier : null;
                       });
                     },
                     child: const Text('Annuler'),
@@ -256,6 +339,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildInfoRow(Icons.email_outlined, 'Email', email, trailing: _buildVerifiedBadge(emailVerified)),
             const SizedBox(height: 14),
             _buildInfoRow(Icons.phone_outlined, 'Téléphone', user?.telephone ?? 'Non renseigné'),
+            const SizedBox(height: 14),
+            _buildInfoRow(Icons.location_on_outlined, 'Quartier', user?.quartier ?? 'Non renseigné'),
           ],
         ],
       ),
@@ -324,10 +409,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return _buildClientOwnerScaffold(context);
     }
     final providerDash = _ownerMode ? context.watch<ProviderDashboardProvider>() : null;
+    final authUser = context.watch<AuthProvider>().user;
     final data = _ownerMode
-        ? ProfileViewData.fromProviderProfile(providerDash!.profile)
+        ? ProfileViewData.fromProviderProfile(providerDash!.profile, realUser: authUser, certifie: authUser?.certifie ?? false)
         : ProfileViewData.fromProviderModel(_visitorProvider);
-    final providerName = _ownerMode ? providerDash!.profile.nomComplet : _visitorProvider.name;
+    final providerName = _ownerMode ? data.name : _visitorProvider.name;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -347,7 +433,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 16),
                     _buildAboutSection(data, providerDash),
                     const SizedBox(height: 16),
-                    const RealisationsCarousel(),
+                    RealisationsCarousel(editable: _ownerMode),
                     const SizedBox(height: 16),
                     _buildSkillsSection(data, providerDash),
                     const SizedBox(height: 16),
@@ -363,10 +449,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                         child: Column(
-                          children: [
-                            const Align(alignment: Alignment.centerLeft, child: AppBackButton()),
-                            ...sections,
-                          ],
+                          children: sections,
                         ),
                       ),
                     );
@@ -383,7 +466,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             padding: const EdgeInsets.all(20),
                             child: Column(
                               children: [
-                                const Align(alignment: Alignment.centerLeft, child: AppBackButton()),
                                 _buildProfileCard(data, providerDash),
                                 const SizedBox(height: 16),
                                 _buildSkillsSection(data, providerDash),
@@ -402,7 +484,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               children: [
                                 _buildAboutSection(data, providerDash),
                                 const SizedBox(height: 16),
-                                const RealisationsCarousel(),
+                                RealisationsCarousel(editable: _ownerMode),
                                 const SizedBox(height: 16),
                                 _buildCalendarSection(providerName),
                                 const SizedBox(height: 16),

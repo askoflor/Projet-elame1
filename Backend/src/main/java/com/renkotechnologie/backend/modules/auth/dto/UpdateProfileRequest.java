@@ -13,4 +13,9 @@ public class UpdateProfileRequest {
     private String prenom;
 
     private String telephone;
+
+    private String quartier;
+
+    /** Photo de profil encodee en base64 (data URI). Null = ne pas modifier. */
+    private String photoUrl;
 }

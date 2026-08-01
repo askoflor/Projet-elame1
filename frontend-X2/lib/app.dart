@@ -11,6 +11,9 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+    // Ecoute aussi TranslationProvider pour que tout changement de langue
+    // reconstruise l'arbre de widgets et rafraichisse les context.tr(...).
+    context.watch<TranslationProvider>();
     return MaterialApp.router(
       title: context.tr('app.title'),
       debugShowCheckedModeBanner: false,

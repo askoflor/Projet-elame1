@@ -19,7 +19,10 @@ public class UserResponse {
     private String telephone;
     private String specialite;
     private LocalDate dateNaissance;
+    private String quartier;
+    private String photoUrl;
     private boolean emailVerified;
+    private boolean certifie;
 
     public static UserResponse fromEntity(User user) {
         return UserResponse.builder()
@@ -31,7 +34,10 @@ public class UserResponse {
                 .telephone(user.getTelephone())
                 .specialite(user.getSpecialite())
                 .dateNaissance(user.getDateNaissance())
+                .quartier(user.getQuartier())
+                .photoUrl(user.getPhotoUrl())
                 .emailVerified(user.isEmailVerified())
+                .certifie(user.isCertifie())
                 .build();
     }
 }

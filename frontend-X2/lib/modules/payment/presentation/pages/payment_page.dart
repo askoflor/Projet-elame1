@@ -5,7 +5,6 @@ import '../../../../core/widgets/micro_interactions.dart';
 import '../../../../core/utils/hour_range_formatter.dart';
 import '../../../../modules/home/presentation/widgets/header/nav_bar.dart';
 import '../../domain/payment_method.dart';
-import '../../../../core/widgets/app_back_button.dart';
 import '../../../intervention/domain/intervention.dart';
 
 class PaymentPage extends StatefulWidget {
@@ -70,11 +69,6 @@ class _PaymentPageState extends State<PaymentPage>
                   child: Column(
                     children: [
                       const SizedBox(height: 16),
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: AppBackButton(),
-                      ),
-                      const SizedBox(height: 8),
                       _isSuccess ? _buildSuccessView() : _buildPaymentView(),
                     ],
                   ),

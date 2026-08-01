@@ -133,8 +133,20 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> updateProfile({String? nom, String? prenom, String? telephone}) async {
-    final updated = await _repository.updateProfile(nom: nom, prenom: prenom, telephone: telephone);
+  Future<bool> updateProfile({
+    String? nom,
+    String? prenom,
+    String? telephone,
+    String? quartier,
+    String? photoUrl,
+  }) async {
+    final updated = await _repository.updateProfile(
+      nom: nom,
+      prenom: prenom,
+      telephone: telephone,
+      quartier: quartier,
+      photoUrl: photoUrl,
+    );
     if (updated != null) {
       _user = updated;
       notifyListeners();

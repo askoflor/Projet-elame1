@@ -7,7 +7,6 @@ import '../widgets/how_it_works/how_it_works_section.dart';
 import '../widgets/testimonials/testimonials_section.dart';
 import '../widgets/footer/app_footer.dart';
 import '../widgets/partners/partners_section.dart';
-import '../../../../core/widgets/app_back_button.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -25,11 +24,6 @@ class HomePage extends StatelessWidget {
                 physics: const AlwaysScrollableScrollPhysics(),
                 child: Column(
                   children: [
-                    const Align(
-                      alignment: Alignment.centerLeft,
-                      child: AppBackButton(),
-                    ),
-                    const SizedBox(height: 16),
                     const HeroSection(),
                     const ActivityBannerSection(),
                     const CategoriesSection(),

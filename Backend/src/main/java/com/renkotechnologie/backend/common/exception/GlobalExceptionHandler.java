@@ -2,6 +2,7 @@ package com.renkotechnologie.backend.common.exception;
 
 import com.renkotechnologie.backend.modules.auth.exception.EmailAlreadyUsedException;
 import com.renkotechnologie.backend.modules.auth.exception.InvalidTokenException;
+import com.renkotechnologie.backend.modules.auth.exception.ResourceNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EmailAlreadyUsedException.class)
     public ResponseEntity<Map<String, String>> handleEmailAlreadyUsed(EmailAlreadyUsedException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleResourceNotFound(ResourceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", ex.getMessage()));
     }
 
     @ExceptionHandler(InvalidTokenException.class)

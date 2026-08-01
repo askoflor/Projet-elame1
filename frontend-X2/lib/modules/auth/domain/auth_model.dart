@@ -7,7 +7,10 @@ class UserModel {
   final String? telephone;
   final String? specialite;
   final DateTime? dateNaissance;
+  final String? quartier;
+  final String? photoUrl;
   final bool emailVerified;
+  final bool certifie;
 
   const UserModel({
     required this.id,
@@ -18,10 +21,13 @@ class UserModel {
     this.telephone,
     this.specialite,
     this.dateNaissance,
+    this.quartier,
+    this.photoUrl,
     this.emailVerified = false,
+    this.certifie = false,
   });
 
-  UserModel copyWith({String? nom, String? prenom, String? telephone}) => UserModel(
+  UserModel copyWith({String? nom, String? prenom, String? telephone, String? quartier, String? photoUrl}) => UserModel(
         id: id,
         email: email,
         nom: nom ?? this.nom,
@@ -30,7 +36,10 @@ class UserModel {
         telephone: telephone ?? this.telephone,
         specialite: specialite,
         dateNaissance: dateNaissance,
+        quartier: quartier ?? this.quartier,
+        photoUrl: photoUrl ?? this.photoUrl,
         emailVerified: emailVerified,
+        certifie: certifie,
       );
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -42,7 +51,10 @@ class UserModel {
         telephone: json['telephone'] as String?,
         specialite: json['specialite'] as String?,
         dateNaissance: _parseDate(json['dateNaissance']),
+        quartier: json['quartier'] as String?,
+        photoUrl: json['photoUrl'] as String?,
         emailVerified: json['emailVerified'] as bool? ?? false,
+        certifie: json['certifie'] as bool? ?? false,
       );
 
   /// Tolerant a plusieurs representations possibles d'une date renvoyee par

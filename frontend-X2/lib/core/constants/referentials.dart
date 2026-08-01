@@ -38,6 +38,34 @@ class Referentials {
     'Foumban',
   ];
 
+  // Quartiers courants (grandes villes camerounaises) proposes au choix sur le
+  // profil. Liste indicative, non exhaustive et non filtree par ville.
+  static const List<String> quartiers = [
+    'Akwa',
+    'Bonanjo',
+    'Bonapriso',
+    'Bépanda',
+    'Deido',
+    'Ndokoti',
+    'Bali',
+    'New Bell',
+    'Makepe',
+    'Logpom',
+    'Bastos',
+    'Bastos Nord',
+    'Mvan',
+    'Mvog-Mbi',
+    'Nsam',
+    'Essos',
+    'Nlongkak',
+    'Omnisport',
+    'Tsinga',
+    'Biyem-Assi',
+    'Odza',
+    'Ngousso',
+    'Autre',
+  ];
+
   static const List<String> services = [
     'Électricité',
     'Plomberie',

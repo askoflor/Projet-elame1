@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/widgets/app_back_button.dart';
 import '../../../home/presentation/widgets/header/nav_bar.dart';
 import '../widgets/dashboard/dashboard_content.dart';
 
@@ -21,8 +20,6 @@ class ProviderDashboardScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Align(alignment: Alignment.centerLeft, child: AppBackButton()),
-                    const SizedBox(height: 8),
                     const DashboardContent(),
                   ],
                 ),

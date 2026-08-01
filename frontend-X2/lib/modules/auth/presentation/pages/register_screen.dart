@@ -11,7 +11,9 @@ import '../../../../core/widgets/app_back_button.dart';
 enum UserRole { client, prestataire }
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  final UserRole? initialRole;
+
+  const RegisterScreen({super.key, this.initialRole});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -38,6 +40,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _specialiteFocus = FocusNode();
   final _dateNaissanceController = TextEditingController();
   DateTime? _dateNaissance;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialRole != null) _role = widget.initialRole!;
+  }
 
   Color get _primaryColor =>
       _role == UserRole.prestataire ? const Color(0xFFF97316) : const Color(0xFF2563EB);

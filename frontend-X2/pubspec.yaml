@@ -28,6 +28,7 @@ dependencies:
   flutter_svg: ^2.0.9
   loading_animation_widget: ^1.2.0+4
   google_fonts: ^6.1.0
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

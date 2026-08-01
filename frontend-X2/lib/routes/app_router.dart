@@ -43,7 +43,9 @@ class AppRouter {
         ),
         GoRoute(
           path: AppConstants.registerRoute,
-          builder: (context, state) => const RegisterScreen(),
+          builder: (context, state) => RegisterScreen(
+            initialRole: state.extra == 'PRESTATAIRE' ? UserRole.prestataire : null,
+          ),
         ),
         GoRoute(
           path: AppConstants.forgotPasswordRoute,

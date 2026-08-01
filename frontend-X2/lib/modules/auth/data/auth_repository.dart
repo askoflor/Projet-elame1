@@ -104,7 +104,13 @@ class AuthRepository {
     }
   }
 
-  Future<UserModel?> updateProfile({String? nom, String? prenom, String? telephone}) async {
+  Future<UserModel?> updateProfile({
+    String? nom,
+    String? prenom,
+    String? telephone,
+    String? quartier,
+    String? photoUrl,
+  }) async {
     try {
       final response = await _dio.put(
         AppConfig.meEndpoint,
@@ -112,11 +118,43 @@ class AuthRepository {
           if (nom != null) 'nom': nom,
           if (prenom != null) 'prenom': prenom,
           if (telephone != null) 'telephone': telephone,
+          if (quartier != null) 'quartier': quartier,
+          if (photoUrl != null) 'photoUrl': photoUrl,
         },
       );
       return UserModel.fromJson(response.data);
     } catch (_) {
       return null;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getRealisations() async {
+    try {
+      final response = await _dio.get('${AppConfig.meEndpoint}/realisations');
+      return (response.data as List).cast<Map<String, dynamic>>();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>?> addRealisation(String imageData, {String? caption}) async {
+    try {
+      final response = await _dio.post(
+        '${AppConfig.meEndpoint}/realisations',
+        data: {'imageData': imageData, if (caption != null) 'caption': caption},
+      );
+      return response.data as Map<String, dynamic>;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<bool> deleteRealisation(String id) async {
+    try {
+      await _dio.delete('${AppConfig.meEndpoint}/realisations/$id');
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 

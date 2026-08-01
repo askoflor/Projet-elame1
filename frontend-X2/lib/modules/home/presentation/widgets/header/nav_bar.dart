@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../auth/domain/auth_provider.dart';
+import '../../../../../core/localization/translation_provider.dart';
 
 class NavBar extends StatefulWidget {
   const NavBar({super.key});
@@ -16,7 +17,7 @@ class _NavBarState extends State<NavBar> {
 
   List<String> get allMenuItems {
     final auth = context.watch<AuthProvider>();
-    final items = ['Accueil', 'Recherche', 'Profil', 'Paiement'];
+    final items = ['Accueil', 'Recherche', 'Profil', 'Paiement', 'Confidentialité'];
     if (auth.isAuthenticated) {
       if (auth.user?.role == 'PRESTATAIRE') {
         items.add('Prestataire');
@@ -25,6 +26,13 @@ class _NavBarState extends State<NavBar> {
       }
     }
     return items;
+  }
+
+  /// "Devenir prestataire" reste visible pour les visiteurs et les clients,
+  /// et disparait uniquement une fois connecte en tant que prestataire.
+  bool get _showDevenirPrestataire {
+    final auth = context.watch<AuthProvider>();
+    return !(auth.isAuthenticated && auth.user?.role == 'PRESTATAIRE');
   }
 
   @override
@@ -65,6 +73,12 @@ class _NavBarState extends State<NavBar> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    _buildLanguageToggle(),
+                    const SizedBox(width: 8),
+                    if (_showDevenirPrestataire) ...[
+                      _buildDevenirPrestataireButton(),
+                      const SizedBox(width: 8),
+                    ],
                     if (!isLoggedIn) _buildButtons() else _buildUserMenu(),
                   ],
                 ),
@@ -178,6 +192,8 @@ class _NavBarState extends State<NavBar> {
         return 'Profil';
       case '/paiement':
         return 'Paiement';
+      case '/confidentialite':
+        return 'Confidentialité';
       case '/espace-client':
         return 'Espace Client';
       case '/prestataire':
@@ -200,6 +216,9 @@ class _NavBarState extends State<NavBar> {
         break;
       case 'Paiement':
         context.go('/paiement');
+        break;
+      case 'Confidentialité':
+        context.go('/confidentialite');
         break;
       case 'Espace Client':
         context.go('/espace-client');
@@ -271,6 +290,73 @@ class _NavBarState extends State<NavBar> {
             fontSize: 12,
             fontWeight: FontWeight.w500,
             color: Colors.white,
+            fontFamily: 'Sora',
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageToggle() {
+    final tp = context.watch<TranslationProvider>();
+    final isFr = tp.locale.languageCode == 'fr';
+    return _HoverButton(
+      onTap: () => tp.setLocale(Locale(isFr ? 'en' : 'fr')),
+      builder: (isHovered) => AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.ease,
+        height: 29,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isHovered ? const Color(0xFF2563EB) : const Color(0xFFE8ECF2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.language_rounded, size: 14, color: Color(0xFF64748B)),
+            const SizedBox(width: 4),
+            Text(
+              isFr ? 'FR' : 'EN',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isHovered ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+                fontFamily: 'Sora',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDevenirPrestataireButton() {
+    return _HoverButton(
+      onTap: () => context.go('/register', extra: 'PRESTATAIRE'),
+      builder: (isHovered) => AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.ease,
+        height: 29,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isHovered ? const Color(0xFFF97316) : const Color(0xFFE8ECF2),
+            width: 1,
+          ),
+        ),
+        child: Text(
+          'Devenir prestataire',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: isHovered ? const Color(0xFFF97316) : const Color(0xFF64748B),
             fontFamily: 'Sora',
           ),
         ),
@@ -365,6 +451,8 @@ class _NavBarState extends State<NavBar> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          Align(alignment: Alignment.centerRight, child: _buildLanguageToggle()),
+          const SizedBox(height: 12),
           ...allMenuItems.map(
             (item) => ListTile(
               title: Text(
@@ -384,6 +472,10 @@ class _NavBarState extends State<NavBar> {
             ),
           ),
           const SizedBox(height: 16),
+          if (_showDevenirPrestataire) ...[
+            SizedBox(width: double.infinity, child: _buildDevenirPrestataireButton()),
+            const SizedBox(height: 8),
+          ],
           if (!isLoggedIn)
             Row(
               children: [
