@@ -106,6 +106,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final realName = authUser != null ? '${authUser.prenom} ${authUser.nom}'.trim() : '';
     setState(() {
       _editing = true;
+      _pendingPhotoDataUri = null;
       _nameController.text = realName.isNotEmpty ? realName : providerDash.profile.nomComplet;
       _selectedMetier = (authUser?.specialite != null && Referentials.metiers.contains(authUser!.specialite))
           ? authUser.specialite!
@@ -114,7 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  void _saveEditMode(ProviderDashboardProvider providerDash) {
+  Future<void> _saveEditMode(ProviderDashboardProvider providerDash) async {
     final parts = _nameController.text.trim().split(RegExp(r'\s+'));
     final prenom = parts.isNotEmpty ? parts.first : '';
     final nom = parts.length > 1 ? parts.sublist(1).join(' ') : '';
@@ -124,11 +125,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       specialite: _selectedMetier,
       ville: _selectedVille,
     );
+    final success = await context.read<AuthProvider>().updateProfile(
+          nom: nom.isEmpty ? null : nom,
+          prenom: prenom.isEmpty ? null : prenom,
+          photoUrl: _pendingPhotoDataUri,
+        );
+    if (!mounted) return;
     setState(() {
       _editing = false;
       _editingAbout = false;
       _addingCert = false;
+      _pendingPhotoDataUri = null;
     });
+    if (!success) _toast(context.tr('profile.erreurEnregistrementProvider'));
   }
 
   Future<void> _saveClientProfile() async {
@@ -145,7 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _editingClient = false;
       _pendingPhotoDataUri = null;
     });
-    _toast(success ? 'Profil mis à jour' : 'Une erreur est survenue, réessayez');
+    _toast(success ? context.tr('profile.profilMisAJour') : context.tr('profile.erreurEnregistrement'));
   }
 
   /// Selectionne une nouvelle photo et la garde en attente localement : elle
@@ -157,7 +166,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (picked == null) return;
       final bytes = await picked.readAsBytes();
       if (bytes.lengthInBytes > 1600 * 1024) {
-        _toast('Image trop volumineuse (max ~1,5 Mo). Choisissez une photo plus légère.');
+        _toast(context.tr('profile.imageTropVolumineuse'));
         return;
       }
       final ext = picked.name.toLowerCase().endsWith('.png') ? 'png' : 'jpeg';
@@ -165,7 +174,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _pendingPhotoDataUri = 'data:image/$ext;base64,${base64Encode(bytes)}';
       });
     } catch (_) {
-      _toast('Impossible de charger cette image');
+      _toast(context.tr('profile.impossibleChargerImage'));
     }
   }
 
@@ -265,7 +274,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Text('$prenom $nom'.trim(),
                         style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
                     const SizedBox(height: 4),
-                    Text('Compte client', style: GoogleFonts.dmSans(fontSize: 13, color: const Color(0xFF64748B))),
+                    Text(context.tr('profile.compteClient'), style: GoogleFonts.dmSans(fontSize: 13, color: const Color(0xFF64748B))),
                   ],
                 ),
               ),
@@ -273,7 +282,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 OutlinedButton.icon(
                   onPressed: () => setState(() => _editingClient = true),
                   icon: const Icon(Icons.edit_outlined, size: 16),
-                  label: const Text('Modifier'),
+                  label: Text(context.tr('profile.modifierBtn')),
                 ),
             ],
           ),
@@ -281,21 +290,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const Divider(color: Color(0xFFE8ECF2)),
           const SizedBox(height: 20),
           if (_editingClient) ...[
-            _buildTextField('Prénom', _clientPrenomController),
+            _buildTextField(context.tr('profile.champPrenom'), _clientPrenomController),
             const SizedBox(height: 14),
-            _buildTextField('Nom', _clientNomController),
+            _buildTextField(context.tr('profile.champNom'), _clientNomController),
             const SizedBox(height: 14),
-            _buildTextField('Téléphone', _clientTelController, keyboardType: TextInputType.phone),
+            _buildTextField(context.tr('profile.champTelephone'), _clientTelController, keyboardType: TextInputType.phone),
             const SizedBox(height: 14),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Quartier', style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
+                Text(context.tr('profile.champQuartier'), style: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
                 const SizedBox(height: 6),
                 DropdownButtonFormField<String>(
                   initialValue: _selectedQuartier,
                   isExpanded: true,
-                  hint: const Text('Sélectionnez un quartier'),
+                  hint: Text(context.tr('profile.selectQuartier')),
                   decoration: InputDecoration(
                     isDense: true,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
@@ -322,7 +331,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _selectedQuartier = Referentials.quartiers.contains(user?.quartier) ? user!.quartier : null;
                       });
                     },
-                    child: const Text('Annuler'),
+                    child: Text(context.tr('profile.annulerBtn')),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -330,17 +339,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: ElevatedButton(
                     onPressed: _saveClientProfile,
                     style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), foregroundColor: Colors.white),
-                    child: const Text('Enregistrer'),
+                    child: Text(context.tr('profile.enregistrerBtn')),
                   ),
                 ),
               ],
             ),
           ] else ...[
-            _buildInfoRow(Icons.email_outlined, 'Email', email, trailing: _buildVerifiedBadge(emailVerified)),
+            _buildInfoRow(Icons.email_outlined, context.tr('profile.champEmail'), email, trailing: _buildVerifiedBadge(emailVerified)),
             const SizedBox(height: 14),
-            _buildInfoRow(Icons.phone_outlined, 'Téléphone', user?.telephone ?? 'Non renseigné'),
+            _buildInfoRow(Icons.phone_outlined, context.tr('profile.champTelephone'), user?.telephone ?? context.tr('profile.nonRenseigne')),
             const SizedBox(height: 14),
-            _buildInfoRow(Icons.location_on_outlined, 'Quartier', user?.quartier ?? 'Non renseigné'),
+            _buildInfoRow(Icons.location_on_outlined, context.tr('profile.champQuartier'), user?.quartier ?? context.tr('profile.nonRenseigne')),
           ],
         ],
       ),
@@ -393,7 +402,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        verified ? 'Vérifié' : 'Non vérifié',
+        verified ? context.tr('profile.verifie') : context.tr('profile.nonVerifie'),
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
@@ -536,9 +545,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Column(
               children: [
                 const SizedBox(height: 8),
-                _buildDropdown('Métier', _selectedMetier, Referentials.metiers, (v) => setState(() => _selectedMetier = v)),
+                _buildDropdown(context.tr('profile.champMetier'), _selectedMetier, Referentials.metiers, (v) => setState(() => _selectedMetier = v)),
                 const SizedBox(height: 8),
-                _buildDropdown('Ville', _selectedVille, Referentials.villes, (v) => setState(() => _selectedVille = v)),
+                _buildDropdown(context.tr('profile.champVille'), _selectedVille, Referentials.villes, (v) => setState(() => _selectedVille = v)),
               ],
             )
           else
@@ -571,11 +580,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
                 if (_ownerMode && _editing)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 10),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
                     child: Text(
-                      'Calculées automatiquement · non modifiables',
-                      style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontStyle: FontStyle.italic),
+                      context.tr('profile.statsNonModifiables'),
+                      style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontStyle: FontStyle.italic),
                     ),
                   ),
               ],
@@ -588,7 +597,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () => _toast('Message envoyé'),
+                  onPressed: () => _toast(context.tr('profile.messageEnvoye')),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFF64748B),
                     side: const BorderSide(color: Color(0xFFE8ECF2)),
@@ -610,13 +619,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onPressed: () => _saveEditMode(providerDash!),
                       style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF97316), foregroundColor: Colors.white),
                       icon: const Icon(Icons.check, size: 16),
-                      label: const Text('Terminer l\'édition'),
+                      label: Text(context.tr('profile.terminerEdition')),
                     )
                   : ElevatedButton.icon(
                       onPressed: () => _enterEditMode(providerDash!),
                       style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), foregroundColor: Colors.white),
                       icon: const Icon(Icons.edit_outlined, size: 16),
-                      label: const Text('Modifier mon profil'),
+                      label: Text(context.tr('profile.modifierProfilBtn')),
                     ),
             ),
           ],
@@ -626,22 +635,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildAvatar(ProfileViewData p) {
+    final photoBytes = decodeDataUri(_pendingPhotoDataUri ?? p.photoUrl);
     return MouseRegion(
       cursor: (_ownerMode && _editing) ? SystemMouseCursors.click : SystemMouseCursors.basic,
       child: GestureDetector(
-        onTap: (_ownerMode && _editing) ? () => _toast('Sélection d\'une nouvelle photo de profil') : null,
+        onTap: (_ownerMode && _editing) ? _pickProfilePhoto : null,
         child: Stack(
           children: [
             Container(
               width: 88,
               height: 88,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(colors: [Color(0xFF2563EB), Color(0xFF1E40AF)]),
+              decoration: BoxDecoration(
+                gradient: photoBytes == null
+                    ? const LinearGradient(colors: [Color(0xFF2563EB), Color(0xFF1E40AF)])
+                    : null,
+                image: photoBytes != null
+                    ? DecorationImage(image: MemoryImage(photoBytes), fit: BoxFit.cover)
+                    : null,
                 shape: BoxShape.circle,
               ),
-              child: Center(
-                child: Text(p.initials, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white)),
-              ),
+              child: photoBytes == null
+                  ? Center(
+                      child: Text(p.initials, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white)),
+                    )
+                  : null,
             ),
             Positioned(
               bottom: 4,
@@ -751,13 +768,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(onPressed: () => setState(() => _editingAbout = false), child: const Text('Annuler')),
+                TextButton(onPressed: () => setState(() => _editingAbout = false), child: Text(context.tr('profile.annulerBtn'))),
                 ElevatedButton(
                   onPressed: () {
                     providerDash!.updateProfile(description: _aboutController.text.trim());
                     setState(() => _editingAbout = false);
                   },
-                  child: const Text('Enregistrer'),
+                  child: Text(context.tr('profile.enregistrerBtn')),
                 ),
               ],
             ),
@@ -807,13 +824,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               enabled: p.skills.length < 12,
               decoration: InputDecoration(
                 isDense: true,
-                hintText: p.skills.length >= 12 ? 'Limite atteinte' : '+ Ajouter une compétence',
+                hintText: p.skills.length >= 12 ? context.tr('profile.limiteAtteinte') : context.tr('profile.ajouterCompetencePlaceholder'),
               ),
               onSubmitted: (_) {
                 final v = _skillInputController.text.trim();
                 if (v.isEmpty) return;
                 if (p.skills.length >= 12) {
-                  _toast('Maximum 12 compétences');
+                  _toast(context.tr('profile.maxCompetences'));
                   return;
                 }
                 providerDash!.updateCompetences([...providerDash.profile.competences, v]);
@@ -821,7 +838,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
             ),
             const SizedBox(height: 4),
-            Text('Appuyez sur Entrée pour valider · ${p.skills.length}/12 compétences',
+            Text('${context.tr('profile.appuyezEntree')} ${p.skills.length}/12 ${context.tr('profile.competencesSuffix')}',
                 style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
           ],
         ],
@@ -890,14 +907,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
           if (editable && _addingCert) ...[
             const Divider(height: 20, color: Color(0xFFE8ECF2)),
-            TextField(controller: _certTitleController, decoration: const InputDecoration(labelText: 'Intitulé', isDense: true)),
+            TextField(controller: _certTitleController, decoration: InputDecoration(labelText: context.tr('profile.intitule'), isDense: true)),
             const SizedBox(height: 8),
-            TextField(controller: _certOrgController, decoration: const InputDecoration(labelText: 'Organisme délivrant', isDense: true)),
+            TextField(controller: _certOrgController, decoration: InputDecoration(labelText: context.tr('profile.organismeDelivrant'), isDense: true)),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(onPressed: () => setState(() => _addingCert = false), child: const Text('Annuler')),
+                TextButton(onPressed: () => setState(() => _addingCert = false), child: Text(context.tr('profile.annulerBtn'))),
                 ElevatedButton(
                   onPressed: () {
                     final titre = _certTitleController.text.trim();
@@ -910,9 +927,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _certTitleController.clear();
                     _certOrgController.clear();
                     setState(() => _addingCert = false);
-                    _toast('Certification soumise à vérification');
+                    _toast(context.tr('profile.certifSoumise'));
                   },
-                  child: const Text('Enregistrer'),
+                  child: Text(context.tr('profile.enregistrerBtn')),
                 ),
               ],
             ),
@@ -946,7 +963,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(color: const Color(0xFFFEF3C7), borderRadius: BorderRadius.circular(10)),
-                    child: const Text('En attente de vérification', style: TextStyle(fontSize: 10, color: Color(0xFFB45309))),
+                    child: Text(context.tr('profile.enAttenteVerif'), style: const TextStyle(fontSize: 10, color: Color(0xFFB45309))),
                   ),
                 ],
               ],
@@ -963,9 +980,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   bool _sameDay(DateTime a, DateTime b) => a.year == b.year && a.month == b.month && a.day == b.day;
 
+  static const _monthNamesFr = [
+    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+  ];
+  static const _monthNamesEn = [
+    'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  static const _weekdayLettersFr = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+  static const _weekdayLettersEn = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
   Widget _buildCalendarSection(String providerName) {
     final interventions = context.watch<InterventionProvider>();
     final ownerProvider = _ownerMode ? context.watch<ProviderDashboardProvider>() : null;
+    final isFr = context.watch<TranslationProvider>().locale.languageCode == 'fr';
     final today = DateTime.now();
 
     bool isPast(DateTime day) => DateTime(day.year, day.month, day.day).isBefore(DateTime(today.year, today.month, today.day));
@@ -976,9 +1003,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final daysInMonth = DateTime(_visibleMonth.year, _visibleMonth.month + 1, 0).day;
     final firstWeekday = DateTime(_visibleMonth.year, _visibleMonth.month, 1).weekday; // 1=lundi
     final leadingBlanks = firstWeekday - 1;
-    final monthNames = const [
-      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
-    ];
+    final monthNames = isFr ? _monthNamesFr : _monthNamesEn;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -1001,7 +1026,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
-                'Cliquez sur une date pour basculer entre disponible et indisponible. Les journées avec une intervention déjà réservée sont verrouillées.',
+                context.tr('profile.calendrierHint'),
                 style: GoogleFonts.dmSans(fontSize: 11, color: const Color(0xFF64748B)),
               ),
             ),
@@ -1042,11 +1067,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   OutlinedButton(
                     onPressed: () => ownerProvider!.bulkSetAvailability(_visibleMonth, true),
-                    child: const Text('Tout disponible', style: TextStyle(fontSize: 11)),
+                    child: Text(context.tr('profile.toutDisponible'), style: const TextStyle(fontSize: 11)),
                   ),
                   OutlinedButton(
                     onPressed: () => ownerProvider!.bulkSetAvailability(_visibleMonth, false),
-                    child: const Text('Tout indisponible', style: TextStyle(fontSize: 11)),
+                    child: Text(context.tr('profile.toutIndisponible'), style: const TextStyle(fontSize: 11)),
                   ),
                 ],
               );
@@ -1072,15 +1097,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             spacing: 12,
             runSpacing: 6,
             children: [
-              _buildLegend(const Color(0xFFECFDF5), const Color(0xFF059669), 'Disponible'),
-              _buildLegend(const Color(0xFFFEF2F2), const Color(0xFFEF4444), 'Indisponible'),
-              _buildLegend(const Color(0xFF2563EB), const Color(0xFF2563EB), 'Aujourd\'hui / sélectionné'),
-              if (_ownerMode) _buildLegend(const Color(0xFFF5F7FA), const Color(0xFF94A3B8), 'Verrouillé (réservé)'),
+              _buildLegend(const Color(0xFFECFDF5), const Color(0xFF059669), context.tr('profile.legendDisponible')),
+              _buildLegend(const Color(0xFFFEF2F2), const Color(0xFFEF4444), context.tr('profile.legendIndisponible')),
+              _buildLegend(const Color(0xFF2563EB), const Color(0xFF2563EB), context.tr('profile.legendAujourdhuiSelectionne')),
+              if (_ownerMode) _buildLegend(const Color(0xFFF5F7FA), const Color(0xFF94A3B8), context.tr('profile.legendVerrouille')),
             ],
           ),
           const SizedBox(height: 12),
           Row(
-            children: ['L', 'M', 'M', 'J', 'V', 'S', 'D']
+            children: (isFr ? _weekdayLettersFr : _weekdayLettersEn)
                 .map((d) => Expanded(
                       child: Center(
                         child: Text(d, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8))),
@@ -1114,13 +1139,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Text('Créneaux du ${_selectedDay!.day} ${monthNames[_selectedDay!.month - 1].toLowerCase()}',
+                Text('${context.tr('profile.creneauxDu')} ${_selectedDay!.day} ${monthNames[_selectedDay!.month - 1].toLowerCase()}',
                     style: GoogleFonts.sora(fontSize: 13, fontWeight: FontWeight.w600)),
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(color: const Color(0xFFECFDF5), borderRadius: BorderRadius.circular(20)),
-                  child: const Text('24h/24', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF059669))),
+                  child: Text(context.tr('profile.creneau24h'), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF059669))),
                 ),
               ],
             ),
@@ -1142,7 +1167,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                   },
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF97316), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14)),
-                  child: Text('Continuer la réservation (${_pickedHours.length}h)'),
+                  child: Text('${context.tr('profile.continuerReservation')} (${_pickedHours.length}h)'),
                 ),
               ),
             ],
@@ -1195,7 +1220,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_ownerMode) {
       onTap = () {
         if (locked) {
-          _toast('Journée verrouillée : une intervention est déjà réservée');
+          _toast(context.tr('profile.journeeVerrouillee'));
           return;
         }
         ownerProvider!.toggleAvailabilityDay(day);
@@ -1234,19 +1259,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         TextButton(
           onPressed: providerDash.cancelAvailabilityChanges,
-          child: const Text('Annuler', style: TextStyle(color: Colors.white70)),
+          child: Text(context.tr('profile.annulerBtn'), style: const TextStyle(color: Colors.white70)),
         ),
         const SizedBox(width: 4),
         ElevatedButton(
           onPressed: providerDash.saveAvailabilityChanges,
           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), foregroundColor: Colors.white),
-          child: const Text('Enregistrer'),
+          child: Text(context.tr('profile.enregistrerBtn')),
         ),
       ],
     );
-    const message = Text(
-      'Vous avez des modifications de disponibilité non enregistrées.',
-      style: TextStyle(color: Colors.white, fontSize: 12),
+    final message = Text(
+      context.tr('profile.modifsNonEnregistrees'),
+      style: const TextStyle(color: Colors.white, fontSize: 12),
       overflow: TextOverflow.ellipsis,
       maxLines: 2,
     );
@@ -1268,7 +1293,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               }
               return Row(
                 children: [
-                  const Expanded(child: message),
+                  Expanded(child: message),
                   buttons,
                 ],
               );
@@ -1301,14 +1326,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           if (_ownerMode && _editing)
-            const Padding(
-              padding: EdgeInsets.only(top: 8),
-              child: Text('Les avis sont publiés par vos clients et ne peuvent pas être modifiés.',
-                  style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontStyle: FontStyle.italic)),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(context.tr('profile.avisNonModifiables'),
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontStyle: FontStyle.italic)),
             ),
           const SizedBox(height: 14),
           if (p.reviews.isEmpty)
-            const Text('Aucun avis pour le moment', style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)))
+            Text(context.tr('profile.aucunAvis'), style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)))
           else
             for (var i = 0; i < p.reviews.length; i++) ...[
               if (i > 0) const Divider(height: 1, color: Color(0xFFE8ECF2)),

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../auth/domain/auth_provider.dart';
 import '../../../../../core/localization/translation_provider.dart';
+import '../../../../../core/utils/data_uri.dart';
 
 class NavBar extends StatefulWidget {
   const NavBar({super.key});
@@ -26,6 +27,30 @@ class _NavBarState extends State<NavBar> {
       }
     }
     return items;
+  }
+
+  /// Les elements de [allMenuItems] restent des identifiants internes en
+  /// francais (utilises par [_getCurrentItem]/[_navigateToItem]) ; seul le
+  /// libelle affiche passe par context.tr().
+  String _labelFor(String item) {
+    switch (item) {
+      case 'Accueil':
+        return context.tr('nav.accueil');
+      case 'Recherche':
+        return context.tr('nav.recherche');
+      case 'Profil':
+        return context.tr('nav.profil');
+      case 'Paiement':
+        return context.tr('nav.paiement');
+      case 'Confidentialité':
+        return context.tr('nav.confidentialite');
+      case 'Espace Client':
+        return context.tr('nav.espaceClient');
+      case 'Prestataire':
+        return context.tr('nav.prestataire');
+      default:
+        return item;
+    }
   }
 
   /// "Devenir prestataire" reste visible pour les visiteurs et les clients,
@@ -168,7 +193,7 @@ class _NavBarState extends State<NavBar> {
               : [],
         ),
         child: Text(
-          title,
+          _labelFor(title),
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
@@ -259,7 +284,7 @@ class _NavBarState extends State<NavBar> {
           ),
         ),
         child: Text(
-          'Connexion',
+          context.tr('nav.connexion'),
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
@@ -284,9 +309,9 @@ class _NavBarState extends State<NavBar> {
           color: isHovered ? const Color(0xFF1D4ED8) : const Color(0xFF2563EB),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: const Text(
-          "S'inscrire",
-          style: TextStyle(
+        child: Text(
+          context.tr('nav.inscription'),
+          style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
             color: Colors.white,
@@ -352,7 +377,7 @@ class _NavBarState extends State<NavBar> {
           ),
         ),
         child: Text(
-          'Devenir prestataire',
+          context.tr('nav.devenirPrestataire'),
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
@@ -370,6 +395,7 @@ class _NavBarState extends State<NavBar> {
     final prenom = user?.prenom ?? '';
     final displayName = '$prenom $nom'.trim();
     final initiales = (prenom.isNotEmpty ? prenom[0] : '') + (nom.isNotEmpty ? nom[0] : '');
+    final photoBytes = decodeDataUri(user?.photoUrl);
 
     return PopupMenuButton<String>(
       tooltip: '',
@@ -389,7 +415,7 @@ class _NavBarState extends State<NavBar> {
             children: [
               const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF64748B)),
               const SizedBox(width: 10),
-              const Text('Mon profil', style: TextStyle(fontSize: 13, fontFamily: 'Sora')),
+              Text(context.tr('nav.monProfil'), style: const TextStyle(fontSize: 13, fontFamily: 'Sora')),
             ],
           ),
         ),
@@ -399,7 +425,7 @@ class _NavBarState extends State<NavBar> {
             children: [
               const Icon(Icons.logout_rounded, size: 18, color: Color(0xFFEF4444)),
               const SizedBox(width: 10),
-              const Text('Déconnexion', style: TextStyle(fontSize: 13, fontFamily: 'Sora', color: Color(0xFFEF4444))),
+              Text(context.tr('nav.deconnexion'), style: const TextStyle(fontSize: 13, fontFamily: 'Sora', color: Color(0xFFEF4444))),
             ],
           ),
         ),
@@ -412,16 +438,19 @@ class _NavBarState extends State<NavBar> {
             CircleAvatar(
               radius: 16,
               backgroundColor: const Color(0xFF2563EB),
-              child: Text(
-                initiales.toUpperCase().isEmpty ? '?' : initiales.toUpperCase(),
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white, fontFamily: 'Sora'),
-              ),
+              backgroundImage: photoBytes != null ? MemoryImage(photoBytes) : null,
+              child: photoBytes == null
+                  ? Text(
+                      initiales.toUpperCase().isEmpty ? '?' : initiales.toUpperCase(),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white, fontFamily: 'Sora'),
+                    )
+                  : null,
             ),
             const SizedBox(width: 8),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 120),
               child: Text(
-                displayName.isEmpty ? 'Mon compte' : displayName,
+                displayName.isEmpty ? context.tr('nav.monCompte') : displayName,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF1E293B), fontFamily: 'Sora'),
               ),
@@ -456,7 +485,7 @@ class _NavBarState extends State<NavBar> {
           ...allMenuItems.map(
             (item) => ListTile(
               title: Text(
-                item,
+                _labelFor(item),
                 style: TextStyle(
                   color: currentItem == item
                       ? const Color(0xFF2563EB)
@@ -494,6 +523,7 @@ class _NavBarState extends State<NavBar> {
   Widget _buildMobileUserRow() {
     final user = context.watch<AuthProvider>().user;
     final displayName = '${user?.prenom ?? ''} ${user?.nom ?? ''}'.trim();
+    final photoBytes = decodeDataUri(user?.photoUrl);
     return Row(
       children: [
         Expanded(
@@ -502,8 +532,10 @@ class _NavBarState extends State<NavBar> {
               Navigator.pop(context);
               context.go('/profil');
             },
-            icon: const Icon(Icons.person_outline_rounded, size: 16),
-            label: Text(displayName.isEmpty ? 'Mon profil' : displayName, overflow: TextOverflow.ellipsis),
+            icon: photoBytes != null
+                ? CircleAvatar(radius: 10, backgroundImage: MemoryImage(photoBytes))
+                : const Icon(Icons.person_outline_rounded, size: 16),
+            label: Text(displayName.isEmpty ? context.tr('nav.monProfil') : displayName, overflow: TextOverflow.ellipsis),
           ),
         ),
         const SizedBox(width: 8),

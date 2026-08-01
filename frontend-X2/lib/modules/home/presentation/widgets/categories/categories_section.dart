@@ -17,61 +17,84 @@ class _CategoriesSectionState extends State<CategoriesSection> {
   final List<Map<String, dynamic>> categories = [
     {
       'name': 'Électricité',
-      'count': '342 prestataires',
+      'count': 342,
       'icon': Icons.electrical_services,
       'iconColor': const Color(0xFFD97706),
       'bgColor': const Color(0xFFFFFBEB),
     },
     {
       'name': 'Plomberie',
-      'count': '218 prestataires',
+      'count': 218,
       'icon': Icons.plumbing,
       'iconColor': const Color(0xFF2563EB),
       'bgColor': const Color(0xFFEFF6FF),
     },
     {
       'name': 'Climatisation',
-      'count': '156 prestataires',
+      'count': 156,
       'icon': Icons.ac_unit,
       'iconColor': const Color(0xFF0D9488),
       'bgColor': const Color(0xFFF0FDFA),
     },
     {
       'name': 'Carrelage',
-      'count': '94 prestataires',
+      'count': 94,
       'icon': Icons.grid_on,
       'iconColor': const Color(0xFFF97316),
       'bgColor': const Color(0xFFFFF7ED),
     },
     {
       'name': 'Maintenance',
-      'count': '287 prestataires',
+      'count': 287,
       'icon': Icons.build,
       'iconColor': const Color(0xFF7C3AED),
       'bgColor': const Color(0xFFF5F3FF),
     },
     {
       'name': 'Jardinage',
-      'count': '73 prestataires',
+      'count': 73,
       'icon': Icons.yard,
       'iconColor': const Color(0xFF16A34A),
       'bgColor': const Color(0xFFF0FDF4),
     },
     {
       'name': 'Peinture',
-      'count': '128 prestataires',
+      'count': 128,
       'icon': Icons.format_paint,
       'iconColor': const Color(0xFFDB2777),
       'bgColor': const Color(0xFFFDF2F8),
     },
     {
       'name': 'Menuiserie',
-      'count': '81 prestataires',
+      'count': 81,
       'icon': Icons.carpenter,
       'iconColor': const Color(0xFF16A34A),
       'bgColor': const Color(0xFFF0FDF4),
     },
   ];
+
+  String _categoryLabel(BuildContext context, String v) {
+    switch (v) {
+      case 'Électricité':
+        return context.tr('search.categoryElectricite');
+      case 'Plomberie':
+        return context.tr('search.categoryPlomberie');
+      case 'Climatisation':
+        return context.tr('search.categoryClim');
+      case 'Carrelage':
+        return context.tr('search.categoryCarrelage');
+      case 'Maintenance':
+        return context.tr('search.categoryMaintenance');
+      case 'Jardinage':
+        return context.tr('search.categoryJardinage');
+      case 'Peinture':
+        return context.tr('search.categoryPeinture');
+      case 'Menuiserie':
+        return context.tr('search.categoryMenuiserie');
+      default:
+        return v;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -172,8 +195,8 @@ class _CategoriesSectionState extends State<CategoriesSection> {
           itemCount: categories.length,
           itemBuilder: (context, index) {
             return CategoryCard(
-              name: categories[index]['name'] as String,
-              count: categories[index]['count'] as String,
+              name: _categoryLabel(context, categories[index]['name'] as String),
+              count: '${categories[index]['count']} ${context.tr('categories.countPrestataires')}',
               icon: categories[index]['icon'] as IconData,
               iconColor: categories[index]['iconColor'] as Color,
               bgColor: categories[index]['bgColor'] as Color,

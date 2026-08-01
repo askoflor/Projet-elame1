@@ -49,6 +49,84 @@ class _FiltersPanelState extends State<FiltersPanel> {
   ];
   final List<String> urgencies = ['Planifié', 'Semi-urgent', 'Urgent'];
 
+  String _categoryLabel(String v) {
+    switch (v) {
+      case 'Tous':
+        return context.tr('search.categoryAll');
+      case 'Électricité':
+        return context.tr('search.categoryElectricite');
+      case 'Plomberie':
+        return context.tr('search.categoryPlomberie');
+      case 'Climatisation':
+        return context.tr('search.categoryClim');
+      case 'Carrelage':
+        return context.tr('search.categoryCarrelage');
+      case 'Maintenance':
+        return context.tr('search.categoryMaintenance');
+      case 'Jardinage':
+        return context.tr('search.categoryJardinage');
+      case 'Peinture':
+        return context.tr('search.categoryPeinture');
+      case 'Menuiserie':
+        return context.tr('search.categoryMenuiserie');
+      default:
+        return v;
+    }
+  }
+
+  String _availabilityLabel(String v) {
+    switch (v) {
+      case 'Maintenant':
+        return context.tr('search.availabilityNow');
+      case 'Aujourd\'hui':
+        return context.tr('search.availabilityToday');
+      case 'Cette semaine':
+        return context.tr('search.availabilityWeek');
+      default:
+        return v;
+    }
+  }
+
+  String _cityLabel(String v) {
+    switch (v) {
+      case 'Douala':
+        return context.tr('search.cityDouala');
+      case 'Yaoundé':
+        return context.tr('search.cityYaounde');
+      case 'Bafoussam':
+        return context.tr('search.cityBafoussam');
+      case 'Garoua':
+        return context.tr('search.cityGaroua');
+      case 'Bamenda':
+        return context.tr('search.cityBamenda');
+      case 'Maroua':
+        return context.tr('search.cityMaroua');
+      case 'Ngaoundéré':
+        return context.tr('search.cityNgaoundere');
+      case 'Bertoua':
+        return context.tr('search.cityBertoua');
+      case 'Buea':
+        return context.tr('search.cityBuea');
+      case 'Ebolowa':
+        return context.tr('search.cityEbolowa');
+      default:
+        return v;
+    }
+  }
+
+  String _urgencyLabel(String v) {
+    switch (v) {
+      case 'Planifié':
+        return context.tr('booking.urgencePlanifie');
+      case 'Semi-urgent':
+        return context.tr('search.urgencySemiUrgent');
+      case 'Urgent':
+        return context.tr('booking.urgenceUrgent');
+      default:
+        return v;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -76,11 +154,12 @@ class _FiltersPanelState extends State<FiltersPanel> {
           const SizedBox(height: 16),
           // Catégorie
           _buildFilterGroup(
-            label: 'CATÉGORIE',
+            label: context.tr('search.categoryLabel'),
             showBorder: true,
             child: _buildTagsFilter(
               items: categories,
               selected: selectedCategory,
+              labelBuilder: _categoryLabel,
               onSelect: (val) {
                 setState(() => selectedCategory = val);
                 widget.onCategoryChanged?.call(val);
@@ -89,11 +168,12 @@ class _FiltersPanelState extends State<FiltersPanel> {
           ),
           // Disponibilité
           _buildFilterGroup(
-            label: 'DISPONIBILITÉ',
+            label: context.tr('search.availabilityLabel'),
             showBorder: true,
             child: _buildTagsFilter(
               items: availabilities,
               selected: selectedAvailability,
+              labelBuilder: _availabilityLabel,
               onSelect: (val) => setState(() => selectedAvailability = val),
             ),
           ),
@@ -131,7 +211,7 @@ class _FiltersPanelState extends State<FiltersPanel> {
               widget.onCategoryChanged?.call(selectedCategory);
             }),
             child: Text(
-              'Réinitialiser',
+              context.tr('search.resetButton'),
               style: GoogleFonts.sora(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -182,6 +262,7 @@ class _FiltersPanelState extends State<FiltersPanel> {
     required List<String> items,
     required String selected,
     required Function(String) onSelect,
+    String Function(String)? labelBuilder,
   }) {
     return Wrap(
       spacing: 6,
@@ -207,7 +288,7 @@ class _FiltersPanelState extends State<FiltersPanel> {
               ),
             ),
             child: Text(
-              item,
+              labelBuilder != null ? labelBuilder(item) : item,
               style: GoogleFonts.sora(
                 fontSize: 12,
                 fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
@@ -244,7 +325,7 @@ class _FiltersPanelState extends State<FiltersPanel> {
           items: cities
               .map((city) => DropdownMenuItem(
                     value: city,
-                    child: Text(city),
+                    child: Text(_cityLabel(city)),
                   ))
               .toList(),
           onChanged: (val) {
@@ -283,7 +364,7 @@ class _FiltersPanelState extends State<FiltersPanel> {
               ),
             ),
             child: Text(
-              item,
+              _urgencyLabel(item),
               style: GoogleFonts.sora(
                 fontSize: 12,
                 fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,

@@ -173,13 +173,13 @@ class DisponibilitesContent extends StatelessWidget {
     final debut = await showTimePicker(
       context: context,
       initialTime: dispo.debut,
-      helpText: 'Heure de début',
+      helpText: context.tr('provider.heureDebut'),
     );
     if (debut == null) return;
     final fin = await showTimePicker(
       context: context,
       initialTime: dispo.fin,
-      helpText: 'Heure de fin',
+      helpText: context.tr('provider.heureFin'),
     );
     if (fin == null) return;
     provider.updateDisponibiliteHeure(index, debut, fin);

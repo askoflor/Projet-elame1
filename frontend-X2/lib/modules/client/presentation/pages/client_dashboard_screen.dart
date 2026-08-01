@@ -92,7 +92,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Bonjour, $prenom \u{1F44B}',
+              '${context.tr('client.bonjourPrefix')} $prenom \u{1F44B}',
               style: GoogleFonts.sora(fontSize: 22, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B)),
             ),
             const SizedBox(height: 4),
@@ -126,7 +126,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
               spacing: 12,
               runSpacing: 8,
               children: [
-                Text('Évolution', style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
+                Text(context.tr('client.evolution'), style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
                 OutlinedButton.icon(
                   onPressed: () => _pickDate(context, all),
                   icon: const Icon(Icons.calendar_today_rounded, size: 14),
@@ -289,20 +289,20 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
               child: DataTable(
                 headingRowColor: WidgetStateProperty.all(const Color(0xFFFAFAFA)),
                 columnSpacing: 24,
-                columns: const [
-                  DataColumn(label: Text('Prestataire', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
-                  DataColumn(label: Text('Service', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
-                  DataColumn(label: Text('Date', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
-                  DataColumn(label: Text('Montant', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
-                  DataColumn(label: Text('Statut', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
-                  DataColumn(label: Text('')),
+                columns: [
+                  DataColumn(label: Text(context.tr('client.prestataire'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
+                  DataColumn(label: Text(context.tr('client.service'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
+                  DataColumn(label: Text(context.tr('client.date'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
+                  DataColumn(label: Text(context.tr('client.montant'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
+                  DataColumn(label: Text(context.tr('client.statut'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
+                  const DataColumn(label: Text('')),
                 ],
                 rows: interventions.map((i) => DataRow(cells: [
                       DataCell(Text('${i.providerName}\n${i.reference}', style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)))),
                       DataCell(_serviceCell(i)),
                       DataCell(Text('${i.date.day}/${i.date.month}/${i.date.year}\n${formatHourRanges(i.heures)}', style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)))),
                       DataCell(Text(i.montant == null ? '—' : '${i.montant!.toStringAsFixed(0)} FCFA', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)))),
-                      DataCell(buildInterventionStatusBadge(i.statut)),
+                      DataCell(buildInterventionStatusBadge(context, i.statut)),
                       DataCell(_buildAction(context, i)),
                     ])).toList(),
               ),
@@ -328,12 +328,12 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   Widget _buildAction(BuildContext context, Intervention i) {
     switch (i.statut) {
       case InterventionStatus.attente:
-        return const Text('En attente de l\'appel', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)));
+        return Text(context.tr('client.enAttenteAppel'), style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)));
       case InterventionStatus.encours:
         return ElevatedButton(
           onPressed: () => context.push('/paiement', extra: i),
           style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF97316), foregroundColor: Colors.white, minimumSize: const Size(0, 32)),
-          child: const Text('Payer', style: TextStyle(fontSize: 12)),
+          child: Text(context.tr('client.payerBtn'), style: const TextStyle(fontSize: 12)),
         );
       case InterventionStatus.terminee:
         return OutlinedButton(
@@ -341,12 +341,12 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
             final result = await NotationDialog.show(context, i.providerName);
             if (result != null && context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Merci pour votre note (${result.rating}/5) !')),
+                SnackBar(content: Text(context.tr('client.merciNote').replaceFirst('{0}', '${result.rating}'))),
               );
             }
           },
           style: OutlinedButton.styleFrom(minimumSize: const Size(0, 32)),
-          child: const Text('Noter', style: TextStyle(fontSize: 12)),
+          child: Text(context.tr('client.noterBtn'), style: const TextStyle(fontSize: 12)),
         );
       case InterventionStatus.annulee:
         return const SizedBox.shrink();
@@ -366,7 +366,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
               Expanded(
                 child: Text(i.providerName, style: GoogleFonts.sora(fontSize: 13, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
               ),
-              buildInterventionStatusBadge(i.statut),
+              buildInterventionStatusBadge(context, i.statut),
             ],
           ),
           const SizedBox(height: 4),

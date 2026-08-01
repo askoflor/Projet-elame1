@@ -68,31 +68,31 @@ class ResultCard extends StatelessWidget {
                     ]
                   : [],
             ),
-            child: isCompact ? _buildCompactLayout() : _buildWideLayout(),
+            child: isCompact ? _buildCompactLayout(context) : _buildWideLayout(context),
           );
         },
       ),
     );
   }
 
-  Widget _buildWideLayout() {
+  Widget _buildWideLayout(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildAvatar(),
         const SizedBox(width: 14),
-        Expanded(child: _buildInfo()),
+        Expanded(child: _buildInfo(context)),
       ],
     );
   }
 
-  Widget _buildCompactLayout() {
+  Widget _buildCompactLayout(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildAvatar(),
         const SizedBox(width: 14),
-        Expanded(child: _buildInfo()),
+        Expanded(child: _buildInfo(context)),
       ],
     );
   }
@@ -118,7 +118,7 @@ class ResultCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfo() {
+  Widget _buildInfo(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -135,10 +135,10 @@ class ResultCard extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             if (isCertified) ...[
-              _buildCertifiedBadge(),
+              _buildCertifiedBadge(context),
               const SizedBox(width: 6),
             ],
-            _buildBadge(),
+            _buildBadge(context),
           ],
         ),
         const SizedBox(height: 2),
@@ -160,7 +160,7 @@ class ResultCard extends StatelessWidget {
     );
   }
 
-  Widget _buildCertifiedBadge() {
+  Widget _buildCertifiedBadge(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -177,7 +177,7 @@ class ResultCard extends StatelessWidget {
           ),
           const SizedBox(width: 3),
           Text(
-            'Certifié',
+            context.tr('resultCard.certifie'),
             style: GoogleFonts.sora(
               fontSize: 10,
               fontWeight: FontWeight.w500,
@@ -189,7 +189,7 @@ class ResultCard extends StatelessWidget {
     );
   }
 
-  Widget _buildBadge() {
+  Widget _buildBadge(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -211,7 +211,7 @@ class ResultCard extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Text(
-            isAvailable ? 'Disponible' : 'En mission',
+            isAvailable ? context.tr('resultCard.disponible') : context.tr('resultCard.enMission'),
             style: GoogleFonts.sora(
               fontSize: 10,
               fontWeight: FontWeight.w500,

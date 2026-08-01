@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/widgets/static_page_scaffold.dart';
+import '../../../../core/localization/translation_provider.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -8,48 +9,34 @@ class AboutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StaticPageScaffold(
-      title: 'À propos de NZELA-SERVICE',
-      subtitle: 'La plateforme qui met en relation clients et prestataires techniques au Cameroun.',
+      title: context.tr('about.title'),
+      subtitle: context.tr('about.subtitle'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _paragraph(
-            'NZELA-SERVICE est une plateforme numérique conçue pour simplifier la recherche et la '
-            'réservation de prestataires techniques qualifiés : électriciens, plombiers, techniciens en '
-            'climatisation, peintres, menuisiers et bien d\'autres corps de métier. Notre objectif est simple : '
-            'permettre à chacun de trouver rapidement un professionnel disponible et de confiance, où qu\'il se '
-            'trouve au Cameroun.',
-          ),
+          _paragraph(context.tr('about.intro')),
           const SizedBox(height: 28),
-          _sectionTitle('Notre mission'),
-          _paragraph(
-            'Nous voulons rendre l\'accès aux services techniques du quotidien aussi simple qu\'une réservation en '
-            'ligne : recherche par métier et par ville, consultation des disponibilités en temps réel, prise de '
-            'rendez-vous directement depuis le profil du prestataire, et paiement sécurisé via Orange Money, MTN '
-            'Mobile Money ou Wave.',
-          ),
+          _sectionTitle(context.tr('about.missionTitle')),
+          _paragraph(context.tr('about.missionText')),
           const SizedBox(height: 28),
-          _sectionTitle('Comment ça marche'),
-          _bulletList(const [
-            'Le client décrit son besoin et choisit un prestataire selon sa spécialité, sa ville et ses avis.',
-            'Il réserve un créneau directement dans le calendrier du prestataire.',
-            'Le prestataire échange avec le client, chiffre l\'intervention et confirme le rendez-vous.',
-            'Une fois l\'intervention terminée, le client règle en ligne et peut noter le prestataire.',
+          _sectionTitle(context.tr('about.howTitle')),
+          _bulletList([
+            context.tr('about.how1'),
+            context.tr('about.how2'),
+            context.tr('about.how3'),
+            context.tr('about.how4'),
           ]),
           const SizedBox(height: 28),
-          _sectionTitle('Nos valeurs'),
-          _bulletList(const [
-            'Confiance : des profils vérifiés et des avis authentiques laissés par de vrais clients.',
-            'Simplicité : un parcours de réservation pensé pour aller à l\'essentiel.',
-            'Transparence : un tarif convenu avant l\'intervention, sans surprise.',
-            'Proximité : des prestataires locaux, disponibles près de chez vous.',
+          _sectionTitle(context.tr('about.valuesTitle')),
+          _bulletList([
+            context.tr('about.value1'),
+            context.tr('about.value2'),
+            context.tr('about.value3'),
+            context.tr('about.value4'),
           ]),
           const SizedBox(height: 28),
-          _sectionTitle('Rejoindre l\'aventure'),
-          _paragraph(
-            'Vous êtes un professionnel technique et souhaitez développer votre clientèle ? '
-            'Créez votre profil prestataire en quelques minutes et commencez à recevoir des demandes.',
-          ),
+          _sectionTitle(context.tr('about.joinTitle')),
+          _paragraph(context.tr('about.joinText')),
         ],
       ),
     );

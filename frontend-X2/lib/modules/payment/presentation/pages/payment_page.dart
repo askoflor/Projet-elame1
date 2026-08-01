@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/widgets/micro_interactions.dart';
 import '../../../../core/utils/hour_range_formatter.dart';
+import '../../../../core/localization/translation_provider.dart';
 import '../../../../modules/home/presentation/widgets/header/nav_bar.dart';
 import '../../domain/payment_method.dart';
 import '../../../intervention/domain/intervention.dart';
@@ -104,9 +105,9 @@ class _PaymentPageState extends State<PaymentPage>
             ),
           ),
           const SizedBox(height: 32),
-          Text('Paiement réussi !', style: GoogleFonts.sora(fontSize: 28, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
+          Text(context.tr('paymentPage.successTitle'), style: GoogleFonts.sora(fontSize: 28, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
           const SizedBox(height: 8),
-          Text('Votre paiement a bien été enregistré', style: GoogleFonts.dmSans(fontSize: 15, color: const Color(0xFF64748B))),
+          Text(context.tr('paymentPage.successSubtitle'), style: GoogleFonts.dmSans(fontSize: 15, color: const Color(0xFF64748B))),
           const SizedBox(height: 32),
           if (data != null) ...[
             Container(
@@ -118,7 +119,7 @@ class _PaymentPageState extends State<PaymentPage>
               ),
               child: Column(
                 children: [
-                  Text('Référence', style: GoogleFonts.dmSans(fontSize: 12, color: const Color(0xFF059669))),
+                  Text(context.tr('paymentPage.reference'), style: GoogleFonts.dmSans(fontSize: 12, color: const Color(0xFF059669))),
                   const SizedBox(height: 4),
                   Text(data.reference, style: GoogleFonts.sora(fontSize: 20, fontWeight: FontWeight.w700, color: const Color(0xFF065F46))),
                 ],
@@ -131,25 +132,25 @@ class _PaymentPageState extends State<PaymentPage>
               constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
                 children: [
-                  _buildSuccessRow('Prestataire', data.providerName),
+                  _buildSuccessRow(context.tr('paymentPage.rowPrestataire'), data.providerName),
                   const SizedBox(height: 8),
-                  _buildSuccessRow('Service', data.service),
+                  _buildSuccessRow(context.tr('paymentPage.rowService'), data.service),
                   const SizedBox(height: 8),
-                  _buildSuccessRow('Date', '${data.date.day}/${data.date.month}/${data.date.year} · ${formatHourRanges(data.heures)}'),
+                  _buildSuccessRow(context.tr('paymentPage.rowDate'), '${data.date.day}/${data.date.month}/${data.date.year} · ${formatHourRanges(data.heures)}'),
                   const SizedBox(height: 8),
-                  _buildSuccessRow('Adresse', data.adresse),
+                  _buildSuccessRow(context.tr('paymentPage.rowAdresse'), data.adresse),
                   const SizedBox(height: 8),
-                  _buildSuccessRow('Montant', '${data.montant?.toStringAsFixed(0) ?? '—'} FCFA'),
+                  _buildSuccessRow(context.tr('paymentPage.rowMontant'), '${data.montant?.toStringAsFixed(0) ?? '—'} FCFA'),
                 ],
               ),
             ),
           ],
           const SizedBox(height: 16),
-          Text('Un SMS de confirmation vous sera envoyé', style: GoogleFonts.dmSans(fontSize: 12, color: const Color(0xFF94A3B8))),
+          Text(context.tr('paymentPage.smsConfirmation'), style: GoogleFonts.dmSans(fontSize: 12, color: const Color(0xFF94A3B8))),
           const SizedBox(height: 32),
-          _buildActionButton('Retour à l\'accueil', onTap: () => context.go('/')),
+          _buildActionButton(context.tr('paymentPage.retourAccueil'), onTap: () => context.go('/')),
           const SizedBox(height: 12),
-          _buildActionButton('Voir mes réservations', onTap: () => context.go('/espace-client'), isSecondary: true),
+          _buildActionButton(context.tr('paymentPage.voirReservations'), onTap: () => context.go('/espace-client'), isSecondary: true),
         ],
       ),
     );
@@ -205,8 +206,8 @@ class _PaymentPageState extends State<PaymentPage>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Paiement sécurisé', style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
-                  Text('Choisissez votre méthode de paiement', style: GoogleFonts.dmSans(fontSize: 13, color: const Color(0xFF64748B))),
+                  Text(context.tr('paymentPage.paiementSecurise'), style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
+                  Text(context.tr('paymentPage.choisirMethode'), style: GoogleFonts.dmSans(fontSize: 13, color: const Color(0xFF64748B))),
                 ],
               ),
             ],
@@ -232,13 +233,13 @@ class _PaymentPageState extends State<PaymentPage>
       {'method': PaymentMethod.orangeMoney, 'label': 'OM', 'name': 'Orange Money', 'color': const Color(0xFFFF6600), 'lightBg': const Color(0xFFFFF4ED), 'icon': Icons.phone_android},
       {'method': PaymentMethod.mtnMoMo, 'label': 'MTN', 'name': 'MTN MoMo', 'color': const Color(0xFFFFCC00), 'lightBg': const Color(0xFFFFFBEB), 'icon': Icons.phone_iphone},
       {'method': PaymentMethod.wave, 'label': 'Wave', 'name': 'Wave', 'color': const Color(0xFF1A56DB), 'lightBg': const Color(0xFFEFF6FF), 'icon': Icons.waves},
-      {'method': PaymentMethod.cash, 'label': 'Cash', 'name': 'Paiement sur place', 'color': const Color(0xFF10B981), 'lightBg': const Color(0xFFF0FDF4), 'icon': Icons.money},
+      {'method': PaymentMethod.cash, 'label': 'Cash', 'name': context.tr('paymentPage.paiementSurPlace'), 'color': const Color(0xFF10B981), 'lightBg': const Color(0xFFF0FDF4), 'icon': Icons.money},
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('MÉTHODE DE PAIEMENT', style: GoogleFonts.sora(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF64748B), letterSpacing: 0.5)),
+        Text(context.tr('paymentPage.methodePaiement'), style: GoogleFonts.sora(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF64748B), letterSpacing: 0.5)),
         const SizedBox(height: 10),
         LayoutBuilder(
           builder: (context, constraints) {
@@ -330,7 +331,7 @@ class _PaymentPageState extends State<PaymentPage>
             ],
           ),
           const SizedBox(height: 16),
-          Text('NUMÉRO DE TÉLÉPHONE', style: GoogleFonts.sora(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF64748B), letterSpacing: 0.5)),
+          Text(context.tr('paymentPage.numeroTelephone'), style: GoogleFonts.sora(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF64748B), letterSpacing: 0.5)),
           const SizedBox(height: 6),
           Container(
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE8ECF2))),
@@ -367,7 +368,7 @@ class _PaymentPageState extends State<PaymentPage>
                         text: TextSpan(
                           style: GoogleFonts.dmSans(fontSize: 12, color: const Color(0xFFF97316)),
                           children: [
-                            const TextSpan(text: 'Vous recevrez un SMS pour valider le paiement de '),
+                            TextSpan(text: context.tr('paymentPage.smsValidation')),
                             TextSpan(text: '${intervention.montant!.toStringAsFixed(0)} FCFA', style: GoogleFonts.sora(fontWeight: FontWeight.w700)),
                           ],
                         ),
@@ -395,9 +396,9 @@ class _PaymentPageState extends State<PaymentPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Paiement à l\'intervention', style: GoogleFonts.sora(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF065F46))),
+                Text(context.tr('paymentPage.paiementIntervention'), style: GoogleFonts.sora(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF065F46))),
                 const SizedBox(height: 4),
-                Text('Vous réglerez le prestataire directement après l\'intervention.', style: GoogleFonts.dmSans(fontSize: 12, color: const Color(0xFF059669))),
+                Text(context.tr('paymentPage.reglementDirect'), style: GoogleFonts.dmSans(fontSize: 12, color: const Color(0xFF059669))),
               ],
             ),
           ),
@@ -420,15 +421,15 @@ class _PaymentPageState extends State<PaymentPage>
               child: const Icon(Icons.shopping_cart_outlined, size: 48, color: Color(0xFFF97316)),
             ),
             const SizedBox(height: 16),
-            Text('Aucun paiement à effectuer', style: GoogleFonts.sora(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+            Text(context.tr('paymentPage.aucunPaiement'), style: GoogleFonts.sora(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
             const SizedBox(height: 6),
             Text(
-              'Cette page n\'est accessible que depuis une intervention déjà chiffrée par un prestataire.',
+              context.tr('paymentPage.pageInaccessible'),
               textAlign: TextAlign.center,
               style: GoogleFonts.dmSans(fontSize: 13, color: const Color(0xFF64748B), height: 1.4),
             ),
             const SizedBox(height: 24),
-            _buildActionButton('Retour à l\'accueil', onTap: () => context.go('/')),
+            _buildActionButton(context.tr('paymentPage.retourAccueil'), onTap: () => context.go('/')),
           ],
         ),
       );
@@ -473,14 +474,14 @@ class _PaymentPageState extends State<PaymentPage>
             ),
           ),
           const SizedBox(height: 16),
-          _buildOrderRow('Service', data.service, color: const Color(0xFF2563EB)),
-          _buildOrderRow('Date', '${data.date.day}/${data.date.month}/${data.date.year}'),
-          _buildOrderRow('Créneaux', formatHourRanges(data.heures)),
-          _buildOrderRow('Adresse', data.adresse),
+          _buildOrderRow(context.tr('paymentPage.rowService'), data.service, color: const Color(0xFF2563EB)),
+          _buildOrderRow(context.tr('paymentPage.rowDate'), '${data.date.day}/${data.date.month}/${data.date.year}'),
+          _buildOrderRow(context.tr('paymentPage.rowCreneaux'), formatHourRanges(data.heures)),
+          _buildOrderRow(context.tr('paymentPage.rowAdresse'), data.adresse),
           const SizedBox(height: 8),
           const Divider(height: 1, color: Color(0xFFE8ECF2)),
           const SizedBox(height: 8),
-          _buildOrderRow('Total', '${data.montant!.toStringAsFixed(0)} FCFA', total: true, color: const Color(0xFF2563EB)),
+          _buildOrderRow(context.tr('paymentPage.rowTotal'), '${data.montant!.toStringAsFixed(0)} FCFA', total: true, color: const Color(0xFF2563EB)),
           const SizedBox(height: 16),
           _buildPromoField(data),
           const SizedBox(height: 16),
@@ -489,9 +490,9 @@ class _PaymentPageState extends State<PaymentPage>
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildSecurityBadge(Icons.shield_outlined, 'Chiffré SSL'),
+              _buildSecurityBadge(Icons.shield_outlined, context.tr('paymentPage.chiffreSSL')),
               const SizedBox(width: 16),
-              _buildSecurityBadge(Icons.check_circle_outline, 'Remboursement garanti'),
+              _buildSecurityBadge(Icons.check_circle_outline, context.tr('paymentPage.remboursementGaranti')),
             ],
           ),
           if (_isProcessing) ...[
@@ -509,7 +510,7 @@ class _PaymentPageState extends State<PaymentPage>
               ),
             ),
             const SizedBox(height: 8),
-            Center(child: Text('Traitement du paiement en cours...', style: GoogleFonts.dmSans(fontSize: 12, color: const Color(0xFF64748B)))),
+            Center(child: Text(context.tr('paymentPage.traitementEnCours'), style: GoogleFonts.dmSans(fontSize: 12, color: const Color(0xFF64748B)))),
           ],
         ],
       ),
@@ -542,7 +543,7 @@ class _PaymentPageState extends State<PaymentPage>
               controller: _promoController,
               style: GoogleFonts.sora(fontSize: 12, color: const Color(0xFF1E293B)),
               decoration: InputDecoration(
-                hintText: 'Code promo',
+                hintText: context.tr('paymentPage.codePromo'),
                 hintStyle: GoogleFonts.sora(fontSize: 12, color: const Color(0xFF94A3B8)),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 10),
@@ -553,13 +554,13 @@ class _PaymentPageState extends State<PaymentPage>
             onPressed: () {
               final code = _promoController.text.trim();
               if (code.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Veuillez entrer un code promo')));
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('paymentPage.codePromoVide'))));
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Code "$code" invalide')));
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(context.tr('paymentPage.codePromoInvalide').replaceFirst('{0}', code))));
               }
             },
             style: TextButton.styleFrom(foregroundColor: const Color(0xFF2563EB), padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: Size.zero),
-            child: Text('Appliquer', style: GoogleFonts.sora(fontSize: 11, fontWeight: FontWeight.w600)),
+            child: Text(context.tr('paymentPage.appliquer'), style: GoogleFonts.sora(fontSize: 11, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -601,7 +602,7 @@ class _PaymentPageState extends State<PaymentPage>
                       Icon(_selectedMethod == PaymentMethod.cash ? Icons.money : Icons.lock, size: 16, color: canPay ? Colors.white : const Color(0xFF94A3B8)),
                       const SizedBox(width: 8),
                       Text(
-                        _selectedMethod == PaymentMethod.cash ? 'Confirmer' : 'Payer ${data.montant!.toStringAsFixed(0)} FCFA',
+                        _selectedMethod == PaymentMethod.cash ? context.tr('paymentPage.btnConfirmer') : '${context.tr('paymentPage.btnPayer')} ${data.montant!.toStringAsFixed(0)} FCFA',
                         style: GoogleFonts.sora(fontSize: 14, fontWeight: FontWeight.w600, color: canPay ? Colors.white : const Color(0xFF94A3B8)),
                       ),
                     ],

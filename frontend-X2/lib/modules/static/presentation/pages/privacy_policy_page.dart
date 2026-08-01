@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/widgets/static_page_scaffold.dart';
+import '../../../../core/localization/translation_provider.dart';
 
 class PrivacyPolicyPage extends StatelessWidget {
   const PrivacyPolicyPage({super.key});
@@ -8,115 +9,65 @@ class PrivacyPolicyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StaticPageScaffold(
-      title: 'Politique de confidentialité',
-      subtitle: 'Dernière mise à jour : Juillet 2026',
+      title: context.tr('privacy.title'),
+      subtitle: context.tr('privacy.subtitle'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _notice(
-            'Cette politique décrit, de façon générale, la manière dont NZELA-SERVICE collecte, utilise et '
-            'protège les données personnelles de ses utilisateurs, dans le respect des principes de protection '
-            'des données personnelles applicables au Cameroun (notamment la loi n° 2010/012 du 21 décembre 2010 '
-            'relative à la cybersécurité et à la cybercriminalité) ainsi que des bonnes pratiques internationales '
-            'en la matière. Ce document a une portée informative et sera révisé au fur et à mesure de l\'évolution '
-            'du service et de la réglementation applicable.',
-          ),
+          _notice(context.tr('privacy.notice')),
           const SizedBox(height: 28),
+          _section(context.tr('privacy.s1Title'), context.tr('privacy.s1Text')),
           _section(
-            '1. Responsable du traitement',
-            'Les données personnelles collectées via NZELA-SERVICE sont traitées par l\'exploitant de la '
-                'plateforme, dans le cadre de la mise en relation entre clients et prestataires de services '
-                'techniques.',
-          ),
-          _section(
-            '2. Données que nous collectons',
-            'Nous collectons les données que vous nous fournissez directement lors de la création de votre '
-                'compte et de l\'utilisation de la plateforme :',
-            bullets: const [
-              'Données d\'identification : nom, prénom, adresse e-mail, numéro de téléphone.',
-              'Données de profil prestataire : métier, ville, compétences, certifications déclarées.',
-              'Données liées aux interventions : adresse d\'intervention, dates, créneaux, montants convenus.',
-              'Données de paiement : transactions effectuées via Orange Money, MTN Mobile Money ou Wave '
-                  '(NZELA-SERVICE ne stocke pas les identifiants ou codes secrets de ces services).',
-              'Données techniques : type d\'appareil, navigateur, adresse IP, journaux de connexion.',
+            context.tr('privacy.s2Title'),
+            context.tr('privacy.s2Text'),
+            bullets: [
+              context.tr('privacy.s2B1'),
+              context.tr('privacy.s2B2'),
+              context.tr('privacy.s2B3'),
+              context.tr('privacy.s2B4'),
+              context.tr('privacy.s2B5'),
             ],
           ),
           _section(
-            '3. Finalités du traitement',
-            'Vos données sont utilisées pour :',
-            bullets: const [
-              'Créer et gérer votre compte utilisateur (client ou prestataire).',
-              'Mettre en relation clients et prestataires et faciliter la prise de rendez-vous.',
-              'Traiter les paiements liés aux interventions réalisées.',
-              'Assurer le support, la sécurité et la prévention de la fraude sur la plateforme.',
-              'Vous informer de l\'avancement de vos réservations et interventions.',
-              'Améliorer la qualité et l\'ergonomie du service.',
+            context.tr('privacy.s3Title'),
+            context.tr('privacy.s3Text'),
+            bullets: [
+              context.tr('privacy.s3B1'),
+              context.tr('privacy.s3B2'),
+              context.tr('privacy.s3B3'),
+              context.tr('privacy.s3B4'),
+              context.tr('privacy.s3B5'),
+              context.tr('privacy.s3B6'),
             ],
           ),
+          _section(context.tr('privacy.s4Title'), context.tr('privacy.s4Text')),
           _section(
-            '4. Base légale du traitement',
-            'Le traitement de vos données repose sur l\'exécution du contrat qui vous lie à NZELA-SERVICE '
-                'lorsque vous créez un compte, sur votre consentement lorsque celui-ci est requis (par exemple '
-                'pour certaines communications), ainsi que sur l\'intérêt légitime de la plateforme à assurer '
-                'son bon fonctionnement et sa sécurité.',
-          ),
-          _section(
-            '5. Partage des données',
-            'Vos données ne sont partagées qu\'avec les tiers strictement nécessaires au fonctionnement du '
-                'service :',
-            bullets: const [
-              'Les prestataires ou clients concernés par une réservation (nom, coordonnées, adresse '
-                  'd\'intervention).',
-              'Les opérateurs de paiement mobile (Orange Money, MTN Mobile Money, Wave) pour le traitement des '
-                  'transactions.',
-              'Les prestataires techniques qui hébergent et sécurisent la plateforme.',
+            context.tr('privacy.s5Title'),
+            context.tr('privacy.s5Text'),
+            bullets: [
+              context.tr('privacy.s5B1'),
+              context.tr('privacy.s5B2'),
+              context.tr('privacy.s5B3'),
             ],
-            footer: 'NZELA-SERVICE ne vend ni ne loue vos données personnelles à des tiers à des fins '
-                'commerciales.',
+            footer: context.tr('privacy.s5Footer'),
           ),
+          _section(context.tr('privacy.s6Title'), context.tr('privacy.s6Text')),
           _section(
-            '6. Durée de conservation',
-            'Vos données sont conservées pendant la durée de votre inscription sur la plateforme, puis '
-                'archivées ou supprimées dans un délai raisonnable après la clôture de votre compte, sauf '
-                'obligation légale de conservation plus longue (notamment à des fins comptables ou fiscales).',
-          ),
-          _section(
-            '7. Vos droits',
-            'Conformément aux principes de protection des données personnelles, vous disposez des droits '
-                'suivants sur vos données :',
-            bullets: const [
-              'Droit d\'accès à vos données personnelles.',
-              'Droit de rectification des données inexactes ou incomplètes.',
-              'Droit à l\'effacement de vos données, sous réserve des obligations légales de conservation.',
-              'Droit d\'opposition à certains traitements, notamment à des fins de prospection.',
-              'Droit à la portabilité de vos données, lorsque cela est techniquement possible.',
+            context.tr('privacy.s7Title'),
+            context.tr('privacy.s7Text'),
+            bullets: [
+              context.tr('privacy.s7B1'),
+              context.tr('privacy.s7B2'),
+              context.tr('privacy.s7B3'),
+              context.tr('privacy.s7B4'),
+              context.tr('privacy.s7B5'),
             ],
-            footer: 'Pour exercer ces droits, vous pouvez nous contacter depuis la rubrique Contact du pied de '
-                'page.',
+            footer: context.tr('privacy.s7Footer'),
           ),
-          _section(
-            '8. Sécurité des données',
-            'NZELA-SERVICE met en œuvre des mesures techniques et organisationnelles raisonnables pour '
-                'protéger vos données personnelles contre l\'accès non autorisé, la perte, l\'altération ou la '
-                'divulgation.',
-          ),
-          _section(
-            '9. Cookies',
-            'La plateforme peut utiliser des cookies ou technologies similaires afin d\'assurer le bon '
-                'fonctionnement du service, de mémoriser vos préférences et d\'améliorer votre expérience de '
-                'navigation.',
-          ),
-          _section(
-            '10. Modifications de cette politique',
-            'Cette politique de confidentialité peut être mise à jour périodiquement pour refléter les '
-                'évolutions du service ou de la réglementation applicable. La date de dernière mise à jour est '
-                'indiquée en haut de cette page.',
-          ),
-          _section(
-            '11. Contact',
-            'Pour toute question relative à cette politique ou au traitement de vos données personnelles, '
-                'vous pouvez nous contacter via la rubrique Contact du pied de page.',
-          ),
+          _section(context.tr('privacy.s8Title'), context.tr('privacy.s8Text')),
+          _section(context.tr('privacy.s9Title'), context.tr('privacy.s9Text')),
+          _section(context.tr('privacy.s10Title'), context.tr('privacy.s10Text')),
+          _section(context.tr('privacy.s11Title'), context.tr('privacy.s11Text')),
         ],
       ),
     );

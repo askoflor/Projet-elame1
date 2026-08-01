@@ -156,7 +156,7 @@ class _ParametresContentState extends State<ParametresContent> {
           children: [
             const Icon(Icons.check_circle, color: Colors.white, size: 18),
             const SizedBox(width: 8),
-            Text('Profil mis à jour', style: const TextStyle(fontFamily: 'DM Sans')),
+            Text(context.tr('profile.profilMisAJour'), style: const TextStyle(fontFamily: 'DM Sans')),
           ],
         ),
         backgroundColor: const Color(0xFF16A34A),

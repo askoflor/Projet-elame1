@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/localization/translation_provider.dart';
 
 class NotationResult {
   final int rating;
@@ -46,13 +47,13 @@ class _NotationDialogContentState extends State<_NotationDialogContent> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Noter ${widget.providerName}',
+                '${context.tr('notation.titlePrefix')} ${widget.providerName}',
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontFamily: 'Sora', color: Color(0xFF1E293B)),
               ),
               const SizedBox(height: 4),
-              const Text(
-                'Comment s\'est passée votre intervention ?',
-                style: TextStyle(fontSize: 13, color: Color(0xFF64748B), fontFamily: 'DM Sans'),
+              Text(
+                context.tr('notation.subtitle'),
+                style: const TextStyle(fontSize: 13, color: Color(0xFF64748B), fontFamily: 'DM Sans'),
               ),
               const SizedBox(height: 16),
               Row(
@@ -74,7 +75,7 @@ class _NotationDialogContentState extends State<_NotationDialogContent> {
                 controller: _commentController,
                 maxLines: 3,
                 decoration: InputDecoration(
-                  hintText: 'Laissez un commentaire (optionnel)',
+                  hintText: context.tr('notation.commentHint'),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   isDense: true,
                 ),
@@ -85,7 +86,7 @@ class _NotationDialogContentState extends State<_NotationDialogContent> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Annuler'),
+                      child: Text(context.tr('notation.annulerBtn')),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -95,7 +96,7 @@ class _NotationDialogContentState extends State<_NotationDialogContent> {
                           ? null
                           : () => Navigator.pop(context, NotationResult(_rating, _commentController.text.trim())),
                       style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), foregroundColor: Colors.white),
-                      child: const Text('Envoyer'),
+                      child: Text(context.tr('notation.envoyerBtn')),
                     ),
                   ),
                 ],

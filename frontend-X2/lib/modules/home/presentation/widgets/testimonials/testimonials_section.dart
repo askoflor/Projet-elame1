@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../../core/localization/translation_provider.dart';
 import 'testimonials_card.dart';
 
 class TestimonialsSection extends StatelessWidget {
@@ -14,7 +15,7 @@ class TestimonialsSection extends StatelessWidget {
       child: Column(
         children: [
               Text(
-                'Ce que disent nos clients',
+                context.tr('testimonials.sectionTitle'),
                 style: GoogleFonts.sora(
                   fontSize: 26,
                   fontWeight: FontWeight.w700,
@@ -25,7 +26,7 @@ class TestimonialsSection extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Plus de 18 000 interventions réussies',
+                context.tr('testimonials.sectionSubtitle'),
                 style: GoogleFonts.dmSans(
                   fontSize: 14,
                   color: const Color(0xFF64748B),
@@ -33,38 +34,35 @@ class TestimonialsSection extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
-              _buildGrid(),
+              _buildGrid(context),
             ],
           ),
     );
   }
 
-  Widget _buildGrid() {
+  Widget _buildGrid(BuildContext context) {
     final testimonials = [
       {
         'initials': 'PC',
         'name': 'Pierre Chevalier',
-        'text':
-            '"Intervention rapide et propre. L\'électricien est arrivé en 25 minutes. Je recommande vivement NZELA-SERVICE pour tout dépannage urgent."',
-        'service': 'Service Électricité · Il y a 3 jours',
+        'text': context.tr('testimonials.t1Text'),
+        'service': context.tr('testimonials.t1Service'),
         'avatarColor': const Color(0xFF2563EB),
         'avatarBgColor': const Color(0xFFDBEAFE),
       },
       {
         'initials': 'MN',
         'name': 'Marie Nkeng',
-        'text':
-            '"Plombier très professionnel, il a résolu la fuite en moins d\'une heure. Le paiement via MTN Mobile Money était très pratique."',
-        'service': 'Service Plomberie · Il y a 1 semaine',
+        'text': context.tr('testimonials.t2Text'),
+        'service': context.tr('testimonials.t2Service'),
         'avatarColor': const Color(0xFF16A34A),
         'avatarBgColor': const Color(0xFFDCFCE7),
       },
       {
         'initials': 'JB',
         'name': 'Jean Biya',
-        'text':
-            '"Ma climatisation remise en état en un temps record. La technicienne était certifiée et très compétente. Excellent service !"',
-        'service': 'Service Climatisation · Il y a 2 semaines',
+        'text': context.tr('testimonials.t3Text'),
+        'service': context.tr('testimonials.t3Service'),
         'avatarColor': const Color(0xFFEA580C),
         'avatarBgColor': const Color(0xFFFFF7ED),
       },

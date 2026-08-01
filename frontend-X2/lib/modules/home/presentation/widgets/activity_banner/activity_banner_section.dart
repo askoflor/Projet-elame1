@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../../core/localization/translation_provider.dart';
 
 const String _bannerImageUrl =
     'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1600&q=75';
@@ -68,7 +69,7 @@ class ActivityBannerSection extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Des professionnels qualifiés, sur le terrain',
+                          context.tr('activityBanner.title'),
                           style: GoogleFonts.sora(
                             fontSize: isMobile ? 20 : 30,
                             fontWeight: FontWeight.w700,
@@ -80,7 +81,7 @@ class ActivityBannerSection extends StatelessWidget {
                         SizedBox(
                           width: isMobile ? double.infinity : 480,
                           child: Text(
-                            'Électriciens, plombiers, techniciens : notre communauté de prestataires intervient chaque jour partout au Cameroun.',
+                            context.tr('activityBanner.subtitle'),
                             style: GoogleFonts.dmSans(
                               fontSize: isMobile ? 13 : 15,
                               color: Colors.white.withOpacity(0.85),

@@ -29,7 +29,13 @@ class _MissionsContentState extends State<MissionsContent> {
   String _searchQuery = '';
   final _searchController = TextEditingController();
 
-  final _filters = ['Toutes', 'En attente', 'En cours', 'Terminées', 'Annulées'];
+  List<String> _filterLabels(BuildContext context) => [
+        context.tr('intervention.filterToutes'),
+        context.tr('intervention.filterEnAttente'),
+        context.tr('intervention.filterEnCours'),
+        context.tr('intervention.filterTerminees'),
+        context.tr('intervention.filterAnnulees'),
+      ];
 
   @override
   void dispose() {
@@ -102,9 +108,9 @@ class _MissionsContentState extends State<MissionsContent> {
         ),
         Row(
           children: [
-            _buildStatBadge('En attente', provider.enAttente.length, _warning),
+            _buildStatBadge(tr('intervention.statutAttente'), provider.enAttente.length, _warning),
             const SizedBox(width: 8),
-            _buildStatBadge('En cours', provider.enCours.length, _primary),
+            _buildStatBadge(tr('intervention.statutEnCours'), provider.enCours.length, _primary),
             const SizedBox(width: 8),
             _buildStatBadge(tr('provider.terminees'), provider.terminees.length, _textMuted),
           ],
@@ -127,11 +133,11 @@ class _MissionsContentState extends State<MissionsContent> {
   }
 
   Widget _buildFilters() {
+    final filters = _filterLabels(context);
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: _filters.map((filter) {
-          final index = _filters.indexOf(filter);
+        children: List.generate(filters.length, (index) {
           final isSelected = _selectedFilter == index;
           return Padding(
             padding: const EdgeInsets.only(right: 8),
@@ -146,7 +152,7 @@ class _MissionsContentState extends State<MissionsContent> {
                     border: Border.all(color: isSelected ? _primary : _borderColor),
                   ),
                   child: Text(
-                    filter,
+                    filters[index],
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
@@ -158,7 +164,7 @@ class _MissionsContentState extends State<MissionsContent> {
               ),
             ),
           );
-        }).toList(),
+        }),
       ),
     );
   }
@@ -238,14 +244,14 @@ class _MissionsContentState extends State<MissionsContent> {
             child: DataTable(
               headingRowColor: WidgetStateProperty.all(const Color(0xFFFAFAFA)),
               columnSpacing: 24,
-              columns: const [
-                DataColumn(label: _HeaderText('Client')),
-                DataColumn(label: _HeaderText('Service')),
-                DataColumn(label: _HeaderText('Date')),
-                DataColumn(label: _HeaderText('Créneaux')),
-                DataColumn(label: _HeaderText('Montant')),
-                DataColumn(label: _HeaderText('Statut')),
-                DataColumn(label: _HeaderText('')),
+              columns: [
+                DataColumn(label: _HeaderText(context.tr('intervention.colClient'))),
+                DataColumn(label: _HeaderText(context.tr('intervention.colService'))),
+                DataColumn(label: _HeaderText(context.tr('intervention.colDate'))),
+                DataColumn(label: _HeaderText(context.tr('intervention.colCreneaux'))),
+                DataColumn(label: _HeaderText(context.tr('intervention.colMontant'))),
+                DataColumn(label: _HeaderText(context.tr('intervention.colStatut'))),
+                const DataColumn(label: _HeaderText('')),
               ],
               rows: items
                   .map((i) => DataRow(cells: [
@@ -254,7 +260,7 @@ class _MissionsContentState extends State<MissionsContent> {
                         DataCell(_CellText('${i.date.day}/${i.date.month}/${i.date.year}')),
                         DataCell(_CellText(formatHourRanges(i.heures))),
                         DataCell(_CellText(i.montant == null ? '—' : '${i.montant!.toStringAsFixed(0)} FCFA', bold: true)),
-                        DataCell(buildInterventionStatusBadge(i.statut)),
+                        DataCell(buildInterventionStatusBadge(context, i.statut)),
                         DataCell(_buildRowActions(i, context)),
                       ]))
                   .toList(),
@@ -276,7 +282,7 @@ class _MissionsContentState extends State<MissionsContent> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(i.clientNom, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _textPrimary, fontFamily: 'Sora')),
-              buildInterventionStatusBadge(i.statut),
+              buildInterventionStatusBadge(context, i.statut),
             ],
           ),
           const SizedBox(height: 8),
@@ -324,7 +330,7 @@ class _MissionsContentState extends State<MissionsContent> {
       return _actionButton(Icons.task_alt_rounded, _primary, () => context.read<InterventionProvider>().terminer(i.reference));
     }
     if (i.statut == InterventionStatus.terminee) {
-      return const Text('Clôturée', style: TextStyle(fontSize: 11, color: _textMuted, fontFamily: 'DM Sans'));
+      return Text(context.tr('intervention.cloturee'), style: const TextStyle(fontSize: 11, color: _textMuted, fontFamily: 'DM Sans'));
     }
     return const SizedBox.shrink();
   }

@@ -32,14 +32,14 @@ class AppFooter extends StatelessWidget {
 
   Widget _buildFooterGrid(BuildContext context, bool isMobile) {
     final servicesColumn = _buildColumn(context.tr('footer.servicesTitle'), [
-      _FooterLink('Électricité', '/recherche'),
+      _FooterLink(context.tr('footer.electricite'), '/recherche'),
       _FooterLink(context.tr('footer.plomberie'), '/recherche'),
       _FooterLink(context.tr('footer.climatisation'), '/recherche'),
       _FooterLink(context.tr('footer.maintenance'), '/recherche'),
       _FooterLink(context.tr('footer.jardinage'), '/recherche'),
     ]);
     final entrepriseColumn = _buildColumn(context.tr('footer.entrepriseTitle'), [
-      _FooterLink('À propos', '/a-propos'),
+      _FooterLink(context.tr('footer.aPropos'), '/a-propos'),
       _FooterLink(context.tr('footer.devenirPrestataire'), '/register'),
       _FooterLink(context.tr('footer.partenaires'), '/'),
       _FooterLink(context.tr('footer.blog'), '/'),

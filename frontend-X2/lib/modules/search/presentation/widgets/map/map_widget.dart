@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../../core/localization/translation_provider.dart';
 
 class MapWidget extends StatelessWidget {
   const MapWidget({super.key});
@@ -18,15 +19,15 @@ class MapWidget extends StatelessWidget {
       child: Column(
         children: [
           // Header
-          _buildHeader(),
+          _buildHeader(context),
           // Map body
-          Expanded(child: _buildMapBody()),
+          Expanded(child: _buildMapBody(context)),
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       height: 42,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -39,7 +40,7 @@ class MapWidget extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Carte interactive',
+            context.tr('search.mapTitle'),
             style: GoogleFonts.sora(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -51,7 +52,7 @@ class MapWidget extends StatelessWidget {
             child: GestureDetector(
               onTap: () {},
               child: Text(
-                'Agrandir',
+                context.tr('search.mapAgrandir'),
                 style: GoogleFonts.sora(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -65,7 +66,7 @@ class MapWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildMapBody() {
+  Widget _buildMapBody(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -130,7 +131,7 @@ class MapWidget extends StatelessWidget {
             bottom: 12,
             left: 12,
             right: 12,
-            child: _buildInfoBox(),
+            child: _buildInfoBox(context),
           ),
         ],
       ),
@@ -206,7 +207,7 @@ class MapWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoBox() {
+  Widget _buildInfoBox(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
@@ -220,7 +221,7 @@ class MapWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Douala, Cameroun',
+                context.tr('search.mapLocation'),
                 style: GoogleFonts.sora(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -228,7 +229,7 @@ class MapWidget extends StatelessWidget {
                 ),
               ),
               Text(
-                '156 prestataires dans ce secteur',
+                context.tr('search.mapCount'),
                 style: GoogleFonts.dmSans(
                   fontSize: 12,
                   color: const Color(0xFF64748B),

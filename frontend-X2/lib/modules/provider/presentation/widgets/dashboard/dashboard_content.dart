@@ -100,8 +100,8 @@ class _DashboardContentState extends State<DashboardContent> {
       InterventionProvider interventions, String Function(String) tr) {
     final aChiffrer = interventions.enAttente.length;
     final headline = aChiffrer > 0
-        ? 'Vous avez $aChiffrer intervention${aChiffrer > 1 ? 's' : ''} à chiffrer'
-        : 'Aucune intervention en attente';
+        ? tr('intervention.aChiffrer').replaceFirst('{0}', '$aChiffrer').replaceFirst('{1}', aChiffrer > 1 ? 's' : '')
+        : tr('intervention.aucuneEnAttente');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -145,9 +145,9 @@ class _DashboardContentState extends State<DashboardContent> {
           spacing: 12,
           runSpacing: 8,
           children: [
-            const Text(
-              'Aperçu',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF1E293B), fontFamily: 'Sora'),
+            Text(
+              tr('intervention.apercu'),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF1E293B), fontFamily: 'Sora'),
             ),
             OutlinedButton.icon(
               onPressed: () => _pickDate(context, all),
@@ -161,7 +161,7 @@ class _DashboardContentState extends State<DashboardContent> {
           builder: (context, constraints) {
             final gainChart = _buildChartCard(tr('provider.metricRevenus'), gainSeries, const Color(0xFF16A34A), 10000, isCurrency: true);
             final missionsChart = _buildChartCard(tr('provider.metricRealisees'), missionsSeries, const Color(0xFF2563EB), 5);
-            final enCoursCard = _buildProgressCard('Tâches en cours', '$enCoursCount', enCoursRatio.toDouble(), const Color(0xFFF97316));
+            final enCoursCard = _buildProgressCard(tr('intervention.tachesEnCours'), '$enCoursCount', enCoursRatio.toDouble(), const Color(0xFFF97316));
             final cards = [gainChart, missionsChart, enCoursCard];
             if (constraints.maxWidth > 1100) {
               return IntrinsicHeight(
@@ -332,13 +332,13 @@ class _DashboardContentState extends State<DashboardContent> {
           child: DataTable(
             headingRowColor: WidgetStateProperty.all(const Color(0xFFFAFAFA)),
             columnSpacing: 20,
-            columns: const [
-              DataColumn(label: Text('Client', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
-              DataColumn(label: Text('Service', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
-              DataColumn(label: Text('Date', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
-              DataColumn(label: Text('Montant', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
-              DataColumn(label: Text('Statut', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
-              DataColumn(label: Text('')),
+            columns: [
+              DataColumn(label: Text(context.tr('intervention.colClient'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
+              DataColumn(label: Text(context.tr('intervention.colService'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
+              DataColumn(label: Text(context.tr('intervention.colDate'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
+              DataColumn(label: Text(context.tr('intervention.colMontant'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
+              DataColumn(label: Text(context.tr('intervention.colStatut'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
+              const DataColumn(label: Text('')),
             ],
             rows: mesMissions.map((i) => DataRow(cells: [
                   DataCell(SizedBox(
@@ -362,7 +362,7 @@ class _DashboardContentState extends State<DashboardContent> {
                     ],
                   )),
                   DataCell(Text(i.montant == null ? '—' : '${i.montant!.toStringAsFixed(0)} FCFA', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E293B), fontFamily: 'DM Sans'))),
-                  DataCell(buildInterventionStatusBadge(i.statut)),
+                  DataCell(buildInterventionStatusBadge(context, i.statut)),
                   DataCell(_buildRowActions(i, context)),
                 ])).toList(),
           ),
@@ -399,7 +399,7 @@ class _DashboardContentState extends State<DashboardContent> {
                   ],
                 ),
               ),
-              buildInterventionStatusBadge(i.statut),
+              buildInterventionStatusBadge(context, i.statut),
             ],
           ),
           const SizedBox(height: 6),
@@ -435,7 +435,7 @@ class _DashboardContentState extends State<DashboardContent> {
           ElevatedButton.icon(
             onPressed: () => ChiffrageModal.show(context, i),
             icon: const Icon(Icons.phone_outlined, size: 14),
-            label: const Text('Chiffrer', style: TextStyle(fontSize: 12)),
+            label: Text(context.tr('intervention.chiffrerBtn'), style: const TextStyle(fontSize: 12)),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF2563EB),
               foregroundColor: Colors.white,
@@ -456,11 +456,11 @@ class _DashboardContentState extends State<DashboardContent> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           minimumSize: const Size(0, 30),
         ),
-        child: const Text('Terminer', style: TextStyle(fontSize: 12)),
+        child: Text(context.tr('intervention.terminerBtn'), style: const TextStyle(fontSize: 12)),
       );
     }
     if (i.statut == InterventionStatus.terminee) {
-      return const Text('Clôturée', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontFamily: 'DM Sans'));
+      return Text(context.tr('intervention.cloturee'), style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontFamily: 'DM Sans'));
     }
     return const SizedBox.shrink();
   }
@@ -623,7 +623,7 @@ class _DashboardContentState extends State<DashboardContent> {
   Widget _buildRequestItem(Intervention i, BuildContext context) {
     final tr = context.tr;
     final isUrgent = i.urgence != 'Planifié';
-    final montantLabel = i.montant != null ? '${i.montant!.toStringAsFixed(0)} FCFA' : 'Montant à définir';
+    final montantLabel = i.montant != null ? '${i.montant!.toStringAsFixed(0)} FCFA' : tr('intervention.montantADefinir');
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: const BoxDecoration(
@@ -650,7 +650,7 @@ class _DashboardContentState extends State<DashboardContent> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isUrgent ? 'Mission urgente – ${i.clientNom}' : 'Nouvelle mission – ${i.clientNom}',
+                  isUrgent ? '${tr('intervention.missionUrgente')} – ${i.clientNom}' : '${tr('intervention.nouvelleMission')} – ${i.clientNom}',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -688,12 +688,12 @@ class _DashboardContentState extends State<DashboardContent> {
 
 /// Badge de statut réutilisé par les tableaux d'intervention (dashboard,
 /// missions, historique).
-Widget buildInterventionStatusBadge(InterventionStatus status) {
+Widget buildInterventionStatusBadge(BuildContext context, InterventionStatus status) {
   final data = switch (status) {
-    InterventionStatus.attente => ('En attente', const Color(0xFFF59E0B), const Color(0xFFFEF3C7)),
-    InterventionStatus.encours => ('En cours', const Color(0xFF2563EB), const Color(0xFFDBEAFE)),
-    InterventionStatus.terminee => ('Terminée', const Color(0xFF16A34A), const Color(0xFFDCFCE7)),
-    InterventionStatus.annulee => ('Annulée', const Color(0xFF64748B), const Color(0xFFF1F5F9)),
+    InterventionStatus.attente => (context.tr('intervention.statutAttente'), const Color(0xFFF59E0B), const Color(0xFFFEF3C7)),
+    InterventionStatus.encours => (context.tr('intervention.statutEnCours'), const Color(0xFF2563EB), const Color(0xFFDBEAFE)),
+    InterventionStatus.terminee => (context.tr('intervention.statutTerminee'), const Color(0xFF16A34A), const Color(0xFFDCFCE7)),
+    InterventionStatus.annulee => (context.tr('intervention.statutAnnulee'), const Color(0xFF64748B), const Color(0xFFF1F5F9)),
   };
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

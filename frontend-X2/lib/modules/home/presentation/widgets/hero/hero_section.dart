@@ -122,9 +122,9 @@ class HeroSection extends StatelessWidget {
   Widget _buildStats(BuildContext context) {
     final stats = [
       {'value': '2 400+', 'label': context.tr('hero.stat1Label')},
-      {'value': '18 000+', 'label': 'Interventions réalisées'},
+      {'value': '18 000+', 'label': context.tr('hero.stat2Label')},
       {'value': '4.8/5', 'label': context.tr('hero.stat3Label')},
-      {'value': '< 30 min', 'label': 'Temps de réponse'},
+      {'value': '< 30 min', 'label': context.tr('hero.stat4Label')},
     ];
 
     return Wrap(

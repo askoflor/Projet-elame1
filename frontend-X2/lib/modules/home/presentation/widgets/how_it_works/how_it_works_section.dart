@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/widgets/micro_interactions.dart';
+import '../../../../../core/localization/translation_provider.dart';
 import 'step_item.dart';
 
 class HowItWorksSection extends StatelessWidget {
@@ -18,7 +19,7 @@ class HowItWorksSection extends StatelessWidget {
           child: Column(
             children: [
               Text(
-                'Comment ça marche ?',
+                context.tr('howItWorks.sectionTitle'),
                 style: GoogleFonts.sora(
                   fontSize: 26,
                   fontWeight: FontWeight.w700,
@@ -29,7 +30,7 @@ class HowItWorksSection extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Trouver un prestataire n\'a jamais été aussi simple',
+                context.tr('howItWorks.sectionSubtitle'),
                 style: GoogleFonts.dmSans(
                   fontSize: 14,
                   color: const Color(0xFF64748B),
@@ -37,7 +38,7 @@ class HowItWorksSection extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
-              _buildSteps(),
+              _buildSteps(context),
             ],
           ),
         ),
@@ -45,30 +46,30 @@ class HowItWorksSection extends StatelessWidget {
     );
   }
 
-  Widget _buildSteps() {
+  Widget _buildSteps(BuildContext context) {
     final steps = [
       {
         'number': 1,
-        'title': 'Décrivez votre besoin',
-        'description': 'Précisez le type d\'intervention et votre localisation',
+        'title': context.tr('howItWorks.step1Title'),
+        'description': context.tr('howItWorks.step1Desc'),
         'isActive': false,
       },
       {
         'number': 2,
-        'title': 'Choisissez un prestataire',
-        'description': 'Parcourez les profils, notes et disponibilités',
+        'title': context.tr('howItWorks.step2Title'),
+        'description': context.tr('howItWorks.step2Desc'),
         'isActive': false,
       },
       {
         'number': 3,
-        'title': 'Paiement sécurisé',
-        'description': 'Payez via Orange Money, MTN ou Wave',
+        'title': context.tr('howItWorks.step3Title'),
+        'description': context.tr('howItWorks.step3Desc'),
         'isActive': true,
       },
       {
         'number': 4,
-        'title': 'Intervention réalisée',
-        'description': 'Votre prestataire intervient et vous évaluez',
+        'title': context.tr('howItWorks.step4Title'),
+        'description': context.tr('howItWorks.step4Desc'),
         'isActive': true,
       },
     ];

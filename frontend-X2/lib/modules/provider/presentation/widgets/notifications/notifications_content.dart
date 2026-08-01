@@ -20,12 +20,12 @@ class NotificationsContent extends StatefulWidget {
 
 class _NotificationsContentState extends State<NotificationsContent> {
   int _selectedFilter = 0;
-  final _filters = ['Toutes', 'Non lues'];
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ProviderDashboardProvider>();
     final tr = context.tr;
+    final filters = [tr('notifications.filterToutes'), tr('notifications.filterNonLues')];
     final notifs = _selectedFilter == 0
         ? provider.notifications
         : provider.notifications.where((n) => !n.lu).toList();
@@ -35,12 +35,12 @@ class _NotificationsContentState extends State<NotificationsContent> {
       children: [
         _buildHeader(tr, provider),
         const SizedBox(height: 16),
-        _buildFilters(tr),
+        _buildFilters(filters),
         const SizedBox(height: 16),
         if (notifs.isEmpty)
           _buildEmptyState(tr)
         else
-          _buildGroupedNotifications(notifs, provider, tr),
+          _buildGroupedNotifications(context, notifs, provider, tr),
       ],
     );
   }
@@ -72,10 +72,10 @@ class _NotificationsContentState extends State<NotificationsContent> {
     );
   }
 
-  Widget _buildFilters(String Function(String) tr) {
+  Widget _buildFilters(List<String> filters) {
     return Row(
-      children: _filters.map((filter) {
-        final index = _filters.indexOf(filter);
+      children: List.generate(filters.length, (index) {
+        final filter = filters[index];
         final isSelected = _selectedFilter == index;
         return Padding(
           padding: const EdgeInsets.only(right: 8),
@@ -114,10 +114,10 @@ class _NotificationsContentState extends State<NotificationsContent> {
     );
   }
 
-  Widget _buildGroupedNotifications(List<ProviderNotification> notifs, ProviderDashboardProvider provider, String Function(String) tr) {
+  Widget _buildGroupedNotifications(BuildContext context, List<ProviderNotification> notifs, ProviderDashboardProvider provider, String Function(String) tr) {
     final grouped = <String, List<ProviderNotification>>{};
     for (final n in notifs) {
-      final key = _groupeKey(n.date);
+      final key = _groupeKey(context, n.date);
       grouped.putIfAbsent(key, () => []);
       grouped[key]!.add(n);
     }
@@ -134,7 +134,7 @@ class _NotificationsContentState extends State<NotificationsContent> {
                 padding: const EdgeInsets.only(left: 4, bottom: 8),
                 child: Text(entry.key, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: _textMuted, fontFamily: 'DM Sans')),
               ),
-              ...entry.value.map((n) => _buildNotificationItem(n, provider, tr)),
+              ...entry.value.map((n) => _buildNotificationItem(context, n, provider, tr)),
             ],
           ),
         );
@@ -142,17 +142,17 @@ class _NotificationsContentState extends State<NotificationsContent> {
     );
   }
 
-  String _groupeKey(DateTime date) {
+  String _groupeKey(BuildContext context, DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date);
-    if (diff.inMinutes < 60) return "Aujourd'hui";
-    if (diff.inHours < 24) return "Aujourd'hui";
-    if (diff.inDays < 2) return "Hier";
-    if (diff.inDays < 7) return "Cette semaine";
-    return 'Plus tôt';
+    if (diff.inMinutes < 60) return context.tr('notifications.groupeAujourdhui');
+    if (diff.inHours < 24) return context.tr('notifications.groupeAujourdhui');
+    if (diff.inDays < 2) return context.tr('notifications.groupeHier');
+    if (diff.inDays < 7) return context.tr('notifications.groupeCetteSemaine');
+    return context.tr('notifications.groupePlusTot');
   }
 
-  Widget _buildNotificationItem(ProviderNotification notif, ProviderDashboardProvider provider, String Function(String) tr) {
+  Widget _buildNotificationItem(BuildContext context, ProviderNotification notif, ProviderDashboardProvider provider, String Function(String) tr) {
     return PointerCursor(
       child: GestureDetector(
         onTap: () => provider.marquerNotificationLue(notif.id),
@@ -190,7 +190,7 @@ class _NotificationsContentState extends State<NotificationsContent> {
                     const SizedBox(height: 4),
                     Text(notif.message, style: const TextStyle(fontSize: 12, color: _textSecondary, fontFamily: 'DM Sans', height: 1.4)),
                     const SizedBox(height: 6),
-                    Text(_timeAgo(notif.date), style: const TextStyle(fontSize: 11, color: _textMuted, fontFamily: 'DM Sans')),
+                    Text(_timeAgo(context, notif.date), style: const TextStyle(fontSize: 11, color: _textMuted, fontFamily: 'DM Sans')),
                   ],
                 ),
               ),
@@ -225,12 +225,12 @@ class _NotificationsContentState extends State<NotificationsContent> {
     };
   }
 
-  String _timeAgo(DateTime date) {
+  String _timeAgo(BuildContext context, DateTime date) {
     final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 1) return 'À l\'instant';
-    if (diff.inMinutes < 60) return 'Il y a ${diff.inMinutes} min';
-    if (diff.inHours < 24) return 'Il y a ${diff.inHours}h';
-    if (diff.inDays < 7) return 'Il y a ${diff.inDays}j';
+    if (diff.inMinutes < 1) return context.tr('notifications.aInstant');
+    if (diff.inMinutes < 60) return context.tr('notifications.ilYAMin').replaceFirst('{0}', '${diff.inMinutes}');
+    if (diff.inHours < 24) return context.tr('notifications.ilYAHeures').replaceFirst('{0}', '${diff.inHours}');
+    if (diff.inDays < 7) return context.tr('notifications.ilYAJours').replaceFirst('{0}', '${diff.inDays}');
     return '${date.day}/${date.month}/${date.year}';
   }
 }

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/utils/data_uri.dart';
+import '../../../../core/localization/translation_provider.dart';
 import '../../../auth/data/auth_repository.dart';
 
 /// Carrousel des photos de realisations (portfolio) rattachees au compte
@@ -56,7 +57,7 @@ class _RealisationsCarouselState extends State<RealisationsCarousel> {
       if (picked == null) return;
       final bytes = await picked.readAsBytes();
       if (bytes.lengthInBytes > 1600 * 1024) {
-        _toast('Image trop volumineuse (max ~1,5 Mo). Choisissez une photo plus légère.');
+        _toast(context.tr('realisations.imageTropVolumineuse'));
         return;
       }
       setState(() => _uploading = true);
@@ -68,11 +69,11 @@ class _RealisationsCarouselState extends State<RealisationsCarousel> {
         _uploading = false;
         if (created != null) _photos = [created, ..._photos];
       });
-      if (created == null) _toast('Échec de l\'envoi de la photo, réessayez');
+      if (created == null) _toast(context.tr('realisations.echecEnvoi'));
     } catch (_) {
       if (!mounted) return;
       setState(() => _uploading = false);
-      _toast('Impossible de charger cette image');
+      _toast(context.tr('realisations.impossibleChargerImage'));
     }
   }
 
@@ -87,7 +88,7 @@ class _RealisationsCarouselState extends State<RealisationsCarousel> {
         if (_index >= _photos.length && _index > 0) _index = _photos.length - 1;
       });
     } else {
-      _toast('Impossible de supprimer cette photo');
+      _toast(context.tr('realisations.echecSuppression'));
     }
   }
 
@@ -112,9 +113,9 @@ class _RealisationsCarouselState extends State<RealisationsCarousel> {
             children: [
               const Icon(Icons.photo_library_outlined, size: 18, color: Color(0xFF2563EB)),
               const SizedBox(width: 8),
-              const Text(
-                'Réalisations',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+              Text(
+                context.tr('realisations.title'),
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
               ),
               const Spacer(),
               if (widget.editable)
@@ -123,7 +124,7 @@ class _RealisationsCarouselState extends State<RealisationsCarousel> {
                     : OutlinedButton.icon(
                         onPressed: _addPhoto,
                         icon: const Icon(Icons.add_photo_alternate_outlined, size: 16),
-                        label: const Text('Ajouter'),
+                        label: Text(context.tr('realisations.ajouter')),
                       ),
             ],
           ),
@@ -136,7 +137,7 @@ class _RealisationsCarouselState extends State<RealisationsCarousel> {
               alignment: Alignment.center,
               decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12)),
               child: Text(
-                widget.editable ? 'Aucune photo pour le moment — ajoutez-en une' : 'Aucune réalisation publiée',
+                widget.editable ? context.tr('realisations.videEditable') : context.tr('realisations.videVisiteur'),
                 style: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
               ),
             )

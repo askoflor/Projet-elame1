@@ -146,7 +146,15 @@ class _PlanningContentState extends State<PlanningContent> {
 
   Widget _buildJourCell(PlanningJour jour, double width, int index) {
     final isSelected = _selectedJourIndex == index;
-    final joursNoms = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+    final joursNoms = [
+      context.tr('provider.jourLun'),
+      context.tr('provider.jourMar'),
+      context.tr('provider.jourMer'),
+      context.tr('provider.jourJeu'),
+      context.tr('provider.jourVen'),
+      context.tr('provider.jourSam'),
+      context.tr('provider.jourDim'),
+    ];
     final missionCount = jour.slots.where((s) => s.type == PlanningSlotType.mission).length;
 
     return PointerCursor(

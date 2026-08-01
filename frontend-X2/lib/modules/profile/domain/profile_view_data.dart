@@ -44,6 +44,7 @@ class ProfileViewData {
   final String about;
   final int reviewCount;
   final List<ReviewDisplay> reviews;
+  final String? photoUrl;
 
   const ProfileViewData({
     required this.initials,
@@ -60,6 +61,7 @@ class ProfileViewData {
     required this.about,
     required this.reviewCount,
     required this.reviews,
+    this.photoUrl,
   });
 
   factory ProfileViewData.fromProviderModel(ProviderModel p) {
@@ -113,6 +115,7 @@ class ProfileViewData {
       about: p.description,
       reviewCount: 0,
       reviews: const [],
+      photoUrl: realUser?.photoUrl,
     );
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/widgets/static_page_scaffold.dart';
+import '../../../../core/localization/translation_provider.dart';
 
 class _FaqItem {
   final String question;
@@ -8,60 +9,27 @@ class _FaqItem {
   const _FaqItem(this.question, this.answer);
 }
 
-const _faqItems = [
-  _FaqItem(
-    'Comment réserver un prestataire ?',
-    'Recherchez un métier ou un service depuis la page d\'accueil, choisissez un prestataire selon sa ville, '
-        'ses avis et ses disponibilités, puis sélectionnez un créneau directement dans son calendrier. Vous '
-        'décrivez ensuite votre besoin et confirmez la demande.',
-  ),
-  _FaqItem(
-    'Comment se déroule le paiement ?',
-    'Le prestataire vous contacte pour convenir du tarif de l\'intervention. Une fois ce montant validé et '
-        'l\'intervention en cours, le paiement s\'effectue en ligne via Orange Money, MTN Mobile Money ou Wave.',
-  ),
-  _FaqItem(
-    'Quels moyens de paiement sont acceptés ?',
-    'NZELA-SERVICE accepte Orange Money, MTN Mobile Money et Wave. D\'autres moyens de paiement pourront être '
-        'ajoutés progressivement.',
-  ),
-  _FaqItem(
-    'Comment devenir prestataire sur la plateforme ?',
-    'Cliquez sur « Devenir prestataire », créez votre compte en précisant votre métier, votre ville et vos '
-        'coordonnées. Votre profil devient alors visible dans les résultats de recherche correspondant à votre '
-        'spécialité.',
-  ),
-  _FaqItem(
-    'La plateforme prend-elle une commission ?',
-    'Oui, une commission de 5% est prélevée sur le montant de chaque intervention réglée via la plateforme. '
-        'Elle couvre les frais de fonctionnement du service (hébergement, paiement sécurisé, support).',
-  ),
-  _FaqItem(
-    'Que se passe-t-il si je dois annuler un rendez-vous ?',
-    'Vous pouvez échanger directement avec le prestataire ou le client concerné pour reprogrammer '
-        'l\'intervention. Nous recommandons de prévenir le plus tôt possible en cas d\'imprévu.',
-  ),
-  _FaqItem(
-    'Comment sont sélectionnés les prestataires ?',
-    'Chaque prestataire renseigne son métier, ses compétences et ses certifications lors de son inscription. '
-        'Les certifications ajoutées sont marquées « en attente de vérification » jusqu\'à leur validation.',
-  ),
-  _FaqItem(
-    'Comment contacter le support ?',
-    'Pour toute question non couverte ici, vous pouvez nous écrire depuis la rubrique Contact du pied de page.',
-  ),
-];
-
 class FaqPage extends StatelessWidget {
   const FaqPage({super.key});
+
+  List<_FaqItem> _items(BuildContext context) => [
+        _FaqItem(context.tr('faq.q1'), context.tr('faq.a1')),
+        _FaqItem(context.tr('faq.q2'), context.tr('faq.a2')),
+        _FaqItem(context.tr('faq.q3'), context.tr('faq.a3')),
+        _FaqItem(context.tr('faq.q4'), context.tr('faq.a4')),
+        _FaqItem(context.tr('faq.q5'), context.tr('faq.a5')),
+        _FaqItem(context.tr('faq.q6'), context.tr('faq.a6')),
+        _FaqItem(context.tr('faq.q7'), context.tr('faq.a7')),
+        _FaqItem(context.tr('faq.q8'), context.tr('faq.a8')),
+      ];
 
   @override
   Widget build(BuildContext context) {
     return StaticPageScaffold(
-      title: 'Questions fréquentes',
-      subtitle: 'Tout ce qu\'il faut savoir pour utiliser NZELA-SERVICE.',
+      title: context.tr('faq.title'),
+      subtitle: context.tr('faq.subtitle'),
       child: Column(
-        children: _faqItems.map((item) => _FaqTile(item: item)).toList(),
+        children: _items(context).map((item) => _FaqTile(item: item)).toList(),
       ),
     );
   }

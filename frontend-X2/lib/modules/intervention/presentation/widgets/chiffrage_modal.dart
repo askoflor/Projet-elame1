@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/utils/hour_range_formatter.dart';
+import '../../../../core/localization/translation_provider.dart';
 import '../../domain/intervention.dart';
 import '../../state/intervention_provider.dart';
 
@@ -31,6 +32,23 @@ class _ChiffrageModalState extends State<ChiffrageModal> {
   late String _dureeSelectionnee;
   late DateTime _dateConfirmee;
   double _montant = 0;
+
+  String _dureeLabel(String v) {
+    switch (v) {
+      case '1h':
+        return context.tr('chiffrage.duree1h');
+      case '2h':
+        return context.tr('chiffrage.duree2h');
+      case '3h':
+        return context.tr('chiffrage.duree3h');
+      case 'Demi-journée':
+        return context.tr('chiffrage.dureeDemiJournee');
+      case 'Journée complète':
+        return context.tr('chiffrage.dureeJourneeComplete');
+      default:
+        return v;
+    }
+  }
 
   @override
   void initState() {
@@ -63,7 +81,7 @@ class _ChiffrageModalState extends State<ChiffrageModal> {
   void _confirmer() {
     if (_montant <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Saisissez le montant convenu avec le client')),
+        SnackBar(content: Text(context.tr('chiffrage.montantVide'))),
       );
       return;
     }
@@ -76,7 +94,7 @@ class _ChiffrageModalState extends State<ChiffrageModal> {
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(
-          '${widget.intervention.reference} validée · statut « En cours » · le client peut payer')),
+          context.tr('chiffrage.confirmSnack').replaceFirst('{0}', widget.intervention.reference))),
     );
   }
 
@@ -105,7 +123,7 @@ class _ChiffrageModalState extends State<ChiffrageModal> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Valider l\'intervention',
+                  Text(context.tr('chiffrage.title'),
                       style: GoogleFonts.sora(fontSize: 17, fontWeight: FontWeight.w700)),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
@@ -144,28 +162,27 @@ class _ChiffrageModalState extends State<ChiffrageModal> {
                     ),
                     ElevatedButton(
                       onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Appel du client en cours…'))),
+                          SnackBar(content: Text(context.tr('chiffrage.appelEnCours')))),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2563EB),
                         foregroundColor: Colors.white,
                       ),
-                      child: const Text('Appeler'),
+                      child: Text(context.tr('chiffrage.appelerBtn')),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                'Appelez le client pour convenir des modalités, puis saisissez le montant convenu. '
-                'L\'intervention passera alors au statut « En cours ».',
+                context.tr('chiffrage.instructions'),
                 style: GoogleFonts.dmSans(fontSize: 11, color: const Color(0xFF94A3B8)),
               ),
               const SizedBox(height: 14),
-              _label('Montant convenu (FCFA)'),
+              _label(context.tr('chiffrage.montantLabel')),
               TextField(
                 controller: _montantController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(hintText: 'Ex. 25000'),
+                decoration: InputDecoration(hintText: context.tr('chiffrage.montantHint')),
               ),
               const SizedBox(height: 14),
               LayoutBuilder(
@@ -173,11 +190,11 @@ class _ChiffrageModalState extends State<ChiffrageModal> {
                   final dureeField = Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _label('Durée estimée'),
+                      _label(context.tr('chiffrage.dureeLabel')),
                       DropdownButtonFormField<String>(
                         initialValue: _dureeSelectionnee,
                         items: _durees
-                            .map((d) => DropdownMenuItem(value: d, child: Text(d)))
+                            .map((d) => DropdownMenuItem(value: d, child: Text(_dureeLabel(d))))
                             .toList(),
                         onChanged: (v) => setState(() => _dureeSelectionnee = v ?? _dureeSelectionnee),
                       ),
@@ -186,7 +203,7 @@ class _ChiffrageModalState extends State<ChiffrageModal> {
                   final dateField = Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _label('Date confirmée'),
+                      _label(context.tr('chiffrage.dateLabel')),
                       InkWell(
                         onTap: _pickDate,
                         child: InputDecorator(
@@ -213,12 +230,12 @@ class _ChiffrageModalState extends State<ChiffrageModal> {
                 },
               ),
               const SizedBox(height: 14),
-              _label('Note pour le client (optionnel)'),
+              _label(context.tr('chiffrage.noteLabel')),
               TextField(
                 controller: _noteController,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                    hintText: 'Ex. Prévoir l\'accès au tableau électrique...'),
+                decoration: InputDecoration(
+                    hintText: context.tr('chiffrage.noteHint')),
               ),
               const SizedBox(height: 14),
               Container(
@@ -229,10 +246,10 @@ class _ChiffrageModalState extends State<ChiffrageModal> {
                 ),
                 child: Column(
                   children: [
-                    _calcRow('Montant de la prestation', _montant),
-                    _calcRow('Commission plateforme (5 %)', commission),
+                    _calcRow(context.tr('chiffrage.montantPrestation'), _montant),
+                    _calcRow(context.tr('chiffrage.commissionPlateforme'), commission),
                     const Divider(color: Color(0xFFE8ECF2)),
-                    _calcRow('Net prestataire', net, bold: true),
+                    _calcRow(context.tr('chiffrage.netPrestataire'), net, bold: true),
                   ],
                 ),
               ),
@@ -242,7 +259,7 @@ class _ChiffrageModalState extends State<ChiffrageModal> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Annuler'),
+                    child: Text(context.tr('chiffrage.annulerBtn')),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton.icon(
@@ -252,7 +269,7 @@ class _ChiffrageModalState extends State<ChiffrageModal> {
                       foregroundColor: Colors.white,
                     ),
                     icon: const Icon(Icons.check, size: 18),
-                    label: const Text('Valider et démarrer'),
+                    label: Text(context.tr('chiffrage.validerBtn')),
                   ),
                 ],
               ),

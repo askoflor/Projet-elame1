@@ -132,7 +132,7 @@ class _SearchPageState extends State<SearchPage> {
           _buildResultsHeader(),
           const SizedBox(height: 40),
           Text(
-            'Aucun prestataire trouvé pour cette catégorie',
+            context.tr('search.aucunResultat'),
             style: GoogleFonts.dmSans(
               fontSize: 13,
               color: const Color(0xFF64748B),

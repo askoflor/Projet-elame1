@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../../core/localization/translation_provider.dart';
 
 class SearchBar extends StatefulWidget {
   const SearchBar({super.key});
@@ -37,6 +38,56 @@ class _SearchBarState extends State<SearchBar> {
   String? _selectedService;
   String? _selectedCity;
   DateTime? _selectedDate;
+
+  String _serviceLabel(String v) {
+    switch (v) {
+      case 'Électricité':
+        return context.tr('search.categoryElectricite');
+      case 'Plomberie':
+        return context.tr('search.categoryPlomberie');
+      case 'Climatisation':
+        return context.tr('search.categoryClim');
+      case 'Carrelage':
+        return context.tr('search.categoryCarrelage');
+      case 'Maintenance':
+        return context.tr('search.categoryMaintenance');
+      case 'Jardinage':
+        return context.tr('search.categoryJardinage');
+      case 'Peinture':
+        return context.tr('search.categoryPeinture');
+      case 'Menuiserie':
+        return context.tr('search.categoryMenuiserie');
+      default:
+        return v;
+    }
+  }
+
+  String _cityLabel(String v) {
+    switch (v) {
+      case 'Douala':
+        return context.tr('search.cityDouala');
+      case 'Yaoundé':
+        return context.tr('search.cityYaounde');
+      case 'Bafoussam':
+        return context.tr('search.cityBafoussam');
+      case 'Garoua':
+        return context.tr('search.cityGaroua');
+      case 'Bamenda':
+        return context.tr('search.cityBamenda');
+      case 'Maroua':
+        return context.tr('search.cityMaroua');
+      case 'Ngaoundéré':
+        return context.tr('search.cityNgaoundere');
+      case 'Bertoua':
+        return context.tr('search.cityBertoua');
+      case 'Buea':
+        return context.tr('search.cityBuea');
+      case 'Ebolowa':
+        return context.tr('search.cityEbolowa');
+      default:
+        return v;
+    }
+  }
 
   Future<void> _selectDate() async {
     final picked = await showDatePicker(
@@ -85,9 +136,10 @@ class _SearchBarState extends State<SearchBar> {
           Expanded(
             child: _buildDropdown(
               value: _selectedService,
-              hint: 'Quel service recherchez-vous ?',
+              hint: context.tr('search.heroPlaceholder'),
               icon: Icons.search,
               items: _services,
+              labelBuilder: _serviceLabel,
               onChanged: (val) => setState(() => _selectedService = val),
             ),
           ),
@@ -98,9 +150,10 @@ class _SearchBarState extends State<SearchBar> {
           Expanded(
             child: _buildDropdown(
               value: _selectedCity,
-              hint: 'Votre localisation',
+              hint: context.tr('search.locationPlaceholder'),
               icon: Icons.location_on_outlined,
               items: _cities,
+              labelBuilder: _cityLabel,
               onChanged: (val) => setState(() => _selectedCity = val),
             ),
           ),
@@ -130,9 +183,10 @@ class _SearchBarState extends State<SearchBar> {
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
           child: _buildDropdown(
             value: _selectedService,
-            hint: 'Quel service recherchez-vous ?',
+            hint: context.tr('search.heroPlaceholder'),
             icon: Icons.search,
             items: _services,
+            labelBuilder: _serviceLabel,
             onChanged: (val) => setState(() => _selectedService = val),
           ),
         ),
@@ -141,9 +195,10 @@ class _SearchBarState extends State<SearchBar> {
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
           child: _buildDropdown(
             value: _selectedCity,
-            hint: 'Votre localisation',
+            hint: context.tr('search.locationPlaceholder'),
             icon: Icons.location_on_outlined,
             items: _cities,
+            labelBuilder: _cityLabel,
             onChanged: (val) => setState(() => _selectedCity = val),
           ),
         ),
@@ -165,6 +220,7 @@ class _SearchBarState extends State<SearchBar> {
     required IconData icon,
     required List<String> items,
     required ValueChanged<String?> onChanged,
+    String Function(String)? labelBuilder,
   }) {
     return Row(
       children: [
@@ -192,7 +248,7 @@ class _SearchBarState extends State<SearchBar> {
               items: items
                   .map((item) => DropdownMenuItem(
                         value: item,
-                        child: Text(item, overflow: TextOverflow.ellipsis),
+                        child: Text(labelBuilder != null ? labelBuilder(item) : item, overflow: TextOverflow.ellipsis),
                       ))
                   .toList(),
               onChanged: onChanged,
@@ -216,7 +272,7 @@ class _SearchBarState extends State<SearchBar> {
             Expanded(
               child: Text(
                 _selectedDate == null
-                    ? 'Disponibilité'
+                    ? context.tr('search.availabilityPlaceholder')
                     : '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
                 style: GoogleFonts.sora(
                   fontSize: 13,
@@ -254,7 +310,7 @@ class _SearchBarState extends State<SearchBar> {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
-          'Trouver un prestataire',
+          context.tr('search.heroButton'),
           style: GoogleFonts.sora(
             fontSize: 15,
             fontWeight: FontWeight.w500,
