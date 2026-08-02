@@ -21,9 +21,25 @@ import '../modules/static/presentation/pages/faq_page.dart';
 import '../modules/static/presentation/pages/privacy_policy_page.dart';
 
 class AppRouter {
+  /// Routes accessibles uniquement aux utilisateurs connectes ; toute
+  /// tentative d'y acceder alors qu'on n'est pas authentifie renvoie vers
+  /// la page de connexion.
+  static const _protectedRoutes = [
+    AppConstants.bookingRoute,
+    AppConstants.paymentRoute,
+  ];
+
   static GoRouter router(AuthProvider authProvider) {
     return GoRouter(
       initialLocation: AppConstants.homeRoute,
+      refreshListenable: authProvider,
+      redirect: (context, state) {
+        final isProtected = _protectedRoutes.any((r) => state.matchedLocation.startsWith(r));
+        if (isProtected && !authProvider.isAuthenticated) {
+          return AppConstants.loginRoute;
+        }
+        return null;
+      },
       routes: [
         GoRoute(
           path: AppConstants.homeRoute,

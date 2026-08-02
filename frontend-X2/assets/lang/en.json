@@ -47,6 +47,7 @@
     "urgenceButton": "Urgent",
     "resultsCount": "156 providers ",
     "resultsLocation": "available in Douala",
+    "resultsHeaderNoCount": "Providers available in Douala",
     "filtersTitle": "Filters",
     "resetButton": "Reset",
     "categoryLabel": "CATEGORY",
@@ -218,7 +219,7 @@
     "conditions": "Terms",
     "confidentialite": "Privacy",
     "cookies": "Cookies",
-    "copyright": "© 2025 NZELA-SERVICE. All rights reserved.",
+    "copyright": "© 2026 NZELA-SERVICE. All rights reserved.",
     "availableOn": "Available on iOS & Android"
   },
   "booking": {

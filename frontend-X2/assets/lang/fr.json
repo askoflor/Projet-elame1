@@ -47,6 +47,7 @@
     "urgenceButton": "Urgence",
     "resultsCount": "156 prestataires ",
     "resultsLocation": "disponibles à Douala",
+    "resultsHeaderNoCount": "Prestataires disponibles à Douala",
     "filtersTitle": "Filtres",
     "resetButton": "Réinitialiser",
     "categoryLabel": "CATÉGORIE",
@@ -218,7 +219,7 @@
     "conditions": "Conditions",
     "confidentialite": "Confidentialité",
     "cookies": "Cookies",
-    "copyright": "© 2025 NZELA-SERVICE. Tous droits réservés.",
+    "copyright": "© 2026 NZELA-SERVICE. Tous droits réservés.",
     "availableOn": "Disponible sur iOS & Android"
   },
   "booking": {

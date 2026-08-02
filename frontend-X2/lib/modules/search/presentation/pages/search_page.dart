@@ -177,25 +177,12 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _buildResultsHeader() {
-    return RichText(
-      text: TextSpan(
-        children: [
-          TextSpan(
-            text: '${_filteredProviders.length * 15} ' + context.tr('search.resultsCount').trim() + ' ',
-            style: GoogleFonts.sora(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF1E293B),
-            ),
-          ),
-          TextSpan(
-            text: context.tr('search.resultsLocation'),
-            style: GoogleFonts.dmSans(
-              fontSize: 13,
-              color: const Color(0xFF64748B),
-            ),
-          ),
-        ],
+    return Text(
+      context.tr('search.resultsHeaderNoCount'),
+      style: GoogleFonts.sora(
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
+        color: const Color(0xFF1E293B),
       ),
     );
   }

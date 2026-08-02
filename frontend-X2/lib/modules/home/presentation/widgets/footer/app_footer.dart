@@ -167,7 +167,7 @@ class AppFooter extends StatelessWidget {
 
   Widget _buildFooterBottom(BuildContext context, bool isMobile) {
     final copyright = Text(
-      '© 2025 NZELA-SERVICE. Tous droits réservés.',
+      context.tr('footer.copyright'),
       style: GoogleFonts.dmSans(fontSize: 12, color: Colors.white.withOpacity(0.4)),
     );
     final availableOn = Text(
