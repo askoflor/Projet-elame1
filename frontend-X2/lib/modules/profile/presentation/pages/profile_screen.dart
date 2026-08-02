@@ -16,7 +16,6 @@ import '../../../provider/state/provider_dashboard_state.dart';
 import '../../../provider/domain/certification.dart';
 import '../../../intervention/state/intervention_provider.dart';
 import '../../../search/domain/entities/provider_model.dart';
-import '../../../search/data/models/mock_providers.dart';
 import '../../../booking/domain/booking_entry_args.dart';
 import '../../domain/profile_view_data.dart';
 import '../widgets/realisations_carousel.dart';
@@ -70,7 +69,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _clientTelController.text = auth.user?.telephone ?? '';
       _selectedQuartier = Referentials.quartiers.contains(auth.user?.quartier) ? auth.user!.quartier : null;
     }
-    _visitorProvider = widget.provider ?? mockProviders[0];
+    _visitorProvider = widget.provider ?? _emptyProviderPlaceholder();
+    if (widget.provider == null && !_ownerMode && !_isClientOwner) {
+      // Aucun contexte prestataire (ni visite depuis la recherche, ni mode
+      // proprietaire) : redirige vers la recherche plutot que d'afficher un
+      // profil vide.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.go('/recherche');
+      });
+    }
     if (_ownerMode) {
       final profile = context.read<ProviderDashboardProvider>().profile;
       _selectedMetier = Referentials.metiers.contains(profile.specialite)
@@ -84,6 +91,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _selectedVille = Referentials.villes.first;
     }
   }
+
+  ProviderModel _emptyProviderPlaceholder() => const ProviderModel(
+        initials: '?',
+        name: '',
+        specialty: '',
+        location: '',
+        interventions: 0,
+        isAvailable: false,
+        tags: [],
+        rating: 0,
+        reviewCount: 0,
+        isCertified: false,
+        price: '',
+        avatarColor: Color(0xFF94A3B8),
+        avatarBgColor: Color(0xFFF1F5F9),
+      );
 
   @override
   void dispose() {

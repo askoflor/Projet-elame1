@@ -37,7 +37,7 @@ class _MissionsContentState extends State<MissionsContent> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<InterventionProvider>().chargerMesInterventions();
+      if (mounted) context.read<InterventionProvider>().chargerMesMissions();
     });
   }
 
@@ -56,7 +56,7 @@ class _MissionsContentState extends State<MissionsContent> {
   }
 
   List<Intervention> _filteredInterventions(InterventionProvider provider) {
-    var items = provider.all;
+    var items = provider.mesMissions;
     switch (_selectedFilter) {
       case 1:
         items = items.where((i) => i.statut == InterventionStatus.attente).toList();
@@ -125,18 +125,18 @@ class _MissionsContentState extends State<MissionsContent> {
             ),
             const SizedBox(height: 4),
             Text(
-              '${provider.all.length} ${tr('provider.missionsTotal')}',
+              '${provider.mesMissions.length} ${tr('provider.missionsTotal')}',
               style: const TextStyle(fontSize: 13, color: _textSecondary, fontFamily: 'DM Sans'),
             ),
           ],
         ),
         Row(
           children: [
-            _buildStatBadge(tr('intervention.statutAttente'), provider.enAttente.length, _warning),
+            _buildStatBadge(tr('intervention.statutAttente'), provider.missionsEnAttente.length, _warning),
             const SizedBox(width: 8),
-            _buildStatBadge(tr('intervention.statutEnCours'), provider.enCours.length, _primary),
+            _buildStatBadge(tr('intervention.statutEnCours'), provider.missionsEnCours.length, _primary),
             const SizedBox(width: 8),
-            _buildStatBadge(tr('provider.terminees'), provider.terminees.length, _textMuted),
+            _buildStatBadge(tr('provider.terminees'), provider.missionsTerminees.length, _textMuted),
           ],
         ),
       ],

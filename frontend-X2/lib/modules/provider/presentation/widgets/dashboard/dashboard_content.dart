@@ -25,7 +25,7 @@ class _DashboardContentState extends State<DashboardContent> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<InterventionProvider>().chargerMesInterventions();
+      if (mounted) context.read<InterventionProvider>().chargerMesMissions();
     });
   }
 
@@ -107,7 +107,7 @@ class _DashboardContentState extends State<DashboardContent> {
 
   Widget _buildHeader(BuildContext context, ProviderDashboardProvider provider,
       InterventionProvider interventions, String Function(String) tr) {
-    final aChiffrer = interventions.enAttente.length;
+    final aChiffrer = interventions.missionsEnAttente.length;
     final headline = aChiffrer > 0
         ? tr('intervention.aChiffrer').replaceFirst('{0}', '$aChiffrer').replaceFirst('{1}', aChiffrer > 1 ? 's' : '')
         : tr('intervention.aucuneEnAttente');
@@ -138,11 +138,11 @@ class _DashboardContentState extends State<DashboardContent> {
   }
 
   Widget _buildMetricsSection(BuildContext context, InterventionProvider interventions, String Function(String) tr) {
-    final all = interventions.all;
+    final all = interventions.mesMissions;
     final range = _selectedRange ?? _defaultRange(all);
     final gainSeries = _gainSeries(all, range);
     final missionsSeries = _missionsSeries(all, range);
-    final enCoursCount = interventions.enCours.length;
+    final enCoursCount = interventions.missionsEnCours.length;
     final enCoursRatio = enCoursCount == 0 ? 0.05 : (enCoursCount / (enCoursCount + 3)).clamp(0.1, 1.0);
 
     return Column(
@@ -263,7 +263,7 @@ class _DashboardContentState extends State<DashboardContent> {
 
   Widget _buildInterventionsSection(
       BuildContext context, InterventionProvider interventions, String Function(String) tr) {
-    final mesMissions = interventions.all;
+    final mesMissions = interventions.mesMissions;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -587,7 +587,7 @@ class _DashboardContentState extends State<DashboardContent> {
 
   Widget _buildRequestsCard(
       BuildContext context, InterventionProvider interventions, String Function(String) tr) {
-    final demandes = interventions.enAttente;
+    final demandes = interventions.missionsEnAttente;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(

@@ -116,6 +116,12 @@ public class AuthServiceImpl implements AuthService {
         if (request.getPhotoUrl() != null && !request.getPhotoUrl().isBlank()) {
             user.setPhotoUrl(request.getPhotoUrl());
         }
+        if (request.getAbout() != null) {
+            user.setAbout(request.getAbout());
+        }
+        if (request.getDisponible() != null) {
+            user.setDisponible(request.getDisponible());
+        }
         return UserResponse.fromEntity(userRepository.save(user));
     }
 

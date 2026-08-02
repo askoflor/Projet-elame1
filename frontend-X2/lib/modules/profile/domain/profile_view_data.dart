@@ -84,6 +84,7 @@ class ProfileViewData {
       reviews: p.reviews
           .map((r) => ReviewDisplay(initials: r.initials, name: r.name, date: r.date, rating: r.rating, text: r.text))
           .toList(),
+      photoUrl: p.photoUrl,
     );
   }
 

@@ -37,9 +37,18 @@ class InterventionRepository {
     }
   }
 
-  Future<List<Intervention>> mesInterventions() async {
+  Future<List<Intervention>> mesReservationsClient() async {
     try {
-      final response = await _dio.get(AppConfig.myInterventionsEndpoint);
+      final response = await _dio.get(AppConfig.myReservationsEndpoint);
+      return (response.data as List).map((e) => Intervention.fromJson(e as Map<String, dynamic>)).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<List<Intervention>> mesMissionsPrestataire() async {
+    try {
+      final response = await _dio.get(AppConfig.myMissionsEndpoint);
       return (response.data as List).map((e) => Intervention.fromJson(e as Map<String, dynamic>)).toList();
     } catch (_) {
       return [];

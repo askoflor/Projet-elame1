@@ -1,47 +1,39 @@
-package com.renkotechnologie.backend.modules.auth.dto;
+package com.renkotechnologie.backend.modules.search.dto;
 
 import com.renkotechnologie.backend.modules.auth.entity.User;
-import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
+/** Profil d'un prestataire tel qu'expose par la recherche : uniquement des donnees publiques. */
 @Getter
 @Builder
 @AllArgsConstructor
-public class UserResponse {
+public class ProviderSearchResponse {
 
     private String id;
-    private String email;
     private String nom;
     private String prenom;
-    private String role;
-    private String telephone;
     private String specialite;
-    private LocalDate dateNaissance;
     private String quartier;
     private String photoUrl;
-    private boolean emailVerified;
-    private boolean certifie;
     private String about;
+    private boolean certifie;
     private boolean disponible;
+    private long missionsRealisees;
 
-    public static UserResponse fromEntity(User user) {
-        return UserResponse.builder()
+    public static ProviderSearchResponse fromEntity(User user, long missionsRealisees) {
+        return ProviderSearchResponse.builder()
                 .id(String.valueOf(user.getId()))
-                .email(user.getEmail())
                 .nom(user.getNom())
                 .prenom(user.getPrenom())
-                .role(user.getRole().name())
-                .telephone(user.getTelephone())
                 .specialite(user.getSpecialite())
-                .dateNaissance(user.getDateNaissance())
                 .quartier(user.getQuartier())
                 .photoUrl(user.getPhotoUrl())
-                .emailVerified(user.isEmailVerified())
-                .certifie(user.isCertifie())
                 .about(user.getAbout())
+                .certifie(user.isCertifie())
                 .disponible(user.isDisponible())
+                .missionsRealisees(missionsRealisees)
                 .build();
     }
 }

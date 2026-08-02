@@ -11,7 +11,16 @@ public interface InterventionService {
 
     InterventionResponse creer(String clientEmail, InterventionCreateRequest request);
 
-    List<InterventionResponse> mesInterventions(String email);
+    /**
+     * Reservations faites par l'utilisateur en tant que client. Un
+     * prestataire peut lui aussi reserver un service aupres d'un autre
+     * prestataire ; cette liste reflete alors ses propres commandes, quel
+     * que soit son role.
+     */
+    List<InterventionResponse> mesReservationsClient(String email);
+
+    /** Missions assignees a l'utilisateur en tant que prestataire (vide si ce n'est pas un prestataire enregistre). */
+    List<InterventionResponse> mesMissionsPrestataire(String email);
 
     List<ProviderScheduleEntry> planningPrestataire(String providerName);
 

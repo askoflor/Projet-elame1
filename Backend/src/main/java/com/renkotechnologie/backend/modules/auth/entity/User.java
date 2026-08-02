@@ -81,6 +81,20 @@ public class User implements UserDetails {
     @Builder.Default
     private boolean certifie = false;
 
+    /** Presentation courte affichee sur le profil public (prestataire). */
+    @Column(columnDefinition = "TEXT")
+    private String about;
+
+    /**
+     * Disponibilite affichee sur le profil et utilisee comme filtre de
+     * recherche. columnDefinition avec DEFAULT pour ne pas casser les lignes
+     * existantes lors de l'ajout de cette colonne (meme raison que
+     * {@link #certifie}).
+     */
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    @Builder.Default
+    private boolean disponible = true;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

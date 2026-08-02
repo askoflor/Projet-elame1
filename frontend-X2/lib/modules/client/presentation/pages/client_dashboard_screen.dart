@@ -32,7 +32,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<InterventionProvider>().chargerMesInterventions();
+      if (mounted) context.read<InterventionProvider>().chargerMesReservations();
     });
   }
 
@@ -121,7 +121,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   }
 
   Widget _buildTrendsSection(BuildContext context) {
-    final all = context.watch<InterventionProvider>().all;
+    final all = context.watch<InterventionProvider>().mesReservations;
     final range = _selectedRange ?? _defaultRange(all);
     final taskSeries = _taskSeries(all, range);
     final expenseSeries = _expenseSeries(all, range);
@@ -255,7 +255,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   }
 
   Widget _buildInterventionsTableSection(BuildContext context) {
-    final interventions = context.watch<InterventionProvider>().all;
+    final interventions = context.watch<InterventionProvider>().mesReservations;
     final totalPages = (interventions.length / _pageSize).ceil().clamp(1, 1 << 30);
     if (_currentPage >= totalPages) _currentPage = 0;
     final paged = interventions.skip(_currentPage * _pageSize).take(_pageSize).toList();

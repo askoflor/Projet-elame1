@@ -1,6 +1,5 @@
 package com.renkotechnologie.backend.modules.booking.service.impl;
 
-import com.renkotechnologie.backend.modules.auth.entity.Role;
 import com.renkotechnologie.backend.modules.auth.entity.User;
 import com.renkotechnologie.backend.modules.auth.exception.ResourceNotFoundException;
 import com.renkotechnologie.backend.modules.auth.repository.UserRepository;
@@ -51,12 +50,19 @@ public class InterventionServiceImpl implements InterventionService {
     }
 
     @Override
-    public List<InterventionResponse> mesInterventions(String email) {
+    public List<InterventionResponse> mesReservationsClient(String email) {
         User user = findUserByEmail(email);
-        List<Intervention> interventions = user.getRole() == Role.PRESTATAIRE
-                ? interventionRepository.findByProviderNameOrderByCreeLeDesc(displayName(user))
-                : interventionRepository.findByClientIdOrderByCreeLeDesc(user.getId());
-        return interventions.stream().map(this::toResponse).toList();
+        return interventionRepository.findByClientIdOrderByCreeLeDesc(user.getId()).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
+    public List<InterventionResponse> mesMissionsPrestataire(String email) {
+        User user = findUserByEmail(email);
+        return interventionRepository.findByProviderNameOrderByCreeLeDesc(displayName(user)).stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Override

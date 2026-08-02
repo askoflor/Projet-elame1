@@ -35,10 +35,20 @@ public class InterventionController {
         return ResponseEntity.status(HttpStatus.CREATED).body(interventionService.creer(user.getEmail(), request));
     }
 
-    /** Renvoie les interventions du client connecte, ou les missions du prestataire connecte selon le role. */
-    @GetMapping("/mine")
-    public ResponseEntity<List<InterventionResponse>> mesInterventions(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(interventionService.mesInterventions(user.getEmail()));
+    /**
+     * Reservations faites par l'utilisateur connecte en tant que client.
+     * Un prestataire peut lui aussi commander un autre prestataire ; cet
+     * endpoint reflete alors ses propres commandes independamment de son role.
+     */
+    @GetMapping("/mine/client")
+    public ResponseEntity<List<InterventionResponse>> mesReservationsClient(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(interventionService.mesReservationsClient(user.getEmail()));
+    }
+
+    /** Missions assignees a l'utilisateur connecte en tant que prestataire. */
+    @GetMapping("/mine/prestataire")
+    public ResponseEntity<List<InterventionResponse>> mesMissionsPrestataire(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(interventionService.mesMissionsPrestataire(user.getEmail()));
     }
 
     /** Planning public d'un prestataire (creneaux occupes), accessible a tout utilisateur connecte pour reserver. */

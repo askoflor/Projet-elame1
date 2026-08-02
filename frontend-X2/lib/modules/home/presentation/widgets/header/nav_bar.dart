@@ -20,11 +20,13 @@ class _NavBarState extends State<NavBar> {
     final auth = context.watch<AuthProvider>();
     final items = ['Accueil', 'Recherche', 'Profil', 'Paiement', 'Confidentialité'];
     if (auth.isAuthenticated) {
+      // Un prestataire peut lui aussi commander un service aupres d'un
+      // autre prestataire : il garde donc acces a son espace prestataire
+      // ET a son espace client (ses propres reservations).
       if (auth.user?.role == 'PRESTATAIRE') {
         items.add('Prestataire');
-      } else if (auth.user?.role == 'CLIENT') {
-        items.add('Espace Client');
       }
+      items.add('Espace Client');
     }
     return items;
   }

@@ -25,7 +25,8 @@ class AppConfig {
 
   // Endpoints Interventions
   static const String interventionsEndpoint = '/interventions';
-  static const String myInterventionsEndpoint = '/interventions/mine';
+  static const String myReservationsEndpoint = '/interventions/mine/client';
+  static const String myMissionsEndpoint = '/interventions/mine/prestataire';
   static const String interventionsPlanningEndpoint = '/interventions/planning';
 
   // Timeouts

@@ -4,35 +4,50 @@ import '../domain/intervention.dart';
 import '../domain/provider_schedule_entry.dart';
 
 /// Etat partage du cycle de vie des interventions, adosse a l'API backend
-/// (`/api/v1/interventions`). `all` reflete les interventions du client
-/// connecte (ses reservations) ou du prestataire connecte (ses missions)
-/// selon le role, chargees via [chargerMesInterventions]. Le planning d'un
-/// prestataire specifique (utilise pour griser les creneaux deja pris sur
-/// son calendrier public) est charge a la demande via [chargerPlanning].
+/// (`/api/v1/interventions`).
+///
+/// Un utilisateur peut etre a la fois prestataire ET client (un prestataire
+/// peut commander un service aupres d'un autre prestataire), donc les deux
+/// "vues" sont chargees et mises en cache separement :
+/// - [mesReservations] : ce que l'utilisateur a lui-meme commande (cote client) ;
+/// - [mesMissions] : ce qui lui est assigne en tant que prestataire.
+///
+/// Le planning d'un prestataire specifique (utilise pour griser les
+/// creneaux deja pris sur son calendrier public) est charge a la demande
+/// via [chargerPlanning].
 class InterventionProvider extends ChangeNotifier {
   final InterventionRepository _repository;
 
   InterventionProvider({InterventionRepository? repository})
       : _repository = repository ?? InterventionRepository();
 
-  List<Intervention> _all = [];
+  List<Intervention> _mesReservations = [];
+  List<Intervention> _mesMissions = [];
   bool _loading = false;
   String? lastCreatedReference;
   final Map<String, List<ProviderScheduleEntry>> _scheduleCache = {};
 
-  List<Intervention> get all => List.unmodifiable(_all);
+  /// Reservations faites par l'utilisateur en tant que client.
+  List<Intervention> get mesReservations => List.unmodifiable(_mesReservations);
+
+  /// Missions assignees a l'utilisateur en tant que prestataire.
+  List<Intervention> get mesMissions => List.unmodifiable(_mesMissions);
+
   bool get isLoading => _loading;
 
-  List<Intervention> get enAttente =>
-      _all.where((i) => i.statut == InterventionStatus.attente).toList();
-  List<Intervention> get enCours =>
-      _all.where((i) => i.statut == InterventionStatus.encours).toList();
-  List<Intervention> get terminees =>
-      _all.where((i) => i.statut == InterventionStatus.terminee).toList();
+  List<Intervention> get missionsEnAttente =>
+      _mesMissions.where((i) => i.statut == InterventionStatus.attente).toList();
+  List<Intervention> get missionsEnCours =>
+      _mesMissions.where((i) => i.statut == InterventionStatus.encours).toList();
+  List<Intervention> get missionsTerminees =>
+      _mesMissions.where((i) => i.statut == InterventionStatus.terminee).toList();
 
-  double get montantCeMois {
+  double get montantCeMoisMissions => _montantCeMois(_mesMissions);
+  double get montantCeMoisReservations => _montantCeMois(_mesReservations);
+
+  double _montantCeMois(List<Intervention> source) {
     final now = DateTime.now();
-    return _all
+    return source
         .where((i) =>
             i.montant != null &&
             i.statut != InterventionStatus.annulee &&
@@ -41,10 +56,18 @@ class InterventionProvider extends ChangeNotifier {
         .fold<double>(0, (sum, i) => sum + i.montant!);
   }
 
-  Future<void> chargerMesInterventions() async {
+  Future<void> chargerMesReservations() async {
     _loading = true;
     notifyListeners();
-    _all = await _repository.mesInterventions();
+    _mesReservations = await _repository.mesReservationsClient();
+    _loading = false;
+    notifyListeners();
+  }
+
+  Future<void> chargerMesMissions() async {
+    _loading = true;
+    notifyListeners();
+    _mesMissions = await _repository.mesMissionsPrestataire();
     _loading = false;
     notifyListeners();
   }
@@ -98,7 +121,7 @@ class InterventionProvider extends ChangeNotifier {
       adresse: adresse,
     );
     if (created != null) {
-      _all = [created, ..._all];
+      _mesReservations = [created, ..._mesReservations];
       lastCreatedReference = created.reference;
       notifyListeners();
     }
@@ -113,7 +136,7 @@ class InterventionProvider extends ChangeNotifier {
   }) async {
     final updated = await _repository.chiffrer(reference, montant: montant, dateConfirmee: dateConfirmee, note: note);
     if (updated == null) return false;
-    _replace(updated);
+    _replaceMission(updated);
     return true;
   }
 
@@ -124,25 +147,25 @@ class InterventionProvider extends ChangeNotifier {
   }) async {
     final updated = await _repository.terminer(reference, description: description, photos: photos);
     if (updated == null) return false;
-    _replace(updated);
+    _replaceMission(updated);
     return true;
   }
 
   Future<bool> annuler(String reference) async {
     final updated = await _repository.annuler(reference);
     if (updated == null) return false;
-    _replace(updated);
+    _replaceMission(updated);
     return true;
   }
 
-  void _replace(Intervention updated) {
-    final index = _all.indexWhere((i) => i.reference == updated.reference);
+  void _replaceMission(Intervention updated) {
+    final index = _mesMissions.indexWhere((i) => i.reference == updated.reference);
     if (index == -1) {
-      _all = [updated, ..._all];
+      _mesMissions = [updated, ..._mesMissions];
     } else {
-      final next = List.of(_all);
+      final next = List.of(_mesMissions);
       next[index] = updated;
-      _all = next;
+      _mesMissions = next;
     }
     notifyListeners();
   }

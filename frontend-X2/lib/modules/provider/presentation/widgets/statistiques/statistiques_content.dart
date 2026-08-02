@@ -68,7 +68,7 @@ class StatistiquesContent extends StatelessWidget {
           ),
           children: [
             _perfCard(tr('provider.tauxSucces'), '${((provider.profile.missionsRealisees / math.max(provider.profile.missionsTotal, 1)) * 100).toStringAsFixed(1)}%', Icons.verified_rounded, _success, 0.91),
-            _perfCard(tr('provider.tauxCompletion'), '${((interventions.enCours.length / math.max(interventions.all.length, 1)) * 100).toStringAsFixed(1)}%', Icons.task_alt_rounded, _primary, 0.78),
+            _perfCard(tr('provider.tauxCompletion'), '${((interventions.missionsEnCours.length / math.max(interventions.mesMissions.length, 1)) * 100).toStringAsFixed(1)}%', Icons.task_alt_rounded, _primary, 0.78),
             _perfCard(tr('provider.satisfaction'), '${provider.profile.tauxSatisfaction.toStringAsFixed(0)}%', Icons.emoji_emotions_rounded, _warning, 0.97),
             _perfCard(tr('provider.noteMoyenne'), provider.profile.note.toStringAsFixed(1), Icons.star_rounded, _purple, 0.96),
           ],
@@ -113,11 +113,11 @@ class StatistiquesContent extends StatelessWidget {
 
   Widget _buildStatsGrid(ProviderDashboardProvider provider, InterventionProvider interventions, String Function(String) tr) {
     final p = provider.profile;
-    final annulees = interventions.all.where((i) => i.statut == InterventionStatus.annulee).length;
+    final annulees = interventions.mesMissions.where((i) => i.statut == InterventionStatus.annulee).length;
     final stats = [
       _StatItem(tr('provider.totalMissions'), '${p.missionsTotal}', Icons.work_history_rounded, _primary),
-      _StatItem(tr('provider.missionsRealisees'), '${interventions.terminees.length}', Icons.task_alt_rounded, _success),
-      _StatItem(tr('provider.missionsEnAttente'), '${interventions.enAttente.length}', Icons.pending_actions_rounded, _warning),
+      _StatItem(tr('provider.missionsRealisees'), '${interventions.missionsTerminees.length}', Icons.task_alt_rounded, _success),
+      _StatItem(tr('provider.missionsEnAttente'), '${interventions.missionsEnAttente.length}', Icons.pending_actions_rounded, _warning),
       _StatItem(tr('provider.missionsAnnulees'), '$annulees', Icons.cancel_outlined, const Color(0xFFEF4444)),
       _StatItem(tr('provider.nombreClients'), '24', Icons.people_rounded, const Color(0xFF06B6D4)),
       _StatItem(tr('provider.tauxFidelite'), '92%', Icons.favorite_rounded, const Color(0xFFEC4899)),

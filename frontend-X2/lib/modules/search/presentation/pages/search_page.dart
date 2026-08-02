@@ -1,11 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/localization/translation_provider.dart';
 import '../../../../modules/home/presentation/widgets/header/nav_bar.dart';
 import '../widgets/filters/filters_panel.dart';
 import '../widgets/provider_list/result_card.dart';
-import '../../data/models/mock_providers.dart';
+import '../../data/search_repository.dart';
 import '../../domain/entities/provider_model.dart';
 
 class SearchPage extends StatefulWidget {
@@ -20,40 +20,30 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   int selectedIndex = 0;
   late String _selectedCategory;
+  String? _selectedQuartier;
+  final _repository = SearchRepository();
+  List<ProviderModel> _providers = [];
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     _selectedCategory = widget.initialCategory ?? 'Tous';
+    _rechercher();
   }
 
-  List<ProviderModel> get _filteredProviders => mockProviders
-      .where((p) => _matchesCategory(p, _selectedCategory))
-      .toList();
-
-  bool _matchesCategory(ProviderModel provider, String category) {
-    if (category == 'Tous') return true;
-    final s = provider.specialty.toLowerCase();
-    switch (category) {
-      case 'Électricité':
-        return s.contains('électricien');
-      case 'Plomberie':
-        return s.contains('plomb');
-      case 'Climatisation':
-        return s.contains('clim') || s.contains('frigoriste');
-      case 'Carrelage':
-        return s.contains('carrel');
-      case 'Maintenance':
-        return s.contains('maintenance');
-      case 'Jardinage':
-        return s.contains('jardin');
-      case 'Peinture':
-        return s.contains('peintre') || s.contains('peinture');
-      case 'Menuiserie':
-        return s.contains('menuis');
-      default:
-        return true;
-    }
+  Future<void> _rechercher() async {
+    setState(() => _loading = true);
+    final results = await _repository.rechercherPrestataires(
+      specialite: _selectedCategory == 'Tous' ? null : _selectedCategory,
+      quartier: _selectedQuartier,
+    );
+    if (!mounted) return;
+    setState(() {
+      _providers = results;
+      _loading = false;
+      selectedIndex = 0;
+    });
   }
 
   @override
@@ -114,17 +104,27 @@ class _SearchPageState extends State<SearchPage> {
   Widget _buildFiltersPanel() {
     return FiltersPanel(
       initialCategory: _selectedCategory,
+      initialQuartier: _selectedQuartier,
       onCategoryChanged: (category) {
-        setState(() {
-          _selectedCategory = category;
-          selectedIndex = 0;
-        });
+        setState(() => _selectedCategory = category);
+        _rechercher();
+      },
+      onQuartierChanged: (quartier) {
+        setState(() => _selectedQuartier = quartier);
+        _rechercher();
       },
     );
   }
 
   Widget _buildResultsList() {
-    final providers = _filteredProviders;
+    if (_loading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 60),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final providers = _providers;
 
     if (providers.isEmpty) {
       return Column(
@@ -164,6 +164,7 @@ class _SearchPageState extends State<SearchPage> {
               price: provider.price,
               avatarColor: provider.avatarColor,
               avatarBgColor: provider.avatarBgColor,
+              photoUrl: provider.photoUrl,
               isSelected: selectedIndex == entry.key,
               onTap: () {
                 setState(() => selectedIndex = entry.key);

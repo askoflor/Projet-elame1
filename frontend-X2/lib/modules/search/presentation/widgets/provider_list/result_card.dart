@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/localization/translation_provider.dart';
+import '../../../../../core/utils/data_uri.dart';
 
 class ResultCard extends StatelessWidget {
   final String initials;
@@ -18,6 +19,7 @@ class ResultCard extends StatelessWidget {
   final Color avatarBgColor;
   final bool isSelected;
   final VoidCallback onTap;
+  final String? photoUrl;
 
   const ResultCard({
     super.key,
@@ -36,6 +38,7 @@ class ResultCard extends StatelessWidget {
     required this.avatarBgColor,
     required this.isSelected,
     required this.onTap,
+    this.photoUrl,
   });
 
   @override
@@ -98,23 +101,27 @@ class ResultCard extends StatelessWidget {
   }
 
   Widget _buildAvatar() {
+    final bytes = decodeDataUri(photoUrl);
     return Container(
       width: 60,
       height: 60,
       decoration: BoxDecoration(
         color: avatarBgColor,
         shape: BoxShape.circle,
+        image: bytes != null ? DecorationImage(image: MemoryImage(bytes), fit: BoxFit.cover) : null,
       ),
-      child: Center(
-        child: Text(
-          initials,
-          style: GoogleFonts.sora(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: avatarColor,
-          ),
-        ),
-      ),
+      child: bytes != null
+          ? null
+          : Center(
+              child: Text(
+                initials,
+                style: GoogleFonts.sora(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: avatarColor,
+                ),
+              ),
+            ),
     );
   }
 

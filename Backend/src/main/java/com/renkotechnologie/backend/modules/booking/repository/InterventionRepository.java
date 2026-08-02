@@ -16,4 +16,7 @@ public interface InterventionRepository extends JpaRepository<Intervention, Long
 
     /** Planning "public" d'un prestataire : sert a griser les creneaux deja pris pour tout client qui consulte son calendrier. */
     List<Intervention> findByProviderNameAndStatutNot(String providerName, InterventionStatus excludedStatut);
+
+    /** Nombre de missions realisees par un prestataire, affiche sur son profil/dans les resultats de recherche. */
+    long countByProviderNameAndStatut(String providerName, InterventionStatus statut);
 }

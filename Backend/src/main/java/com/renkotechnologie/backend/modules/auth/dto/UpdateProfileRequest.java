@@ -18,4 +18,10 @@ public class UpdateProfileRequest {
 
     /** Photo de profil encodee en base64 (data URI). Null = ne pas modifier. */
     private String photoUrl;
+
+    /** Presentation courte affichee sur le profil public (prestataire). */
+    private String about;
+
+    /** Disponibilite affichee sur le profil et utilisee comme filtre de recherche. */
+    private Boolean disponible;
 }

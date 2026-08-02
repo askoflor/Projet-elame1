@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/localization/translation_provider.dart';
+import '../../../../../core/constants/referentials.dart';
 
 class FiltersPanel extends StatefulWidget {
   final String? initialCategory;
   final ValueChanged<String>? onCategoryChanged;
+  final String? initialQuartier;
+  final ValueChanged<String?>? onQuartierChanged;
 
-  const FiltersPanel({super.key, this.initialCategory, this.onCategoryChanged});
+  const FiltersPanel({
+    super.key,
+    this.initialCategory,
+    this.onCategoryChanged,
+    this.initialQuartier,
+    this.onQuartierChanged,
+  });
 
   @override
   State<FiltersPanel> createState() => _FiltersPanelState();
@@ -15,7 +24,7 @@ class FiltersPanel extends StatefulWidget {
 class _FiltersPanelState extends State<FiltersPanel> {
   late String selectedCategory;
   String selectedAvailability = 'Maintenant';
-  String selectedCity = 'Douala';
+  String? selectedQuartier;
   String selectedUrgency = 'Semi-urgent';
 
   static const List<String> categories = [
@@ -34,18 +43,6 @@ class _FiltersPanelState extends State<FiltersPanel> {
     'Maintenant',
     'Aujourd\'hui',
     'Cette semaine'
-  ];
-  final List<String> cities = [
-    'Douala',
-    'Yaoundé',
-    'Bafoussam',
-    'Garoua',
-    'Bamenda',
-    'Maroua',
-    'Ngaoundéré',
-    'Bertoua',
-    'Buea',
-    'Ebolowa',
   ];
   final List<String> urgencies = ['Planifié', 'Semi-urgent', 'Urgent'];
 
@@ -87,33 +84,6 @@ class _FiltersPanelState extends State<FiltersPanel> {
     }
   }
 
-  String _cityLabel(String v) {
-    switch (v) {
-      case 'Douala':
-        return context.tr('search.cityDouala');
-      case 'Yaoundé':
-        return context.tr('search.cityYaounde');
-      case 'Bafoussam':
-        return context.tr('search.cityBafoussam');
-      case 'Garoua':
-        return context.tr('search.cityGaroua');
-      case 'Bamenda':
-        return context.tr('search.cityBamenda');
-      case 'Maroua':
-        return context.tr('search.cityMaroua');
-      case 'Ngaoundéré':
-        return context.tr('search.cityNgaoundere');
-      case 'Bertoua':
-        return context.tr('search.cityBertoua');
-      case 'Buea':
-        return context.tr('search.cityBuea');
-      case 'Ebolowa':
-        return context.tr('search.cityEbolowa');
-      default:
-        return v;
-    }
-  }
-
   String _urgencyLabel(String v) {
     switch (v) {
       case 'Planifié':
@@ -134,6 +104,7 @@ class _FiltersPanelState extends State<FiltersPanel> {
             categories.contains(widget.initialCategory)
         ? widget.initialCategory!
         : 'Tous';
+    selectedQuartier = widget.initialQuartier;
   }
 
   @override
@@ -181,7 +152,7 @@ class _FiltersPanelState extends State<FiltersPanel> {
           _buildFilterGroup(
             label: context.tr('search.locationLabel'),
             showBorder: false,
-            child: _buildCityDropdown(),
+            child: _buildQuartierDropdown(),
           ),
         ],
       ),
@@ -206,9 +177,10 @@ class _FiltersPanelState extends State<FiltersPanel> {
             onTap: () => setState(() {
               selectedCategory = 'Tous';
               selectedAvailability = 'Maintenant';
-              selectedCity = 'Douala';
+              selectedQuartier = null;
               selectedUrgency = 'Semi-urgent';
               widget.onCategoryChanged?.call(selectedCategory);
+              widget.onQuartierChanged?.call(null);
             }),
             child: Text(
               context.tr('search.resetButton'),
@@ -303,7 +275,7 @@ class _FiltersPanelState extends State<FiltersPanel> {
     );
   }
 
-  Widget _buildCityDropdown() {
+  Widget _buildQuartierDropdown() {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -313,23 +285,23 @@ class _FiltersPanelState extends State<FiltersPanel> {
         border: Border.all(color: const Color(0xFFE8ECF2)),
       ),
       child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: selectedCity,
+        child: DropdownButton<String?>(
+          value: selectedQuartier,
           isExpanded: true,
+          hint: Text(context.tr('search.locationAll'), style: GoogleFonts.sora(fontSize: 13, color: const Color(0xFF64748B))),
           icon: const Icon(Icons.keyboard_arrow_down,
               color: Color(0xFF64748B), size: 18),
           style: GoogleFonts.sora(
             fontSize: 13,
             color: const Color(0xFF1E293B),
           ),
-          items: cities
-              .map((city) => DropdownMenuItem(
-                    value: city,
-                    child: Text(_cityLabel(city)),
-                  ))
-              .toList(),
+          items: [
+            DropdownMenuItem<String?>(value: null, child: Text(context.tr('search.locationAll'))),
+            ...Referentials.quartiers.map((q) => DropdownMenuItem<String?>(value: q, child: Text(q))),
+          ],
           onChanged: (val) {
-            if (val != null) setState(() => selectedCity = val);
+            setState(() => selectedQuartier = val);
+            widget.onQuartierChanged?.call(val);
           },
         ),
       ),
