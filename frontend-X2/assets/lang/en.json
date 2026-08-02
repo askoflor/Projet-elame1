@@ -356,6 +356,7 @@
     "sidebarFavoris": "Favorites",
     "sidebarNotifications": "Notifications",
     "sidebarParametres": "Settings",
+    "dashboardTitle": "Your Dashboard",
     "bonjourPrefix": "Hello,",
     "evolution": "Trends",
     "enAttenteAppel": "Waiting for the call",
@@ -496,6 +497,35 @@
     "filterEnCours": "In progress",
     "filterTerminees": "Completed",
     "filterAnnulees": "Cancelled"
+  },
+  "completion": {
+    "title": "Complete the intervention",
+    "instructions": "Describe how the issue was resolved and add at least one photo of the completed work. The client will be able to view this report.",
+    "descriptionLabel": "Description of the work performed",
+    "descriptionHint": "E.g. Replaced the faulty circuit breaker, ran tests...",
+    "descriptionRequise": "A description is required",
+    "photosLabel": "Photos of the completed work",
+    "photoRequise": "At least one photo is required",
+    "champsRequis": "Please provide a description and add at least one photo",
+    "imageTropVolumineuse": "Image too large (max ~1.5 MB). Choose a lighter photo.",
+    "impossibleChargerImage": "Unable to load this image",
+    "interventionTerminee": "Intervention completed · the client can view the report",
+    "annulerBtn": "Cancel",
+    "confirmerBtn": "Confirm completion"
+  },
+  "interventionDetail": {
+    "demandeTitle": "Initial request",
+    "service": "Service",
+    "date": "Date",
+    "adresse": "Address",
+    "urgence": "Urgency",
+    "descriptionClient": "Client description",
+    "montant": "Amount",
+    "rapportTitle": "Provider's report",
+    "rapportIndisponible": "The report is not available yet."
+  },
+  "pagination": {
+    "page": "Page"
   },
   "activityBanner": {
     "title": "Qualified professionals, out in the field",
@@ -649,6 +679,7 @@
     "note": "Rating",
     "succes": "Success",
     "disponible": "Available",
+    "dashboardTitle": "Your Dashboard",
     "greeting": "Hello, Kofi 🖐",
     "greetingSub": "You have 3 new jobs this morning",
     "metricMissions": "New jobs",

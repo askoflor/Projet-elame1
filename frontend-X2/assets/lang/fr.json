@@ -356,6 +356,7 @@
     "sidebarFavoris": "Favoris",
     "sidebarNotifications": "Notifications",
     "sidebarParametres": "Paramètres",
+    "dashboardTitle": "Tableau de bord",
     "bonjourPrefix": "Bonjour,",
     "evolution": "Évolution",
     "enAttenteAppel": "En attente de l'appel",
@@ -496,6 +497,35 @@
     "filterEnCours": "En cours",
     "filterTerminees": "Terminées",
     "filterAnnulees": "Annulées"
+  },
+  "completion": {
+    "title": "Terminer l'intervention",
+    "instructions": "Décrivez comment le problème a été résolu et ajoutez au moins une photo du travail réalisé. Le client pourra consulter ce compte-rendu.",
+    "descriptionLabel": "Description de l'intervention réalisée",
+    "descriptionHint": "Ex. Remplacement du disjoncteur défectueux, tests effectués...",
+    "descriptionRequise": "Une description est requise",
+    "photosLabel": "Photos du travail réalisé",
+    "photoRequise": "Au moins une photo est requise",
+    "champsRequis": "Veuillez renseigner une description et ajouter au moins une photo",
+    "imageTropVolumineuse": "Image trop volumineuse (max ~1,5 Mo). Choisissez une photo plus légère.",
+    "impossibleChargerImage": "Impossible de charger cette image",
+    "interventionTerminee": "Intervention terminée · le client peut consulter le compte-rendu",
+    "annulerBtn": "Annuler",
+    "confirmerBtn": "Confirmer la fin de l'intervention"
+  },
+  "interventionDetail": {
+    "demandeTitle": "Demande initiale",
+    "service": "Service",
+    "date": "Date",
+    "adresse": "Adresse",
+    "urgence": "Urgence",
+    "descriptionClient": "Description du client",
+    "montant": "Montant",
+    "rapportTitle": "Compte-rendu du prestataire",
+    "rapportIndisponible": "Le compte-rendu n'est pas encore disponible."
+  },
+  "pagination": {
+    "page": "Page"
   },
   "activityBanner": {
     "title": "Des professionnels qualifiés, sur le terrain",
@@ -649,6 +679,7 @@
     "note": "Note",
     "succes": "Succès",
     "disponible": "Disponible",
+    "dashboardTitle": "Tableau de bord",
     "greeting": "Bonjour, Kofi 🖐",
     "greetingSub": "Vous avez 3 nouvelles missions ce matin",
     "metricMissions": "Nouvelles missions",

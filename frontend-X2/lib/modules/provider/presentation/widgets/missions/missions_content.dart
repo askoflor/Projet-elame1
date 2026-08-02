@@ -6,6 +6,8 @@ import '../../../../../core/utils/hour_range_formatter.dart';
 import '../../../../intervention/domain/intervention.dart';
 import '../../../../intervention/state/intervention_provider.dart';
 import '../../../../intervention/presentation/widgets/chiffrage_modal.dart';
+import '../../../../intervention/presentation/widgets/completion_modal.dart';
+import '../../../../../core/widgets/pagination_bar.dart';
 import '../dashboard/dashboard_content.dart' show buildInterventionStatusBadge;
 
 const Color _primary = Color(0xFF2563EB);
@@ -28,6 +30,8 @@ class _MissionsContentState extends State<MissionsContent> {
   int _selectedFilter = 0;
   String _searchQuery = '';
   final _searchController = TextEditingController();
+  static const _pageSize = 6;
+  int _currentPage = 0;
 
   List<String> _filterLabels(BuildContext context) => [
         context.tr('intervention.filterToutes'),
@@ -73,6 +77,9 @@ class _MissionsContentState extends State<MissionsContent> {
     final provider = context.watch<InterventionProvider>();
     final tr = context.tr;
     final items = _filteredInterventions(provider);
+    final totalPages = (items.length / _pageSize).ceil().clamp(1, 1 << 30);
+    if (_currentPage >= totalPages) _currentPage = 0;
+    final paged = items.skip(_currentPage * _pageSize).take(_pageSize).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,7 +90,16 @@ class _MissionsContentState extends State<MissionsContent> {
         const SizedBox(height: 16),
         _buildSearchBar(tr),
         const SizedBox(height: 16),
-        if (items.isEmpty) _buildEmptyState(tr) else _buildInterventionsList(items, context),
+        if (items.isEmpty)
+          _buildEmptyState(tr)
+        else ...[
+          _buildInterventionsList(paged, context),
+          PaginationBar(
+            currentPage: _currentPage,
+            totalPages: totalPages,
+            onPageChanged: (p) => setState(() => _currentPage = p),
+          ),
+        ],
       ],
     );
   }
@@ -143,7 +159,10 @@ class _MissionsContentState extends State<MissionsContent> {
             padding: const EdgeInsets.only(right: 8),
             child: PointerCursor(
               child: GestureDetector(
-                onTap: () => setState(() => _selectedFilter = index),
+                onTap: () => setState(() {
+                  _selectedFilter = index;
+                  _currentPage = 0;
+                }),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
@@ -180,7 +199,10 @@ class _MissionsContentState extends State<MissionsContent> {
           Expanded(
             child: TextField(
               controller: _searchController,
-              onChanged: (v) => setState(() => _searchQuery = v),
+              onChanged: (v) => setState(() {
+                _searchQuery = v;
+                _currentPage = 0;
+              }),
               decoration: InputDecoration(
                 hintText: tr('provider.rechercherMission'),
                 hintStyle: const TextStyle(fontSize: 13, color: _textMuted, fontFamily: 'DM Sans'),
@@ -195,7 +217,10 @@ class _MissionsContentState extends State<MissionsContent> {
             GestureDetector(
               onTap: () {
                 _searchController.clear();
-                setState(() => _searchQuery = '');
+                setState(() {
+                  _searchQuery = '';
+                  _currentPage = 0;
+                });
               },
               child: const Icon(Icons.close_rounded, size: 16, color: _textMuted),
             ),
@@ -327,7 +352,7 @@ class _MissionsContentState extends State<MissionsContent> {
       );
     }
     if (i.statut == InterventionStatus.encours) {
-      return _actionButton(Icons.task_alt_rounded, _primary, () => context.read<InterventionProvider>().terminer(i.reference));
+      return _actionButton(Icons.task_alt_rounded, _primary, () => CompletionModal.show(context, i));
     }
     if (i.statut == InterventionStatus.terminee) {
       return Text(context.tr('intervention.cloturee'), style: const TextStyle(fontSize: 11, color: _textMuted, fontFamily: 'DM Sans'));

@@ -16,6 +16,12 @@ class Intervention {
   final String? notePrestataire;
   final InterventionStatus statut;
   final DateTime creeLe;
+  /// Compte-rendu redige par le prestataire a la cloture de l'intervention
+  /// (obligatoire pour passer au statut "terminee").
+  final String? completionDescription;
+  /// Photos du travail realise, encodees en base64 (data URI), jointes au
+  /// compte-rendu de cloture.
+  final List<String> completionPhotos;
 
   const Intervention({
     required this.reference,
@@ -33,6 +39,8 @@ class Intervention {
     this.notePrestataire,
     this.statut = InterventionStatus.attente,
     required this.creeLe,
+    this.completionDescription,
+    this.completionPhotos = const [],
   });
 
   int get dureeHeures => heures.length;
@@ -42,6 +50,8 @@ class Intervention {
     String? notePrestataire,
     InterventionStatus? statut,
     DateTime? date,
+    String? completionDescription,
+    List<String>? completionPhotos,
   }) {
     return Intervention(
       reference: reference,
@@ -59,6 +69,8 @@ class Intervention {
       notePrestataire: notePrestataire ?? this.notePrestataire,
       statut: statut ?? this.statut,
       creeLe: creeLe,
+      completionDescription: completionDescription ?? this.completionDescription,
+      completionPhotos: completionPhotos ?? this.completionPhotos,
     );
   }
 }

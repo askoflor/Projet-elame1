@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/localization/translation_provider.dart';
 import '../../../../core/widgets/micro_interactions.dart';
+import '../../../../core/widgets/pagination_bar.dart';
 import '../../../home/presentation/widgets/header/nav_bar.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/utils/hour_range_formatter.dart';
@@ -10,6 +11,7 @@ import '../../../auth/domain/auth_provider.dart';
 import '../../../intervention/domain/intervention.dart';
 import '../../../intervention/state/intervention_provider.dart';
 import '../../../intervention/presentation/widgets/notation_dialog.dart';
+import '../../../intervention/presentation/widgets/intervention_detail_dialog.dart';
 import '../../../provider/presentation/widgets/dashboard/dashboard_content.dart' show buildInterventionStatusBadge;
 import '../../../../core/widgets/axis_line_chart.dart';
 
@@ -21,8 +23,10 @@ class ClientDashboardScreen extends StatefulWidget {
 }
 
 class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
-  DateTime? _selectedDate;
+  DateTimeRange? _selectedRange;
   static const _windowDays = 7;
+  static const _pageSize = 5;
+  int _currentPage = 0;
 
   DateTime _defaultDate(List<Intervention> all) {
     if (all.isEmpty) return DateTime.now();
@@ -30,20 +34,20 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     return dates.last;
   }
 
-  DateTimeRange _rangeForDate(DateTime date) {
-    final end = DateTime(date.year, date.month, date.day);
+  DateTimeRange _defaultRange(List<Intervention> all) {
+    final end = DateTime(_defaultDate(all).year, _defaultDate(all).month, _defaultDate(all).day);
     return DateTimeRange(start: end.subtract(const Duration(days: _windowDays - 1)), end: end);
   }
 
-  Future<void> _pickDate(BuildContext context, List<Intervention> all) async {
+  Future<void> _pickRange(BuildContext context, List<Intervention> all) async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
+    final picked = await showDateRangePicker(
       context: context,
       firstDate: DateTime(now.year - 2),
       lastDate: DateTime(now.year + 1),
-      initialDate: _selectedDate ?? _defaultDate(all),
+      initialDateRange: _selectedRange ?? _defaultRange(all),
     );
-    if (picked != null) setState(() => _selectedDate = picked);
+    if (picked != null) setState(() => _selectedRange = picked);
   }
 
   @override
@@ -85,19 +89,21 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    final prenom = context.watch<AuthProvider>().user?.prenom ?? 'Marie';
+    final prenom = context.watch<AuthProvider>().user?.prenom ?? '';
     return StaggeredFadeIn(
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${context.tr('client.bonjourPrefix')} $prenom \u{1F44B}',
-              style: GoogleFonts.sora(fontSize: 22, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B)),
+              context.tr('client.dashboardTitle'),
+              style: GoogleFonts.sora(fontSize: 26, fontWeight: FontWeight.w800, color: const Color(0xFF1E293B), letterSpacing: -0.5),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
-              context.tr('client.subtitle'),
+              prenom.isEmpty
+                  ? context.tr('client.subtitle')
+                  : '${context.tr('client.bonjourPrefix')} $prenom · ${context.tr('client.subtitle')}',
               style: GoogleFonts.dmSans(fontSize: 14, color: const Color(0xFF64748B)),
             ),
           ],
@@ -108,8 +114,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
 
   Widget _buildTrendsSection(BuildContext context) {
     final all = context.watch<InterventionProvider>().all;
-    final selected = _selectedDate ?? _defaultDate(all);
-    final range = _rangeForDate(selected);
+    final range = _selectedRange ?? _defaultRange(all);
     final taskSeries = _taskSeries(all, range);
     final expenseSeries = _expenseSeries(all, range);
     final enCoursSeries = _enCoursSeries(all, range);
@@ -128,9 +133,9 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
               children: [
                 Text(context.tr('client.evolution'), style: GoogleFonts.sora(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B))),
                 OutlinedButton.icon(
-                  onPressed: () => _pickDate(context, all),
+                  onPressed: () => _pickRange(context, all),
                   icon: const Icon(Icons.calendar_today_rounded, size: 14),
-                  label: Text(_fmtDate(selected), style: const TextStyle(fontSize: 12)),
+                  label: Text('${_fmtDate(range.start)} — ${_fmtDate(range.end)}', style: const TextStyle(fontSize: 12)),
                 ),
               ],
             ),
@@ -208,11 +213,14 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     return days;
   }
 
+  /// Taches "attribuees" = demandes deja validees/chiffrees par un
+  /// prestataire (statut different de "en attente"), pas les simples
+  /// demandes de reservation pas encore prises en charge.
   List<MapEntry<DateTime, double>> _taskSeries(List<Intervention> all, DateTimeRange range) {
     return _daysIn(range).map((day) {
       final count = all.where((i) {
         final d = DateTime(i.date.year, i.date.month, i.date.day);
-        return !d.isAfter(day);
+        return !d.isAfter(day) && i.statut != InterventionStatus.attente;
       }).length;
       return MapEntry(day, count.toDouble());
     }).toList();
@@ -240,6 +248,9 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
 
   Widget _buildInterventionsTableSection(BuildContext context) {
     final interventions = context.watch<InterventionProvider>().all;
+    final totalPages = (interventions.length / _pageSize).ceil().clamp(1, 1 << 30);
+    if (_currentPage >= totalPages) _currentPage = 0;
+    final paged = interventions.skip(_currentPage * _pageSize).take(_pageSize).toList();
 
     return StaggeredFadeIn(
       staggerDelay: const Duration(milliseconds: 140),
@@ -259,8 +270,14 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                   child: Text(context.tr('client.aucuneIntervention'), style: GoogleFonts.dmSans(fontSize: 14, color: const Color(0xFF94A3B8))),
                 ),
               )
-            else
-              _buildInterventionsTable(context, interventions),
+            else ...[
+              _buildInterventionsTable(context, paged),
+              PaginationBar(
+                currentPage: _currentPage,
+                totalPages: totalPages,
+                onPageChanged: (p) => setState(() => _currentPage = p),
+              ),
+            ],
           ],
         ),
       ],
@@ -287,6 +304,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
             child: ConstrainedBox(
               constraints: BoxConstraints(minWidth: constraints.maxWidth),
               child: DataTable(
+                showCheckboxColumn: false,
                 headingRowColor: WidgetStateProperty.all(const Color(0xFFFAFAFA)),
                 columnSpacing: 24,
                 columns: [
@@ -297,14 +315,17 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
                   DataColumn(label: Text(context.tr('client.statut'), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF94A3B8)))),
                   const DataColumn(label: Text('')),
                 ],
-                rows: interventions.map((i) => DataRow(cells: [
-                      DataCell(Text('${i.providerName}\n${i.reference}', style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)))),
-                      DataCell(_serviceCell(i)),
-                      DataCell(Text('${i.date.day}/${i.date.month}/${i.date.year}\n${formatHourRanges(i.heures)}', style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)))),
-                      DataCell(Text(i.montant == null ? '—' : '${i.montant!.toStringAsFixed(0)} FCFA', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)))),
-                      DataCell(buildInterventionStatusBadge(context, i.statut)),
-                      DataCell(_buildAction(context, i)),
-                    ])).toList(),
+                rows: interventions.map((i) => DataRow(
+                      onSelectChanged: (_) => InterventionDetailDialog.show(context, i),
+                      cells: [
+                        DataCell(Text('${i.providerName}\n${i.reference}', style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)))),
+                        DataCell(_serviceCell(i)),
+                        DataCell(Text('${i.date.day}/${i.date.month}/${i.date.year}\n${formatHourRanges(i.heures)}', style: const TextStyle(fontSize: 12, color: Color(0xFF1E293B)))),
+                        DataCell(Text(i.montant == null ? '—' : '${i.montant!.toStringAsFixed(0)} FCFA', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)))),
+                        DataCell(buildInterventionStatusBadge(context, i.statut)),
+                        DataCell(_buildAction(context, i)),
+                      ],
+                    )).toList(),
               ),
             ),
           ),
@@ -336,17 +357,22 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
           child: Text(context.tr('client.payerBtn'), style: const TextStyle(fontSize: 12)),
         );
       case InterventionStatus.terminee:
-        return OutlinedButton(
-          onPressed: () async {
-            final result = await NotationDialog.show(context, i.providerName);
-            if (result != null && context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(context.tr('client.merciNote').replaceFirst('{0}', '${result.rating}'))),
-              );
-            }
-          },
-          style: OutlinedButton.styleFrom(minimumSize: const Size(0, 32)),
-          child: Text(context.tr('client.noterBtn'), style: const TextStyle(fontSize: 12)),
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            OutlinedButton(
+              onPressed: () async {
+                final result = await NotationDialog.show(context, i.providerName);
+                if (result != null && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(context.tr('client.merciNote').replaceFirst('{0}', '${result.rating}'))),
+                  );
+                }
+              },
+              style: OutlinedButton.styleFrom(minimumSize: const Size(0, 32)),
+              child: Text(context.tr('client.noterBtn'), style: const TextStyle(fontSize: 12)),
+            ),
+          ],
         );
       case InterventionStatus.annulee:
         return const SizedBox.shrink();
@@ -354,34 +380,38 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   }
 
   Widget _buildMobileRow(BuildContext context, Intervention i) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE8ECF2))),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(i.providerName, style: GoogleFonts.sora(fontSize: 13, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
-              ),
-              buildInterventionStatusBadge(context, i.statut),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text('${i.service} · ${i.date.day}/${i.date.month}/${i.date.year} · ${formatHourRanges(i.heures)}',
-              style: GoogleFonts.dmSans(fontSize: 11, color: const Color(0xFF94A3B8))),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(i.montant == null ? '—' : '${i.montant!.toStringAsFixed(0)} FCFA',
-                  style: GoogleFonts.sora(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF2563EB))),
-              _buildAction(context, i),
-            ],
-          ),
-        ],
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => InterventionDetailDialog.show(context, i),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE8ECF2))),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(i.providerName, style: GoogleFonts.sora(fontSize: 13, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+                ),
+                buildInterventionStatusBadge(context, i.statut),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text('${i.service} · ${i.date.day}/${i.date.month}/${i.date.year} · ${formatHourRanges(i.heures)}',
+                style: GoogleFonts.dmSans(fontSize: 11, color: const Color(0xFF94A3B8))),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(i.montant == null ? '—' : '${i.montant!.toStringAsFixed(0)} FCFA',
+                    style: GoogleFonts.sora(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF2563EB))),
+                _buildAction(context, i),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

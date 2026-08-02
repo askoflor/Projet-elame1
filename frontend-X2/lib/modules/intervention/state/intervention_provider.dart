@@ -100,9 +100,20 @@ class InterventionProvider extends ChangeNotifier {
         ));
   }
 
-  void terminer(String reference) {
+  /// Cloture une intervention "en cours" avec le compte-rendu obligatoire du
+  /// prestataire (description + au moins une photo du travail realise).
+  void terminerAvecRapport(
+    String reference, {
+    required String description,
+    required List<String> photos,
+  }) {
     _updateByReference(
-        reference, (i) => i.copyWith(statut: InterventionStatus.terminee));
+        reference,
+        (i) => i.copyWith(
+              statut: InterventionStatus.terminee,
+              completionDescription: description,
+              completionPhotos: photos,
+            ));
   }
 
   void annuler(String reference) {

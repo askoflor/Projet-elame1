@@ -7,6 +7,7 @@ import '../../../state/provider_dashboard_state.dart';
 import '../../../../intervention/domain/intervention.dart';
 import '../../../../intervention/state/intervention_provider.dart';
 import '../../../../intervention/presentation/widgets/chiffrage_modal.dart';
+import '../../../../intervention/presentation/widgets/completion_modal.dart';
 import '../../../../../core/widgets/axis_line_chart.dart';
 
 class DashboardContent extends StatefulWidget {
@@ -17,7 +18,7 @@ class DashboardContent extends StatefulWidget {
 }
 
 class _DashboardContentState extends State<DashboardContent> {
-  DateTime? _selectedDate;
+  DateTimeRange? _selectedRange;
   static const _windowDays = 7;
 
   DateTime _defaultDate(List<Intervention> all) {
@@ -26,20 +27,20 @@ class _DashboardContentState extends State<DashboardContent> {
     return dates.last;
   }
 
-  DateTimeRange _rangeForDate(DateTime date) {
-    final end = DateTime(date.year, date.month, date.day);
+  DateTimeRange _defaultRange(List<Intervention> all) {
+    final end = DateTime(_defaultDate(all).year, _defaultDate(all).month, _defaultDate(all).day);
     return DateTimeRange(start: end.subtract(const Duration(days: _windowDays - 1)), end: end);
   }
 
-  Future<void> _pickDate(BuildContext context, List<Intervention> all) async {
+  Future<void> _pickRange(BuildContext context, List<Intervention> all) async {
     final now = DateTime.now();
-    final picked = await showDatePicker(
+    final picked = await showDateRangePicker(
       context: context,
       firstDate: DateTime(now.year - 2),
       lastDate: DateTime(now.year + 1),
-      initialDate: _selectedDate ?? _defaultDate(all),
+      initialDateRange: _selectedRange ?? _defaultRange(all),
     );
-    if (picked != null) setState(() => _selectedDate = picked);
+    if (picked != null) setState(() => _selectedRange = picked);
   }
 
   List<DateTime> _daysIn(DateTimeRange range) {
@@ -106,12 +107,13 @@ class _DashboardContentState extends State<DashboardContent> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          tr('provider.greeting'),
+          tr('provider.dashboardTitle'),
           style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
             color: Color(0xFF1E293B),
             fontFamily: 'Sora',
+            letterSpacing: -0.5,
           ),
         ),
         const SizedBox(height: 4),
@@ -129,8 +131,7 @@ class _DashboardContentState extends State<DashboardContent> {
 
   Widget _buildMetricsSection(BuildContext context, InterventionProvider interventions, String Function(String) tr) {
     final all = interventions.all;
-    final selected = _selectedDate ?? _defaultDate(all);
-    final range = _rangeForDate(selected);
+    final range = _selectedRange ?? _defaultRange(all);
     final gainSeries = _gainSeries(all, range);
     final missionsSeries = _missionsSeries(all, range);
     final enCoursCount = interventions.enCours.length;
@@ -150,9 +151,9 @@ class _DashboardContentState extends State<DashboardContent> {
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF1E293B), fontFamily: 'Sora'),
             ),
             OutlinedButton.icon(
-              onPressed: () => _pickDate(context, all),
+              onPressed: () => _pickRange(context, all),
               icon: const Icon(Icons.calendar_today_rounded, size: 14),
-              label: Text(_fmtDate(selected), style: const TextStyle(fontSize: 12)),
+              label: Text('${_fmtDate(range.start)} — ${_fmtDate(range.end)}', style: const TextStyle(fontSize: 12)),
             ),
           ],
         ),
@@ -451,7 +452,7 @@ class _DashboardContentState extends State<DashboardContent> {
     }
     if (i.statut == InterventionStatus.encours) {
       return OutlinedButton(
-        onPressed: () => context.read<InterventionProvider>().terminer(i.reference),
+        onPressed: () => CompletionModal.show(context, i),
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           minimumSize: const Size(0, 30),
