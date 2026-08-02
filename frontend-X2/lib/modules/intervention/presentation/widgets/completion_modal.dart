@@ -32,6 +32,7 @@ class _CompletionModalState extends State<CompletionModal> {
   final List<String> _photos = [];
   bool _uploading = false;
   bool _submitAttempted = false;
+  bool _submitting = false;
 
   @override
   void dispose() {
@@ -70,17 +71,24 @@ class _CompletionModalState extends State<CompletionModal> {
 
   bool get _isValid => _descriptionController.text.trim().isNotEmpty && _photos.isNotEmpty;
 
-  void _confirmer() {
+  Future<void> _confirmer() async {
     setState(() => _submitAttempted = true);
     if (!_isValid) {
       _toast(context.tr('completion.champsRequis'));
       return;
     }
-    context.read<InterventionProvider>().terminerAvecRapport(
+    setState(() => _submitting = true);
+    final success = await context.read<InterventionProvider>().terminerAvecRapport(
           widget.intervention.reference,
           description: _descriptionController.text.trim(),
           photos: _photos,
         );
+    if (!mounted) return;
+    if (!success) {
+      setState(() => _submitting = false);
+      _toast(context.tr('completion.echec'));
+      return;
+    }
     Navigator.of(context).pop();
     _toast(context.tr('completion.interventionTerminee'));
   }
@@ -178,9 +186,11 @@ class _CompletionModalState extends State<CompletionModal> {
                   TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(context.tr('completion.annulerBtn'))),
                   const SizedBox(width: 8),
                   ElevatedButton.icon(
-                    onPressed: _confirmer,
+                    onPressed: _submitting ? null : _confirmer,
                     style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF16A34A), foregroundColor: Colors.white),
-                    icon: const Icon(Icons.check, size: 18),
+                    icon: _submitting
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.check, size: 18),
                     label: Text(context.tr('completion.confirmerBtn')),
                   ),
                 ],

@@ -23,6 +23,11 @@ class AppConfig {
   static const String meEndpoint = '/auth/me';
   static const String forgotPasswordEndpoint = '/auth/forgot-password';
 
+  // Endpoints Interventions
+  static const String interventionsEndpoint = '/interventions';
+  static const String myInterventionsEndpoint = '/interventions/mine';
+  static const String interventionsPlanningEndpoint = '/interventions/planning';
+
   // Timeouts
   static const int connectTimeout = 30000;
   static const int receiveTimeout = 30000;

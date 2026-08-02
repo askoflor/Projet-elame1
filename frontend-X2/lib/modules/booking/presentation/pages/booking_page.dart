@@ -8,7 +8,6 @@ import '../../../../core/widgets/hour_slot_grid.dart';
 import '../../../../core/utils/hour_range_formatter.dart';
 import '../../../../core/constants/referentials.dart';
 import '../../../../modules/home/presentation/widgets/header/nav_bar.dart';
-import '../../../auth/domain/auth_provider.dart';
 import '../../../intervention/state/intervention_provider.dart';
 import '../../../search/domain/entities/provider_model.dart';
 
@@ -46,6 +45,9 @@ class _BookingPageState extends State<BookingPage> {
       final index = Referentials.services.indexOf(service);
       _selectedService = index >= 0 ? index : 0;
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<InterventionProvider>().chargerPlanning(_providerName);
+    });
   }
 
   static const _serviceKeys = [
@@ -443,33 +445,36 @@ class _BookingPageState extends State<BookingPage> {
     );
   }
 
-  void _confirmReservation() {
+  Future<void> _confirmReservation() async {
     if (_selectedHours.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sélectionnez au moins une heure d\'intervention')),
+        SnackBar(content: Text(context.tr('booking.selectionnezHeure'))),
       );
       setState(() => _currentStep = 2);
       return;
     }
-    final auth = context.read<AuthProvider>();
-    final clientNom = auth.user != null ? '${auth.user!.prenom} ${auth.user!.nom}'.trim() : 'Client';
-    final intervention = context.read<InterventionProvider>().creer(
-          clientNom: clientNom.isEmpty ? 'Client' : clientNom,
-          clientPhone: 'Non renseigné',
+    final intervention = await context.read<InterventionProvider>().creer(
           providerName: _providerName,
           service: Referentials.services[_selectedService],
           titre: _titleController.text.trim().isEmpty
-              ? 'Intervention ${context.tr(_serviceKeys[_selectedService])}'
+              ? '${context.tr('booking.interventionPrefix')} ${context.tr(_serviceKeys[_selectedService])}'
               : _titleController.text.trim(),
           description: _descriptionController.text.trim(),
           date: _selectedDate,
           heures: _selectedHours,
           urgence: _urgencyLabels[_selectedUrgency],
-          adresse: _addressController.text.trim().isEmpty ? 'Non spécifiée' : _addressController.text.trim(),
+          adresse: _addressController.text.trim().isEmpty ? context.tr('booking.adresseNonSpecifiee') : _addressController.text.trim(),
         );
+    if (!mounted) return;
+    if (intervention == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('booking.echecCreation'))),
+      );
+      return;
+    }
     context.go('/espace-client');
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Intervention ${intervention.reference} créée · visible dans vos réservations')),
+      SnackBar(content: Text('${context.tr('booking.interventionCreeePrefix')} ${intervention.reference} ${context.tr('booking.interventionCreeeSuffix')}')),
     );
   }
 

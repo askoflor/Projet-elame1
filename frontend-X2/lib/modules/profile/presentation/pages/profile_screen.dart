@@ -46,6 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   DateTime _visibleMonth = DateTime(DateTime.now().year, DateTime.now().month);
   DateTime? _selectedDay;
   List<int> _pickedHours = [];
+  String? _planningLoadedFor;
 
   final _nameController = TextEditingController();
   final _aboutController = TextEditingController();
@@ -994,6 +995,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final ownerProvider = _ownerMode ? context.watch<ProviderDashboardProvider>() : null;
     final isFr = context.watch<TranslationProvider>().locale.languageCode == 'fr';
     final today = DateTime.now();
+
+    if (_planningLoadedFor != providerName) {
+      _planningLoadedFor = providerName;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.read<InterventionProvider>().chargerPlanning(providerName);
+      });
+    }
 
     bool isPast(DateTime day) => DateTime(day.year, day.month, day.day).isBefore(DateTime(today.year, today.month, today.day));
     bool isToday(DateTime day) => _sameDay(day, today);

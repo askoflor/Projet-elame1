@@ -32,6 +32,7 @@ class _ChiffrageModalState extends State<ChiffrageModal> {
   late String _dureeSelectionnee;
   late DateTime _dateConfirmee;
   double _montant = 0;
+  bool _submitting = false;
 
   String _dureeLabel(String v) {
     switch (v) {
@@ -78,19 +79,28 @@ class _ChiffrageModalState extends State<ChiffrageModal> {
     if (picked != null) setState(() => _dateConfirmee = picked);
   }
 
-  void _confirmer() {
+  Future<void> _confirmer() async {
     if (_montant <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.tr('chiffrage.montantVide'))),
       );
       return;
     }
-    context.read<InterventionProvider>().chiffrer(
+    setState(() => _submitting = true);
+    final success = await context.read<InterventionProvider>().chiffrer(
           widget.intervention.reference,
           montant: _montant,
           dateConfirmee: _dateConfirmee,
           note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
         );
+    if (!mounted) return;
+    if (!success) {
+      setState(() => _submitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('chiffrage.echec'))),
+      );
+      return;
+    }
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(
@@ -263,12 +273,14 @@ class _ChiffrageModalState extends State<ChiffrageModal> {
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton.icon(
-                    onPressed: _confirmer,
+                    onPressed: _submitting ? null : _confirmer,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2563EB),
                       foregroundColor: Colors.white,
                     ),
-                    icon: const Icon(Icons.check, size: 18),
+                    icon: _submitting
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.check, size: 18),
                     label: Text(context.tr('chiffrage.validerBtn')),
                   ),
                 ],

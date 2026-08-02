@@ -1,17 +1,27 @@
 import 'package:flutter/material.dart';
-import '../data/mock_interventions.dart';
+import '../data/intervention_repository.dart';
 import '../domain/intervention.dart';
+import '../domain/provider_schedule_entry.dart';
 
-/// État partagé du cycle de vie des interventions, consommé à la fois par
-/// l'espace client et l'espace prestataire (une seule identité client et une
-/// seule identité prestataire démo dans cette application, comme le reste
-/// des données mock).
+/// Etat partage du cycle de vie des interventions, adosse a l'API backend
+/// (`/api/v1/interventions`). `all` reflete les interventions du client
+/// connecte (ses reservations) ou du prestataire connecte (ses missions)
+/// selon le role, chargees via [chargerMesInterventions]. Le planning d'un
+/// prestataire specifique (utilise pour griser les creneaux deja pris sur
+/// son calendrier public) est charge a la demande via [chargerPlanning].
 class InterventionProvider extends ChangeNotifier {
-  List<Intervention> _all = List.of(mockInterventions);
-  int _refCounter = 2419;
+  final InterventionRepository _repository;
+
+  InterventionProvider({InterventionRepository? repository})
+      : _repository = repository ?? InterventionRepository();
+
+  List<Intervention> _all = [];
+  bool _loading = false;
   String? lastCreatedReference;
+  final Map<String, List<ProviderScheduleEntry>> _scheduleCache = {};
 
   List<Intervention> get all => List.unmodifiable(_all);
+  bool get isLoading => _loading;
 
   List<Intervention> get enAttente =>
       _all.where((i) => i.statut == InterventionStatus.attente).toList();
@@ -31,30 +41,43 @@ class InterventionProvider extends ChangeNotifier {
         .fold<double>(0, (sum, i) => sum + i.montant!);
   }
 
-  /// Heures déjà occupées par une intervention non annulée d'un prestataire
-  /// à une date donnée — sert à griser les créneaux "Complet".
+  Future<void> chargerMesInterventions() async {
+    _loading = true;
+    notifyListeners();
+    _all = await _repository.mesInterventions();
+    _loading = false;
+    notifyListeners();
+  }
+
+  /// Charge (ou rafraichit) le planning public d'un prestataire : necessaire
+  /// avant d'utiliser [hoursBookedFor]/[isDateLocked] pour ce prestataire.
+  Future<void> chargerPlanning(String providerName) async {
+    final entries = await _repository.planningPrestataire(providerName);
+    _scheduleCache[providerName] = entries;
+    notifyListeners();
+  }
+
+  /// Heures deja occupees par une intervention non annulee d'un prestataire
+  /// a une date donnee — sert a griser les creneaux "Complet". Necessite un
+  /// appel prealable a [chargerPlanning] pour ce prestataire.
   Set<int> hoursBookedFor(String providerName, DateTime date) {
-    return _all
-        .where((i) =>
-            i.providerName == providerName &&
-            i.statut != InterventionStatus.annulee &&
-            _sameDay(i.date, date))
-        .expand((i) => i.heures)
+    final entries = _scheduleCache[providerName] ?? const [];
+    return entries
+        .where((e) => _sameDay(e.date, date))
+        .expand((e) => e.heures)
         .toSet();
   }
 
-  /// Un jour est verrouillé (non basculable par le prestataire) s'il porte
-  /// déjà une intervention en attente ou en cours.
+  /// Un jour est verrouille (non basculable par le prestataire) s'il porte
+  /// deja une intervention en attente ou en cours.
   bool isDateLocked(String providerName, DateTime date) {
-    return _all.any((i) =>
-        i.providerName == providerName &&
-        _sameDay(i.date, date) &&
-        (i.statut == InterventionStatus.attente || i.statut == InterventionStatus.encours));
+    final entries = _scheduleCache[providerName] ?? const [];
+    return entries.any((e) =>
+        _sameDay(e.date, date) &&
+        (e.statut == InterventionStatus.attente || e.statut == InterventionStatus.encours));
   }
 
-  Intervention creer({
-    required String clientNom,
-    required String clientPhone,
+  Future<Intervention?> creer({
     required String providerName,
     required String service,
     required String titre,
@@ -63,12 +86,8 @@ class InterventionProvider extends ChangeNotifier {
     required List<int> heures,
     required String urgence,
     required String adresse,
-  }) {
-    final reference = 'INT-${_refCounter++}';
-    final intervention = Intervention(
-      reference: reference,
-      clientNom: clientNom,
-      clientPhone: clientPhone,
+  }) async {
+    final created = await _repository.creer(
       providerName: providerName,
       service: service,
       titre: titre,
@@ -77,57 +96,54 @@ class InterventionProvider extends ChangeNotifier {
       heures: heures,
       urgence: urgence,
       adresse: adresse,
-      statut: InterventionStatus.attente,
-      creeLe: DateTime.now(),
     );
-    _all = [intervention, ..._all];
-    lastCreatedReference = reference;
-    notifyListeners();
-    return intervention;
+    if (created != null) {
+      _all = [created, ..._all];
+      lastCreatedReference = created.reference;
+      notifyListeners();
+    }
+    return created;
   }
 
-  void chiffrer(
+  Future<bool> chiffrer(
     String reference, {
     required double montant,
     DateTime? dateConfirmee,
     String? note,
-  }) {
-    _updateByReference(reference, (i) => i.copyWith(
-          montant: montant,
-          date: dateConfirmee,
-          notePrestataire: note,
-          statut: InterventionStatus.encours,
-        ));
+  }) async {
+    final updated = await _repository.chiffrer(reference, montant: montant, dateConfirmee: dateConfirmee, note: note);
+    if (updated == null) return false;
+    _replace(updated);
+    return true;
   }
 
-  /// Cloture une intervention "en cours" avec le compte-rendu obligatoire du
-  /// prestataire (description + au moins une photo du travail realise).
-  void terminerAvecRapport(
+  Future<bool> terminerAvecRapport(
     String reference, {
     required String description,
     required List<String> photos,
-  }) {
-    _updateByReference(
-        reference,
-        (i) => i.copyWith(
-              statut: InterventionStatus.terminee,
-              completionDescription: description,
-              completionPhotos: photos,
-            ));
+  }) async {
+    final updated = await _repository.terminer(reference, description: description, photos: photos);
+    if (updated == null) return false;
+    _replace(updated);
+    return true;
   }
 
-  void annuler(String reference) {
-    _updateByReference(
-        reference, (i) => i.copyWith(statut: InterventionStatus.annulee));
+  Future<bool> annuler(String reference) async {
+    final updated = await _repository.annuler(reference);
+    if (updated == null) return false;
+    _replace(updated);
+    return true;
   }
 
-  void _updateByReference(
-      String reference, Intervention Function(Intervention) update) {
-    final index = _all.indexWhere((i) => i.reference == reference);
-    if (index == -1) return;
-    final next = List.of(_all);
-    next[index] = update(next[index]);
-    _all = next;
+  void _replace(Intervention updated) {
+    final index = _all.indexWhere((i) => i.reference == updated.reference);
+    if (index == -1) {
+      _all = [updated, ..._all];
+    } else {
+      final next = List.of(_all);
+      next[index] = updated;
+      _all = next;
+    }
     notifyListeners();
   }
 

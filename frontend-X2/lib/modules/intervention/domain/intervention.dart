@@ -1,4 +1,14 @@
+import '../../../core/utils/date_parser.dart';
+
 enum InterventionStatus { attente, encours, terminee, annulee }
+
+InterventionStatus interventionStatusFromJson(dynamic value) {
+  final name = (value as String? ?? 'ATTENTE').toLowerCase();
+  return InterventionStatus.values.firstWhere(
+    (s) => s.name == name,
+    orElse: () => InterventionStatus.attente,
+  );
+}
 
 class Intervention {
   final String reference;
@@ -45,32 +55,25 @@ class Intervention {
 
   int get dureeHeures => heures.length;
 
-  Intervention copyWith({
-    double? montant,
-    String? notePrestataire,
-    InterventionStatus? statut,
-    DateTime? date,
-    String? completionDescription,
-    List<String>? completionPhotos,
-  }) {
+  factory Intervention.fromJson(Map<String, dynamic> json) {
     return Intervention(
-      reference: reference,
-      clientNom: clientNom,
-      clientPhone: clientPhone,
-      providerName: providerName,
-      service: service,
-      titre: titre,
-      description: description,
-      date: date ?? this.date,
-      heures: heures,
-      urgence: urgence,
-      adresse: adresse,
-      montant: montant ?? this.montant,
-      notePrestataire: notePrestataire ?? this.notePrestataire,
-      statut: statut ?? this.statut,
-      creeLe: creeLe,
-      completionDescription: completionDescription ?? this.completionDescription,
-      completionPhotos: completionPhotos ?? this.completionPhotos,
+      reference: json['reference'] as String,
+      clientNom: json['clientNom'] as String? ?? '',
+      clientPhone: json['clientPhone'] as String? ?? '',
+      providerName: json['providerName'] as String? ?? '',
+      service: json['service'] as String? ?? '',
+      titre: json['titre'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      date: parseFlexibleDate(json['date']) ?? DateTime.now(),
+      heures: (json['heures'] as List?)?.map((e) => e as int).toList() ?? [],
+      urgence: json['urgence'] as String? ?? '',
+      adresse: json['adresse'] as String? ?? '',
+      montant: (json['montant'] as num?)?.toDouble(),
+      notePrestataire: json['notePrestataire'] as String?,
+      statut: interventionStatusFromJson(json['statut']),
+      creeLe: parseFlexibleDate(json['creeLe']) ?? DateTime.now(),
+      completionDescription: json['completionDescription'] as String?,
+      completionPhotos: (json['completionPhotos'] as List?)?.map((e) => e as String).toList() ?? [],
     );
   }
 }

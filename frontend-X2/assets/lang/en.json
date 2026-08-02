@@ -267,7 +267,13 @@
     "deplacement": "Travel fee",
     "commission": "Commission (5%)",
     "total": "Total",
-    "paymentSecure": "100% secure payment. Refund guaranteed if cancelled within 24h."
+    "paymentSecure": "100% secure payment. Refund guaranteed if cancelled within 24h.",
+    "selectionnezHeure": "Select at least one intervention time slot",
+    "interventionPrefix": "Intervention",
+    "adresseNonSpecifiee": "Not specified",
+    "echecCreation": "Unable to create the intervention, please try again",
+    "interventionCreeePrefix": "Intervention",
+    "interventionCreeeSuffix": "created · visible in your bookings"
   },
   "paymentPage": {
     "successTitle": "Payment successful!",
@@ -507,6 +513,7 @@
     "photosLabel": "Photos of the completed work",
     "photoRequise": "At least one photo is required",
     "champsRequis": "Please provide a description and add at least one photo",
+    "echec": "Unable to save the report, please try again",
     "imageTropVolumineuse": "Image too large (max ~1.5 MB). Choose a lighter photo.",
     "impossibleChargerImage": "Unable to load this image",
     "interventionTerminee": "Intervention completed · the client can view the report",
@@ -563,6 +570,7 @@
   "chiffrage": {
     "title": "Confirm the intervention",
     "montantVide": "Enter the amount agreed with the client",
+    "echec": "Unable to save, please try again",
     "confirmSnack": "{0} confirmed · status \"In progress\" · the client can now pay",
     "appelEnCours": "Calling the client…",
     "appelerBtn": "Call",

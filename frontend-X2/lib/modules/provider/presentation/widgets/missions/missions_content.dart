@@ -33,6 +33,14 @@ class _MissionsContentState extends State<MissionsContent> {
   static const _pageSize = 6;
   int _currentPage = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<InterventionProvider>().chargerMesInterventions();
+    });
+  }
+
   List<String> _filterLabels(BuildContext context) => [
         context.tr('intervention.filterToutes'),
         context.tr('intervention.filterEnAttente'),

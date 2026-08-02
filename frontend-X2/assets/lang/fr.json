@@ -267,7 +267,13 @@
     "deplacement": "Déplacement",
     "commission": "Commission (5%)",
     "total": "Total",
-    "paymentSecure": "Paiement 100% sécurisé. Remboursement garanti si annulation sous 24h."
+    "paymentSecure": "Paiement 100% sécurisé. Remboursement garanti si annulation sous 24h.",
+    "selectionnezHeure": "Sélectionnez au moins une heure d'intervention",
+    "interventionPrefix": "Intervention",
+    "adresseNonSpecifiee": "Non spécifiée",
+    "echecCreation": "Impossible de créer l'intervention, réessayez",
+    "interventionCreeePrefix": "Intervention",
+    "interventionCreeeSuffix": "créée · visible dans vos réservations"
   },
   "paymentPage": {
     "successTitle": "Paiement réussi !",
@@ -507,6 +513,7 @@
     "photosLabel": "Photos du travail réalisé",
     "photoRequise": "Au moins une photo est requise",
     "champsRequis": "Veuillez renseigner une description et ajouter au moins une photo",
+    "echec": "Impossible d'enregistrer le compte-rendu, réessayez",
     "imageTropVolumineuse": "Image trop volumineuse (max ~1,5 Mo). Choisissez une photo plus légère.",
     "impossibleChargerImage": "Impossible de charger cette image",
     "interventionTerminee": "Intervention terminée · le client peut consulter le compte-rendu",
@@ -563,6 +570,7 @@
   "chiffrage": {
     "title": "Valider l'intervention",
     "montantVide": "Saisissez le montant convenu avec le client",
+    "echec": "Impossible d'enregistrer, réessayez",
     "confirmSnack": "{0} validée · statut « En cours » · le client peut payer",
     "appelEnCours": "Appel du client en cours…",
     "appelerBtn": "Appeler",

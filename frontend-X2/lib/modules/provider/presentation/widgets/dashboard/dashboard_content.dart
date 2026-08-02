@@ -21,6 +21,14 @@ class _DashboardContentState extends State<DashboardContent> {
   DateTimeRange? _selectedRange;
   static const _windowDays = 7;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<InterventionProvider>().chargerMesInterventions();
+    });
+  }
+
   DateTime _defaultDate(List<Intervention> all) {
     if (all.isEmpty) return DateTime.now();
     final dates = all.map((i) => DateTime(i.date.year, i.date.month, i.date.day)).toList()..sort();
