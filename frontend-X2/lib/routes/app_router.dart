@@ -15,6 +15,7 @@ import '../modules/provider/presentation/pages/provider_dashboard_screen.dart';
 import '../modules/payment/presentation/pages/payment_page.dart';
 import '../modules/profile/presentation/pages/profile_screen.dart';
 import '../modules/search/domain/entities/provider_model.dart';
+import '../modules/search/domain/entities/search_entry_args.dart';
 import '../modules/booking/domain/booking_entry_args.dart';
 import '../modules/static/presentation/pages/about_page.dart';
 import '../modules/static/presentation/pages/faq_page.dart';
@@ -75,6 +76,9 @@ class AppRouter {
           path: AppConstants.searchRoute,
           builder: (context, state) {
             final extra = state.extra;
+            if (extra is SearchEntryArgs) {
+              return SearchPage(initialCategory: extra.specialite, initialDate: extra.date);
+            }
             return SearchPage(initialCategory: extra is String ? extra : null);
           },
         ),

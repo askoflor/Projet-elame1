@@ -4,6 +4,7 @@ import 'app.dart';
 import 'core/localization/translation_provider.dart';
 import 'modules/auth/domain/auth_provider.dart';
 import 'modules/provider/state/provider_dashboard_state.dart';
+import 'modules/provider/state/availability_provider.dart';
 import 'modules/intervention/state/intervention_provider.dart';
 
 void main() async {
@@ -16,6 +17,7 @@ void main() async {
         ChangeNotifierProvider.value(value: translationProvider),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ProviderDashboardProvider()),
+        ChangeNotifierProvider(create: (_) => AvailabilityProvider()),
         ChangeNotifierProvider(create: (_) => InterventionProvider()),
       ],
       child: const App(),

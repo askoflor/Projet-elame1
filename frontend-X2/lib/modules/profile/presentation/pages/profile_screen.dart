@@ -13,6 +13,7 @@ import '../../../home/presentation/widgets/header/nav_bar.dart';
 import '../../../auth/domain/auth_provider.dart';
 import '../../../auth/domain/auth_model.dart';
 import '../../../provider/state/provider_dashboard_state.dart';
+import '../../../provider/state/availability_provider.dart';
 import '../../../provider/domain/certification.dart';
 import '../../../intervention/state/intervention_provider.dart';
 import '../../../search/domain/entities/provider_model.dart';
@@ -70,14 +71,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _selectedQuartier = Referentials.quartiers.contains(auth.user?.quartier) ? auth.user!.quartier : null;
     }
     _visitorProvider = widget.provider ?? _emptyProviderPlaceholder();
-    if (widget.provider == null && !_ownerMode && !_isClientOwner) {
-      // Aucun contexte prestataire (ni visite depuis la recherche, ni mode
-      // proprietaire) : redirige vers la recherche plutot que d'afficher un
-      // profil vide.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) context.go('/recherche');
-      });
-    }
     if (_ownerMode) {
       final profile = context.read<ProviderDashboardProvider>().profile;
       _selectedMetier = Referentials.metiers.contains(profile.specialite)
@@ -89,6 +82,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } else {
       _selectedMetier = Referentials.metiers.first;
       _selectedVille = Referentials.villes.first;
+    }
+    if (_ownerMode) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.read<InterventionProvider>().chargerMesMissions();
+      });
     }
   }
 
@@ -443,16 +441,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
     final providerDash = _ownerMode ? context.watch<ProviderDashboardProvider>() : null;
     final authUser = context.watch<AuthProvider>().user;
+    final missionsTerminees = _ownerMode ? context.watch<InterventionProvider>().missionsTerminees.length : 0;
     final data = _ownerMode
-        ? ProfileViewData.fromProviderProfile(providerDash!.profile, realUser: authUser, certifie: authUser?.certifie ?? false)
+        ? ProfileViewData.fromProviderProfile(
+            providerDash!.profile,
+            realUser: authUser,
+            certifie: authUser?.certifie ?? false,
+            missionsReellesTerminees: missionsTerminees,
+          )
         : ProfileViewData.fromProviderModel(_visitorProvider);
     final providerName = _ownerMode ? data.name : _visitorProvider.name;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      bottomNavigationBar: (_ownerMode && providerDash!.hasPendingAvailabilityChanges)
-          ? _buildSaveBar(providerDash)
-          : null,
       body: SafeArea(
         child: Column(
           children: [
@@ -1015,20 +1016,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildCalendarSection(String providerName) {
     final interventions = context.watch<InterventionProvider>();
-    final ownerProvider = _ownerMode ? context.watch<ProviderDashboardProvider>() : null;
+    final availability = context.watch<AvailabilityProvider>();
     final isFr = context.watch<TranslationProvider>().locale.languageCode == 'fr';
     final today = DateTime.now();
 
     if (_planningLoadedFor != providerName) {
       _planningLoadedFor = providerName;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) context.read<InterventionProvider>().chargerPlanning(providerName);
+        if (!mounted) return;
+        context.read<InterventionProvider>().chargerPlanning(providerName);
+        if (_ownerMode) {
+          context.read<AvailabilityProvider>().chargerMesDisponibilites();
+        } else {
+          context.read<AvailabilityProvider>().chargerDisponibilitesPrestataire(providerName);
+        }
       });
     }
 
     bool isPast(DateTime day) => DateTime(day.year, day.month, day.day).isBefore(DateTime(today.year, today.month, today.day));
     bool isToday(DateTime day) => _sameDay(day, today);
-    bool isAvailable(DateTime day) => _ownerMode ? ownerProvider!.isAvailableOn(day) : true;
+    bool isAvailable(DateTime day) =>
+        _ownerMode ? availability.isAvailableOn(day) : availability.isProviderAvailableOn(providerName, day);
     bool isLocked(DateTime day) => interventions.isDateLocked(providerName, day);
 
     final daysInMonth = DateTime(_visibleMonth.year, _visibleMonth.month + 1, 0).day;
@@ -1097,12 +1105,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 runSpacing: 6,
                 children: [
                   OutlinedButton(
-                    onPressed: () => ownerProvider!.bulkSetAvailability(_visibleMonth, true),
+                    onPressed: () => _setMonthAvailability(true),
                     child: Text(context.tr('profile.toutDisponible'), style: const TextStyle(fontSize: 11)),
                   ),
                   OutlinedButton(
-                    onPressed: () => ownerProvider!.bulkSetAvailability(_visibleMonth, false),
+                    onPressed: () => _setMonthAvailability(false),
                     child: Text(context.tr('profile.toutIndisponible'), style: const TextStyle(fontSize: 11)),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _pickAvailabilityRange,
+                    icon: const Icon(Icons.date_range_outlined, size: 14),
+                    label: Text(context.tr('profile.definirPeriode'), style: const TextStyle(fontSize: 11)),
                   ),
                 ],
               );
@@ -1160,7 +1173,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 available: isAvailable(day),
                 locked: isLocked(day),
                 past: isPast(day),
-                ownerProvider: ownerProvider,
               );
             },
           ),
@@ -1208,6 +1220,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Future<void> _setMonthAvailability(bool disponible) async {
+    final start = DateTime(_visibleMonth.year, _visibleMonth.month, 1);
+    final end = DateTime(_visibleMonth.year, _visibleMonth.month + 1, 0);
+    final success = await context.read<AvailabilityProvider>().definirPeriode(start, end, disponible);
+    if (!mounted) return;
+    if (!success) _toast(context.tr('profile.erreurEnregistrement'));
+  }
+
+  Future<void> _pickAvailabilityRange() async {
+    final now = DateTime.now();
+    final range = await showDateRangePicker(
+      context: context,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+      initialDateRange: DateTimeRange(start: now, end: now.add(const Duration(days: 6))),
+    );
+    if (range == null || !mounted) return;
+    final disponible = await _askDisponibiliteChoice();
+    if (disponible == null || !mounted) return;
+    final success = await context.read<AvailabilityProvider>().definirPeriode(range.start, range.end, disponible);
+    if (!mounted) return;
+    if (!success) _toast(context.tr('profile.erreurEnregistrement'));
+  }
+
+  Future<bool?> _askDisponibiliteChoice() {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.tr('profile.definirPeriodeTitre')),
+        content: Text(dialogContext.tr('profile.definirPeriodeQuestion')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(dialogContext.tr('profile.legendIndisponible')),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(dialogContext.tr('profile.legendDisponible')),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildLegend(Color bg, Color dot, String label) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -1226,7 +1282,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required bool available,
     required bool locked,
     required bool past,
-    required ProviderDashboardProvider? ownerProvider,
   }) {
     Color bg;
     Color fg;
@@ -1254,7 +1309,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _toast(context.tr('profile.journeeVerrouillee'));
           return;
         }
-        ownerProvider!.toggleAvailabilityDay(day);
+        context.read<AvailabilityProvider>().basculerDate(day);
       };
     } else if (!past) {
       onTap = () => setState(() {
@@ -1278,57 +1333,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               if (locked)
                 Positioned(top: 2, right: 3, child: Icon(Icons.lock, size: 8, color: fg)),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSaveBar(ProviderDashboardProvider providerDash) {
-    final buttons = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        TextButton(
-          onPressed: providerDash.cancelAvailabilityChanges,
-          child: Text(context.tr('profile.annulerBtn'), style: const TextStyle(color: Colors.white70)),
-        ),
-        const SizedBox(width: 4),
-        ElevatedButton(
-          onPressed: providerDash.saveAvailabilityChanges,
-          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2563EB), foregroundColor: Colors.white),
-          child: Text(context.tr('profile.enregistrerBtn')),
-        ),
-      ],
-    );
-    final message = Text(
-      context.tr('profile.modifsNonEnregistrees'),
-      style: const TextStyle(color: Colors.white, fontSize: 12),
-      overflow: TextOverflow.ellipsis,
-      maxLines: 2,
-    );
-
-    return Material(
-      color: const Color(0xFF1E293B),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              if (constraints.maxWidth < 420) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [message, const SizedBox(height: 8), buttons],
-                );
-              }
-              return Row(
-                children: [
-                  Expanded(child: message),
-                  buttons,
-                ],
-              );
-            },
           ),
         ),
       ),

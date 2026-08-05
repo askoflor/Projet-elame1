@@ -9,16 +9,21 @@ class SearchRepository {
     String? specialite,
     String? quartier,
     bool? disponible,
+    DateTime? date,
   }) async {
     try {
       final response = await _dio.get('/search/providers', queryParameters: {
         if (specialite != null && specialite.isNotEmpty) 'specialite': specialite,
         if (quartier != null && quartier.isNotEmpty) 'quartier': quartier,
         if (disponible != null) 'disponible': disponible,
+        if (date != null) 'date': _formatDate(date),
       });
       return (response.data as List).map((e) => ProviderModel.fromSearchJson(e as Map<String, dynamic>)).toList();
     } on DioException {
       return [];
     }
   }
+
+  String _formatDate(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }

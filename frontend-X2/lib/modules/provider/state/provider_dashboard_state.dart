@@ -6,9 +6,6 @@ import '../domain/planning.dart';
 import '../domain/notification_model.dart';
 import '../data/models/mock_provider_data.dart';
 
-String _dateKey(DateTime d) =>
-    '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-
 class ProviderDashboardProvider extends ChangeNotifier {
   int _selectedIndex = 0;
   bool _isLoading = false;
@@ -19,7 +16,6 @@ class ProviderDashboardProvider extends ChangeNotifier {
   List<Revenue> _recentRevenus = [];
   PlanningSemaine _planningSemaine = MockProviderData.planningSemaine;
   List<DisponibiliteSemaine> _disponibilites = [];
-  final Map<String, bool> _dateOverrides = {};
   List<ProviderNotification> _notifications = [];
   int _notificationsNonLues = 0;
 
@@ -122,50 +118,6 @@ class ProviderDashboardProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Disponibilité d'un jour précis : l'exception ponctuelle si elle existe,
-  /// sinon le motif hebdomadaire par défaut.
-  bool isAvailableOn(DateTime date) {
-    final override = _dateOverrides[_dateKey(date)];
-    if (override != null) return override;
-    final weekday = date.weekday - 1; // 0 = lundi
-    if (weekday < 0 || weekday >= _disponibilites.length) return true;
-    return _disponibilites[weekday].actif;
-  }
-
-  bool hasPendingAvailabilityChanges = false;
-  Map<String, bool> _savedOverridesSnapshot = {};
-
-  void toggleAvailabilityDay(DateTime date) {
-    _dateOverrides[_dateKey(date)] = !isAvailableOn(date);
-    hasPendingAvailabilityChanges = true;
-    notifyListeners();
-  }
-
-  void bulkSetAvailability(DateTime anyDayInMonth, bool available) {
-    final firstDay = DateTime(anyDayInMonth.year, anyDayInMonth.month, 1);
-    final daysInMonth =
-        DateTime(anyDayInMonth.year, anyDayInMonth.month + 1, 0).day;
-    for (var i = 0; i < daysInMonth; i++) {
-      final day = firstDay.add(Duration(days: i));
-      _dateOverrides[_dateKey(day)] = available;
-    }
-    hasPendingAvailabilityChanges = true;
-    notifyListeners();
-  }
-
-  void saveAvailabilityChanges() {
-    _savedOverridesSnapshot = Map.of(_dateOverrides);
-    hasPendingAvailabilityChanges = false;
-    notifyListeners();
-  }
-
-  void cancelAvailabilityChanges() {
-    _dateOverrides
-      ..clear()
-      ..addAll(_savedOverridesSnapshot);
-    hasPendingAvailabilityChanges = false;
-    notifyListeners();
-  }
 
   void marquerNotificationLue(String id) {
     final idx = _notifications.indexWhere((n) => n.id == id);

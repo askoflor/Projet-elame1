@@ -29,6 +29,12 @@ class AppConfig {
   static const String myMissionsEndpoint = '/interventions/mine/prestataire';
   static const String interventionsPlanningEndpoint = '/interventions/planning';
 
+  // Endpoints Disponibilites
+  static const String myAvailabilityEndpoint = '/availability/me';
+  static const String availabilityEndpoint = '/availability';
+  static const String availabilityToggleEndpoint = '/availability/toggle';
+  static const String availabilityRangeEndpoint = '/availability/range';
+
   // Timeouts
   static const int connectTimeout = 30000;
   static const int receiveTimeout = 30000;

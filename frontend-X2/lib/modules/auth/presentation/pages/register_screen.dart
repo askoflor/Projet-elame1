@@ -7,6 +7,7 @@ import '../../domain/auth_provider.dart';
 import '../../../../core/localization/translation_provider.dart';
 import '../../../../core/widgets/micro_interactions.dart';
 import '../../../../core/widgets/app_back_button.dart';
+import '../../../../core/constants/category_taxonomy.dart';
 
 enum UserRole { client, prestataire }
 
@@ -36,8 +37,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   UserRole _role = UserRole.client;
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
-  final _specialiteController = TextEditingController();
-  final _specialiteFocus = FocusNode();
+  String? _selectedSpecialite;
   final _dateNaissanceController = TextEditingController();
   DateTime? _dateNaissance;
 
@@ -73,8 +73,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailFocus.dispose();
     _passwordFocus.dispose();
     _confirmFocus.dispose();
-    _specialiteController.dispose();
-    _specialiteFocus.dispose();
     _dateNaissanceController.dispose();
     super.dispose();
   }
@@ -120,7 +118,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _passwordController.text,
       _role == UserRole.prestataire ? 'PRESTATAIRE' : 'CLIENT',
       _telephoneController.text.trim(),
-      specialite: _role == UserRole.prestataire ? _specialiteController.text.trim() : null,
+      specialite: _role == UserRole.prestataire ? _selectedSpecialite : null,
       dateNaissance: _role == UserRole.prestataire ? _dateNaissance : null,
     );
 
@@ -611,51 +609,63 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  final List<String> _specialites = [
-    'Électricité',
-    'Plomberie',
-    'Carrelage',
-    'Climatisation',
-    'Maintenance',
-    'Jardinage',
-    'Peinture',
-    'Menuiserie',
-  ];
-
-  String _specialiteKey(String value) {
-    const map = {
-      'Électricité': 'auth.specialiteElectricite',
-      'Plomberie': 'auth.specialitePlomberie',
-      'Carrelage': 'auth.specialiteCarrelage',
-      'Climatisation': 'auth.specialiteClimatisation',
-      'Maintenance': 'auth.specialiteMaintenance',
-      'Jardinage': 'auth.specialiteJardinage',
-      'Peinture': 'auth.specialitePeinture',
-      'Menuiserie': 'auth.specialiteMenuiserie',
-    };
-    return map[value] ?? value;
+  List<DropdownMenuEntry<String>> _specialiteEntries() {
+    final entries = <DropdownMenuEntry<String>>[];
+    for (final categorie in CategoryTaxonomy.categories) {
+      entries.add(DropdownMenuEntry<String>(
+        value: '__${categorie.label}',
+        label: categorie.label,
+        enabled: false,
+        style: MenuItemButton.styleFrom(
+          foregroundColor: categorie.accent,
+          textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+        ),
+      ));
+      for (final sous in categorie.sousCategories) {
+        entries.add(DropdownMenuEntry<String>(value: sous.label, label: sous.label));
+      }
+    }
+    return entries;
   }
 
+  // Liste des metiers etant longue (24 entrees), on utilise DropdownMenu
+  // plutot que DropdownButtonFormField : il affiche un champ de recherche
+  // en haut de la liste deroulante qui filtre les metiers a la frappe.
   Widget _buildSpecialiteField() {
-    return DropdownButtonFormField<String>(
-      value: _specialiteController.text.isNotEmpty ? _specialiteController.text : null,
-      hint: Text(context.tr('auth.specialiteHint')),
-      icon: const Icon(Icons.arrow_drop_down),
-      decoration: InputDecoration(
-        labelText: context.tr('auth.specialiteLabel'),
-        prefixIcon: const Icon(Icons.work_outline),
-      ),
-      items: _specialites.map((s) {
-        return DropdownMenuItem(value: s, child: Text(context.tr(_specialiteKey(s))));
-      }).toList(),
-      onChanged: (v) {
-        setState(() => _specialiteController.text = v ?? '');
-      },
+    return FormField<String>(
+      initialValue: _selectedSpecialite,
       validator: (v) {
         if (_role == UserRole.prestataire && (v == null || v.isEmpty)) {
           return context.tr('auth.required');
         }
         return null;
+      },
+      builder: (state) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return DropdownMenu<String>(
+                  width: constraints.maxWidth,
+                  initialSelection: _selectedSpecialite,
+                  enableFilter: true,
+                  requestFocusOnTap: true,
+                  leadingIcon: const Icon(Icons.work_outline),
+                  label: Text(context.tr('auth.specialiteLabel')),
+                  hintText: context.tr('auth.specialiteHint'),
+                  errorText: state.errorText,
+                  menuHeight: 320,
+                  dropdownMenuEntries: _specialiteEntries(),
+                  onSelected: (val) {
+                    setState(() => _selectedSpecialite = val);
+                    state.didChange(val);
+                  },
+                );
+              },
+            ),
+          ],
+        );
       },
     );
   }

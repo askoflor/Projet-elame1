@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/localization/translation_provider.dart';
 import '../../../../../core/constants/referentials.dart';
+import '../../../../../core/constants/category_taxonomy.dart';
 
 class FiltersPanel extends StatefulWidget {
   final String? initialCategory;
   final ValueChanged<String>? onCategoryChanged;
   final String? initialQuartier;
   final ValueChanged<String?>? onQuartierChanged;
+  final bool? initialAvailability;
+  final ValueChanged<bool?>? onAvailabilityChanged;
 
   const FiltersPanel({
     super.key,
@@ -15,6 +18,8 @@ class FiltersPanel extends StatefulWidget {
     this.onCategoryChanged,
     this.initialQuartier,
     this.onQuartierChanged,
+    this.initialAvailability,
+    this.onAvailabilityChanged,
   });
 
   @override
@@ -23,64 +28,25 @@ class FiltersPanel extends StatefulWidget {
 
 class _FiltersPanelState extends State<FiltersPanel> {
   late String selectedCategory;
-  String selectedAvailability = 'Maintenant';
+  late String selectedAvailabilityKey;
   String? selectedQuartier;
   String selectedUrgency = 'Semi-urgent';
 
-  static const List<String> categories = [
-    'Tous',
-    'Électricité',
-    'Plomberie',
-    'Climatisation',
-    'Carrelage',
-    'Maintenance',
-    'Jardinage',
-    'Peinture',
-    'Menuiserie',
-  ];
+  static List<String> get categories =>
+      ['Tous', ...CategoryTaxonomy.toutesSousCategories.map((s) => s.label)];
 
-  final List<String> availabilities = [
-    'Maintenant',
-    'Aujourd\'hui',
-    'Cette semaine'
-  ];
+  final List<String> availabilityKeys = ['tous', 'maintenant'];
   final List<String> urgencies = ['Planifié', 'Semi-urgent', 'Urgent'];
 
-  String _categoryLabel(String v) {
-    switch (v) {
-      case 'Tous':
-        return context.tr('search.categoryAll');
-      case 'Électricité':
-        return context.tr('search.categoryElectricite');
-      case 'Plomberie':
-        return context.tr('search.categoryPlomberie');
-      case 'Climatisation':
-        return context.tr('search.categoryClim');
-      case 'Carrelage':
-        return context.tr('search.categoryCarrelage');
-      case 'Maintenance':
-        return context.tr('search.categoryMaintenance');
-      case 'Jardinage':
-        return context.tr('search.categoryJardinage');
-      case 'Peinture':
-        return context.tr('search.categoryPeinture');
-      case 'Menuiserie':
-        return context.tr('search.categoryMenuiserie');
-      default:
-        return v;
-    }
-  }
+  String _categoryLabel(String v) => v == 'Tous' ? context.tr('search.categoryAll') : v;
 
   String _availabilityLabel(String v) {
     switch (v) {
-      case 'Maintenant':
+      case 'maintenant':
         return context.tr('search.availabilityNow');
-      case 'Aujourd\'hui':
-        return context.tr('search.availabilityToday');
-      case 'Cette semaine':
-        return context.tr('search.availabilityWeek');
+      case 'tous':
       default:
-        return v;
+        return context.tr('search.availabilityAll');
     }
   }
 
@@ -105,6 +71,7 @@ class _FiltersPanelState extends State<FiltersPanel> {
         ? widget.initialCategory!
         : 'Tous';
     selectedQuartier = widget.initialQuartier;
+    selectedAvailabilityKey = widget.initialAvailability == true ? 'maintenant' : 'tous';
   }
 
   @override
@@ -142,10 +109,13 @@ class _FiltersPanelState extends State<FiltersPanel> {
             label: context.tr('search.availabilityLabel'),
             showBorder: true,
             child: _buildTagsFilter(
-              items: availabilities,
-              selected: selectedAvailability,
+              items: availabilityKeys,
+              selected: selectedAvailabilityKey,
               labelBuilder: _availabilityLabel,
-              onSelect: (val) => setState(() => selectedAvailability = val),
+              onSelect: (val) {
+                setState(() => selectedAvailabilityKey = val);
+                widget.onAvailabilityChanged?.call(val == 'maintenant' ? true : null);
+              },
             ),
           ),
           // Localisation
@@ -176,11 +146,12 @@ class _FiltersPanelState extends State<FiltersPanel> {
           child: GestureDetector(
             onTap: () => setState(() {
               selectedCategory = 'Tous';
-              selectedAvailability = 'Maintenant';
+              selectedAvailabilityKey = 'tous';
               selectedQuartier = null;
               selectedUrgency = 'Semi-urgent';
               widget.onCategoryChanged?.call(selectedCategory);
               widget.onQuartierChanged?.call(null);
+              widget.onAvailabilityChanged?.call(null);
             }),
             child: Text(
               context.tr('search.resetButton'),

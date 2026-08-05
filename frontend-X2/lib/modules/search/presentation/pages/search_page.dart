@@ -10,8 +10,10 @@ import '../../domain/entities/provider_model.dart';
 
 class SearchPage extends StatefulWidget {
   final String? initialCategory;
+  final bool? initialDisponible;
+  final DateTime? initialDate;
 
-  const SearchPage({super.key, this.initialCategory});
+  const SearchPage({super.key, this.initialCategory, this.initialDisponible, this.initialDate});
 
   @override
   State<SearchPage> createState() => _SearchPageState();
@@ -21,6 +23,8 @@ class _SearchPageState extends State<SearchPage> {
   int selectedIndex = 0;
   late String _selectedCategory;
   String? _selectedQuartier;
+  bool? _selectedDisponible;
+  DateTime? _selectedDate;
   final _repository = SearchRepository();
   List<ProviderModel> _providers = [];
   bool _loading = true;
@@ -29,6 +33,8 @@ class _SearchPageState extends State<SearchPage> {
   void initState() {
     super.initState();
     _selectedCategory = widget.initialCategory ?? 'Tous';
+    _selectedDisponible = widget.initialDisponible;
+    _selectedDate = widget.initialDate;
     _rechercher();
   }
 
@@ -37,6 +43,8 @@ class _SearchPageState extends State<SearchPage> {
     final results = await _repository.rechercherPrestataires(
       specialite: _selectedCategory == 'Tous' ? null : _selectedCategory,
       quartier: _selectedQuartier,
+      disponible: _selectedDisponible,
+      date: _selectedDate,
     );
     if (!mounted) return;
     setState(() {
@@ -105,12 +113,17 @@ class _SearchPageState extends State<SearchPage> {
     return FiltersPanel(
       initialCategory: _selectedCategory,
       initialQuartier: _selectedQuartier,
+      initialAvailability: _selectedDisponible,
       onCategoryChanged: (category) {
         setState(() => _selectedCategory = category);
         _rechercher();
       },
       onQuartierChanged: (quartier) {
         setState(() => _selectedQuartier = quartier);
+        _rechercher();
+      },
+      onAvailabilityChanged: (disponible) {
+        setState(() => _selectedDisponible = disponible);
         _rechercher();
       },
     );

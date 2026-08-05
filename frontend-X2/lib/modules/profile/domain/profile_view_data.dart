@@ -92,7 +92,16 @@ class ProfileViewData {
   /// (AuthProvider) : nom, metier et badge "Certifie" doivent refleter les
   /// informations d'inscription reelles plutot que le profil de demonstration
   /// (competences, calendrier, avis...) qui reste mocke.
-  factory ProfileViewData.fromProviderProfile(ProviderProfile p, {UserModel? realUser, bool certifie = false}) {
+  /// [missionsReellesTerminees] est le nombre reel d'interventions terminees
+  /// (derive du backend). La note et le taux de succes n'ont pas encore de
+  /// systeme d'avis reel : ils partent volontairement de zero plutot que
+  /// d'afficher les valeurs fictives du profil de demonstration.
+  factory ProfileViewData.fromProviderProfile(
+    ProviderProfile p, {
+    UserModel? realUser,
+    bool certifie = false,
+    int missionsReellesTerminees = 0,
+  }) {
     final realName = realUser != null ? '${realUser.prenom} ${realUser.nom}'.trim() : '';
     final realSpecialty = realUser?.specialite;
     return ProfileViewData(
@@ -102,9 +111,9 @@ class ProfileViewData {
       ville: p.ville,
       isAvailable: p.disponible,
       isCertified: certifie,
-      formattedInterventions: '${p.missionsRealisees}',
-      formattedRating: p.note.toStringAsFixed(1),
-      successRate: '${p.tauxSatisfaction.toStringAsFixed(0)}%',
+      formattedInterventions: '$missionsReellesTerminees',
+      formattedRating: '0.0',
+      successRate: '0%',
       skills: p.competences,
       certifications: p.certifications
           .map((c) => CertificationDisplay(
