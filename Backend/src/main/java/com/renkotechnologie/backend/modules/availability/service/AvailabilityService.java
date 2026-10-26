@@ -15,4 +15,7 @@ public interface AvailabilityService {
     List<AvailabilityOverrideResponse> basculerDate(String email, LocalDate date);
 
     List<AvailabilityOverrideResponse> definirPeriode(String email, LocalDate debut, LocalDate fin, boolean disponible);
+
+    /** Utilise par le module search : un prestataire sans exception enregistree est considere disponible. */
+    boolean estDisponibleLe(Long providerId, LocalDate date);
 }

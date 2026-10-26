@@ -8,6 +8,14 @@ spring:
     hibernate:
       ddl-auto: create-drop
     show-sql: true
+  mail:
+    # Hote local injoignable : l'envoi echoue immediatement (connexion refusee)
+    # au lieu de tenter smtp.gmail.com (valeur par defaut de application.yml),
+    # qui ferait attendre un timeout reseau a chaque test d'inscription.
+    # EmailService avale deja les echecs d'envoi, donc l'inscription reussit
+    # normalement malgre cet echec.
+    host: localhost
+    port: 1
 
 logging:
   level:

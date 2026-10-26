@@ -1,6 +1,6 @@
 package com.renkotechnologie.backend.modules.search.dto;
 
-import com.renkotechnologie.backend.modules.auth.entity.User;
+import com.renkotechnologie.backend.modules.auth.dto.UserSummary;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,17 +22,17 @@ public class ProviderSearchResponse {
     private boolean disponible;
     private long missionsRealisees;
 
-    public static ProviderSearchResponse fromEntity(User user, long missionsRealisees) {
+    public static ProviderSearchResponse fromSummary(UserSummary user, long missionsRealisees) {
         return ProviderSearchResponse.builder()
-                .id(String.valueOf(user.getId()))
-                .nom(user.getNom())
-                .prenom(user.getPrenom())
-                .specialite(user.getSpecialite())
-                .quartier(user.getQuartier())
-                .photoUrl(user.getPhotoUrl())
-                .about(user.getAbout())
-                .certifie(user.isCertifie())
-                .disponible(user.isDisponible())
+                .id(String.valueOf(user.id()))
+                .nom(user.nom())
+                .prenom(user.prenom())
+                .specialite(user.specialite())
+                .quartier(user.quartier())
+                .photoUrl(user.photoUrl())
+                .about(user.about())
+                .certifie(user.certifie())
+                .disponible(user.disponible())
                 .missionsRealisees(missionsRealisees)
                 .build();
     }

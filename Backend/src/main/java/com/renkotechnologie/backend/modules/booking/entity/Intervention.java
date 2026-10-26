@@ -1,18 +1,15 @@
 package com.renkotechnologie.backend.modules.booking.entity;
 
-import com.renkotechnologie.backend.modules.auth.entity.User;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,12 +26,14 @@ import org.hibernate.annotations.CreationTimestamp;
  * Demande d'intervention creee par un client aupres d'un prestataire.
  *
  * <p>Le prestataire est conserve sous forme de nom affiche ({@code providerName})
- * plutot qu'en relation vers {@link User} : le repertoire de recherche des
+ * plutot qu'en reference vers un compte : le repertoire de recherche des
  * prestataires (module search) reste pour l'instant base sur des donnees de
  * demonstration non liees aux comptes reellement inscrits, donc toutes les
  * interventions ne correspondent pas necessairement a un compte prestataire
  * existant. Le client, lui, est toujours l'utilisateur authentifie qui cree
- * la demande.</p>
+ * la demande ; il est reference par simple identifiant ({@code clientId}),
+ * sans relation JPA vers le module auth (voir auth.service.UserDirectoryService
+ * pour resoudre ses details).</p>
  */
 @Entity
 @Table(name = "interventions")
@@ -52,9 +51,8 @@ public class Intervention {
     @Column(nullable = false, unique = true)
     private String reference;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "client_id", nullable = false)
-    private User client;
+    @Column(name = "client_id", nullable = false)
+    private Long clientId;
 
     @Column(name = "provider_name", nullable = false)
     private String providerName;

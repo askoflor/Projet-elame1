@@ -1,6 +1,6 @@
 package com.renkotechnologie.backend.modules.search.controller;
 
-import com.renkotechnologie.backend.modules.auth.entity.User;
+import com.renkotechnologie.backend.modules.auth.security.UserPrincipal;
 import com.renkotechnologie.backend.modules.search.dto.ProviderSearchResponse;
 import com.renkotechnologie.backend.modules.search.service.SearchService;
 import java.time.LocalDate;
@@ -28,7 +28,7 @@ public class SearchController {
 
     @GetMapping("/providers")
     public ResponseEntity<List<ProviderSearchResponse>> rechercherPrestataires(
-            @AuthenticationPrincipal User caller,
+            @AuthenticationPrincipal UserPrincipal caller,
             @RequestParam(required = false) String specialite,
             @RequestParam(required = false) String quartier,
             @RequestParam(required = false) Boolean disponible,

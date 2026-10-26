@@ -2,7 +2,6 @@ package com.renkotechnologie.backend.common.exception;
 
 import com.renkotechnologie.backend.modules.auth.exception.EmailAlreadyUsedException;
 import com.renkotechnologie.backend.modules.auth.exception.InvalidTokenException;
-import com.renkotechnologie.backend.modules.auth.exception.ResourceNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;

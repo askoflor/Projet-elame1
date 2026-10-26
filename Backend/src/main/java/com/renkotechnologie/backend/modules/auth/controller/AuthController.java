@@ -7,7 +7,7 @@ import com.renkotechnologie.backend.modules.auth.dto.RealisationPhotoResponse;
 import com.renkotechnologie.backend.modules.auth.dto.RegisterRequest;
 import com.renkotechnologie.backend.modules.auth.dto.UpdateProfileRequest;
 import com.renkotechnologie.backend.modules.auth.dto.UserResponse;
-import com.renkotechnologie.backend.modules.auth.entity.User;
+import com.renkotechnologie.backend.modules.auth.security.UserPrincipal;
 import com.renkotechnologie.backend.modules.auth.service.AuthService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -55,13 +55,13 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserResponse> me(@AuthenticationPrincipal User user) {
+    public ResponseEntity<UserResponse> me(@AuthenticationPrincipal UserPrincipal user) {
         return ResponseEntity.ok(authService.getCurrentUser(user.getEmail()));
     }
 
     @PutMapping("/me")
     public ResponseEntity<UserResponse> updateMe(
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal UserPrincipal user,
             @RequestBody UpdateProfileRequest request) {
         return ResponseEntity.ok(authService.updateProfile(user.getEmail(), request));
     }
@@ -73,19 +73,19 @@ public class AuthController {
     }
 
     @GetMapping("/me/realisations")
-    public ResponseEntity<List<RealisationPhotoResponse>> getRealisations(@AuthenticationPrincipal User user) {
+    public ResponseEntity<List<RealisationPhotoResponse>> getRealisations(@AuthenticationPrincipal UserPrincipal user) {
         return ResponseEntity.ok(authService.getRealisations(user.getEmail()));
     }
 
     @PostMapping("/me/realisations")
     public ResponseEntity<RealisationPhotoResponse> addRealisation(
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal UserPrincipal user,
             @Valid @RequestBody RealisationPhotoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.addRealisation(user.getEmail(), request));
     }
 
     @DeleteMapping("/me/realisations/{id}")
-    public ResponseEntity<Void> deleteRealisation(@AuthenticationPrincipal User user, @PathVariable Long id) {
+    public ResponseEntity<Void> deleteRealisation(@AuthenticationPrincipal UserPrincipal user, @PathVariable Long id) {
         authService.deleteRealisation(user.getEmail(), id);
         return ResponseEntity.noContent().build();
     }

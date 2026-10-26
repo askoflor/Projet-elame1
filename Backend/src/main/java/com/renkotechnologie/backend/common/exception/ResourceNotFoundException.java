@@ -1,4 +1,4 @@
-package com.renkotechnologie.backend.modules.auth.exception;
+package com.renkotechnologie.backend.common.exception;
 
 public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(String message) {

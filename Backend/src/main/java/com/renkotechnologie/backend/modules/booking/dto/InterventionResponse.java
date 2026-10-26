@@ -32,11 +32,8 @@ public class InterventionResponse {
     private List<String> completionPhotos;
     private LocalDateTime creeLe;
 
-    public static InterventionResponse fromEntity(Intervention i, List<InterventionPhoto> photos) {
-        String clientNom = i.getClient() != null
-                ? (i.getClient().getPrenom() + " " + i.getClient().getNom()).trim()
-                : "";
-        String clientPhone = i.getClient() != null ? i.getClient().getTelephone() : "";
+    public static InterventionResponse fromEntity(
+            Intervention i, List<InterventionPhoto> photos, String clientNom, String clientPhone) {
         return InterventionResponse.builder()
                 .reference(i.getReference())
                 .clientNom(clientNom)
@@ -46,7 +43,10 @@ public class InterventionResponse {
                 .titre(i.getTitre())
                 .description(i.getDescription())
                 .date(i.getDate())
-                .heures(i.getHeures())
+                // copie immediate : force l'initialisation de la collection
+                // (lazy-loaded) tant que la session Hibernate est encore active
+                // (open-in-view etant desactive, elle ne le sera plus a la serialisation JSON).
+                .heures(List.copyOf(i.getHeures()))
                 .urgence(i.getUrgence())
                 .adresse(i.getAdresse())
                 .montant(i.getMontant())

@@ -29,4 +29,7 @@ public interface InterventionService {
     InterventionResponse terminer(String prestataireEmail, String reference, CompletionRequest request);
 
     InterventionResponse annuler(String prestataireEmail, String reference);
+
+    /** Nombre de missions terminees par un prestataire, utilise par le module search. */
+    long compterMissionsTerminees(String providerName);
 }

@@ -1,8 +1,8 @@
 package com.renkotechnologie.backend.modules.booking.service.impl;
 
-import com.renkotechnologie.backend.modules.auth.entity.User;
-import com.renkotechnologie.backend.modules.auth.exception.ResourceNotFoundException;
-import com.renkotechnologie.backend.modules.auth.repository.UserRepository;
+import com.renkotechnologie.backend.common.exception.ResourceNotFoundException;
+import com.renkotechnologie.backend.modules.auth.dto.UserSummary;
+import com.renkotechnologie.backend.modules.auth.service.UserDirectoryService;
 import com.renkotechnologie.backend.modules.booking.dto.ChiffrageRequest;
 import com.renkotechnologie.backend.modules.booking.dto.CompletionRequest;
 import com.renkotechnologie.backend.modules.booking.dto.InterventionCreateRequest;
@@ -26,15 +26,15 @@ public class InterventionServiceImpl implements InterventionService {
 
     private final InterventionRepository interventionRepository;
     private final InterventionPhotoRepository photoRepository;
-    private final UserRepository userRepository;
+    private final UserDirectoryService userDirectoryService;
 
     @Override
     @Transactional
     public InterventionResponse creer(String clientEmail, InterventionCreateRequest request) {
-        User client = findUserByEmail(clientEmail);
+        UserSummary client = userDirectoryService.getByEmail(clientEmail);
         Intervention intervention = Intervention.builder()
                 .reference(genererReference())
-                .client(client)
+                .clientId(client.id())
                 .providerName(request.getProviderName())
                 .service(request.getService())
                 .titre(request.getTitre())
@@ -46,26 +46,29 @@ public class InterventionServiceImpl implements InterventionService {
                 .statut(InterventionStatus.ATTENTE)
                 .build();
         interventionRepository.save(intervention);
-        return InterventionResponse.fromEntity(intervention, List.of());
+        return InterventionResponse.fromEntity(intervention, List.of(), client.displayName(), client.telephone());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<InterventionResponse> mesReservationsClient(String email) {
-        User user = findUserByEmail(email);
-        return interventionRepository.findByClientIdOrderByCreeLeDesc(user.getId()).stream()
+        UserSummary user = userDirectoryService.getByEmail(email);
+        return interventionRepository.findByClientIdOrderByCreeLeDesc(user.id()).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<InterventionResponse> mesMissionsPrestataire(String email) {
-        User user = findUserByEmail(email);
-        return interventionRepository.findByProviderNameOrderByCreeLeDesc(displayName(user)).stream()
+        UserSummary user = userDirectoryService.getByEmail(email);
+        return interventionRepository.findByProviderNameOrderByCreeLeDesc(user.displayName()).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProviderScheduleEntry> planningPrestataire(String providerName) {
         return interventionRepository.findByProviderNameAndStatutNot(providerName, InterventionStatus.ANNULEE).stream()
                 .map(ProviderScheduleEntry::fromEntity)
@@ -104,7 +107,7 @@ public class InterventionServiceImpl implements InterventionService {
                 .toList();
         photoRepository.saveAll(photos);
 
-        return InterventionResponse.fromEntity(intervention, photos);
+        return toResponse(intervention, photos);
     }
 
     @Override
@@ -116,11 +119,16 @@ public class InterventionServiceImpl implements InterventionService {
         return toResponse(intervention);
     }
 
+    @Override
+    public long compterMissionsTerminees(String providerName) {
+        return interventionRepository.countByProviderNameAndStatut(providerName, InterventionStatus.TERMINEE);
+    }
+
     private Intervention findOwnedByPrestataire(String prestataireEmail, String reference) {
-        User prestataire = findUserByEmail(prestataireEmail);
+        UserSummary prestataire = userDirectoryService.getByEmail(prestataireEmail);
         Intervention intervention = interventionRepository.findByReference(reference)
                 .orElseThrow(() -> new ResourceNotFoundException("Intervention introuvable"));
-        if (!intervention.getProviderName().equals(displayName(prestataire))) {
+        if (!intervention.getProviderName().equals(prestataire.displayName())) {
             throw new ResourceNotFoundException("Intervention introuvable");
         }
         return intervention;
@@ -128,19 +136,15 @@ public class InterventionServiceImpl implements InterventionService {
 
     private InterventionResponse toResponse(Intervention intervention) {
         List<InterventionPhoto> photos = photoRepository.findByInterventionIdOrderByCreatedAtAsc(intervention.getId());
-        return InterventionResponse.fromEntity(intervention, photos);
+        return toResponse(intervention, photos);
     }
 
-    private String displayName(User user) {
-        return (user.getPrenom() + " " + user.getNom()).trim();
+    private InterventionResponse toResponse(Intervention intervention, List<InterventionPhoto> photos) {
+        UserSummary client = userDirectoryService.getById(intervention.getClientId());
+        return InterventionResponse.fromEntity(intervention, photos, client.displayName(), client.telephone());
     }
 
     private String genererReference() {
         return "INT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-    }
-
-    private User findUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur introuvable"));
     }
 }

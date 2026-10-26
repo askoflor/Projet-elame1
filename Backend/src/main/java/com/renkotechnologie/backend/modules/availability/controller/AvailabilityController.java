@@ -1,6 +1,6 @@
 package com.renkotechnologie.backend.modules.availability.controller;
 
-import com.renkotechnologie.backend.modules.auth.entity.User;
+import com.renkotechnologie.backend.modules.auth.security.UserPrincipal;
 import com.renkotechnologie.backend.modules.availability.dto.AvailabilityOverrideResponse;
 import com.renkotechnologie.backend.modules.availability.dto.SetRangeRequest;
 import com.renkotechnologie.backend.modules.availability.dto.ToggleDateRequest;
@@ -25,7 +25,7 @@ public class AvailabilityController {
     private final AvailabilityService availabilityService;
 
     @GetMapping("/me")
-    public ResponseEntity<List<AvailabilityOverrideResponse>> mesDisponibilites(@AuthenticationPrincipal User user) {
+    public ResponseEntity<List<AvailabilityOverrideResponse>> mesDisponibilites(@AuthenticationPrincipal UserPrincipal user) {
         return ResponseEntity.ok(availabilityService.mesDisponibilites(user.getEmail()));
     }
 
@@ -37,13 +37,13 @@ public class AvailabilityController {
 
     @PostMapping("/toggle")
     public ResponseEntity<List<AvailabilityOverrideResponse>> basculerDate(
-            @AuthenticationPrincipal User user, @Valid @RequestBody ToggleDateRequest request) {
+            @AuthenticationPrincipal UserPrincipal user, @Valid @RequestBody ToggleDateRequest request) {
         return ResponseEntity.ok(availabilityService.basculerDate(user.getEmail(), request.getDate()));
     }
 
     @PostMapping("/range")
     public ResponseEntity<List<AvailabilityOverrideResponse>> definirPeriode(
-            @AuthenticationPrincipal User user, @Valid @RequestBody SetRangeRequest request) {
+            @AuthenticationPrincipal UserPrincipal user, @Valid @RequestBody SetRangeRequest request) {
         return ResponseEntity.ok(availabilityService.definirPeriode(
                 user.getEmail(), request.getDateDebut(), request.getDateFin(), request.getDisponible()));
     }

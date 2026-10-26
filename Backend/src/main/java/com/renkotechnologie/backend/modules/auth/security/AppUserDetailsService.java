@@ -1,5 +1,6 @@
 package com.renkotechnologie.backend.modules.auth.security;
 
+import com.renkotechnologie.backend.modules.auth.entity.User;
 import com.renkotechnologie.backend.modules.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,7 +16,8 @@ public class AppUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Aucun utilisateur pour cet email"));
+        return new UserPrincipal(user.getId(), user.getEmail(), user.getPasswordHash(), user.getRole());
     }
 }

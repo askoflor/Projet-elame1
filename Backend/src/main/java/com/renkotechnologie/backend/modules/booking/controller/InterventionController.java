@@ -1,6 +1,6 @@
 package com.renkotechnologie.backend.modules.booking.controller;
 
-import com.renkotechnologie.backend.modules.auth.entity.User;
+import com.renkotechnologie.backend.modules.auth.security.UserPrincipal;
 import com.renkotechnologie.backend.modules.booking.dto.ChiffrageRequest;
 import com.renkotechnologie.backend.modules.booking.dto.CompletionRequest;
 import com.renkotechnologie.backend.modules.booking.dto.InterventionCreateRequest;
@@ -30,7 +30,7 @@ public class InterventionController {
 
     @PostMapping
     public ResponseEntity<InterventionResponse> creer(
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal UserPrincipal user,
             @Valid @RequestBody InterventionCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(interventionService.creer(user.getEmail(), request));
     }
@@ -41,13 +41,13 @@ public class InterventionController {
      * endpoint reflete alors ses propres commandes independamment de son role.
      */
     @GetMapping("/mine/client")
-    public ResponseEntity<List<InterventionResponse>> mesReservationsClient(@AuthenticationPrincipal User user) {
+    public ResponseEntity<List<InterventionResponse>> mesReservationsClient(@AuthenticationPrincipal UserPrincipal user) {
         return ResponseEntity.ok(interventionService.mesReservationsClient(user.getEmail()));
     }
 
     /** Missions assignees a l'utilisateur connecte en tant que prestataire. */
     @GetMapping("/mine/prestataire")
-    public ResponseEntity<List<InterventionResponse>> mesMissionsPrestataire(@AuthenticationPrincipal User user) {
+    public ResponseEntity<List<InterventionResponse>> mesMissionsPrestataire(@AuthenticationPrincipal UserPrincipal user) {
         return ResponseEntity.ok(interventionService.mesMissionsPrestataire(user.getEmail()));
     }
 
@@ -59,7 +59,7 @@ public class InterventionController {
 
     @PostMapping("/{reference}/chiffrer")
     public ResponseEntity<InterventionResponse> chiffrer(
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal UserPrincipal user,
             @PathVariable String reference,
             @Valid @RequestBody ChiffrageRequest request) {
         return ResponseEntity.ok(interventionService.chiffrer(user.getEmail(), reference, request));
@@ -67,7 +67,7 @@ public class InterventionController {
 
     @PostMapping("/{reference}/terminer")
     public ResponseEntity<InterventionResponse> terminer(
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal UserPrincipal user,
             @PathVariable String reference,
             @Valid @RequestBody CompletionRequest request) {
         return ResponseEntity.ok(interventionService.terminer(user.getEmail(), reference, request));
@@ -75,7 +75,7 @@ public class InterventionController {
 
     @PostMapping("/{reference}/annuler")
     public ResponseEntity<InterventionResponse> annuler(
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal UserPrincipal user,
             @PathVariable String reference) {
         return ResponseEntity.ok(interventionService.annuler(user.getEmail(), reference));
     }

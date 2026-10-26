@@ -25,7 +25,8 @@ public class ProviderScheduleEntry {
     public static ProviderScheduleEntry fromEntity(Intervention i) {
         return ProviderScheduleEntry.builder()
                 .date(i.getDate())
-                .heures(i.getHeures())
+                // copie immediate : voir le commentaire equivalent dans InterventionResponse.fromEntity
+                .heures(List.copyOf(i.getHeures()))
                 .statut(i.getStatut().name())
                 .build();
     }
