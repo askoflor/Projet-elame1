@@ -96,11 +96,11 @@ class AppFooter extends StatelessWidget {
             ),
             children: [
               TextSpan(
-                text: 'NZELA-',
+                text: 'E-',
                 style: TextStyle(color: Colors.white),
               ),
               TextSpan(
-                text: 'SERVICE',
+                text: 'BOLO',
                 style: TextStyle(color: Color(0xFFF97316)),
               ),
             ],

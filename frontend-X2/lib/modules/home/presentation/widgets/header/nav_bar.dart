@@ -140,11 +140,11 @@ class _NavBarState extends State<NavBar> {
             ),
             children: [
               TextSpan(
-                text: 'NZELA-',
+                text: 'E-',
                 style: TextStyle(color: Color(0xFF2563EB)),
               ),
               TextSpan(
-                text: 'SERVICE',
+                text: 'BOLO',
                 style: TextStyle(color: Color(0xFFF97316)),
               ),
             ],

@@ -29,7 +29,7 @@ public class EmailService {
     public void sendVerificationEmail(String to, String prenom, String token) {
         String link = verificationBaseUrl + "?token=" + token;
         String body = "Bonjour " + prenom + ",\n\n"
-                + "Merci de vous etre inscrit(e) sur NZELA-SERVICE.\n\n"
+                + "Merci de vous etre inscrit(e) sur E-BOLO.\n\n"
                 + "Veuillez confirmer votre adresse email en ouvrant ce lien :\n"
                 + link + "\n\n"
                 + "Ce lien expire dans 24 heures.\n\n"
@@ -39,7 +39,7 @@ public class EmailService {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromAddress);
             message.setTo(to);
-            message.setSubject("Confirmez votre adresse email - NZELA-SERVICE");
+            message.setSubject("Confirmez votre adresse email - E-BOLO");
             message.setText(body);
             mailSender.send(message);
         } catch (Exception e) {
