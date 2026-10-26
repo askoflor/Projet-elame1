@@ -130,25 +130,10 @@ class _NavBarState extends State<NavBar> {
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: () => context.go('/'),
-        child: RichText(
-          text: const TextSpan(
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.5,
-              fontFamily: 'Sora',
-            ),
-            children: [
-              TextSpan(
-                text: 'E-',
-                style: TextStyle(color: Color(0xFF2563EB)),
-              ),
-              TextSpan(
-                text: 'BOLO',
-                style: TextStyle(color: Color(0xFFF97316)),
-              ),
-            ],
-          ),
+        child: Image.asset(
+          'assets/images/logo.png',
+          height: 28,
+          fit: BoxFit.contain,
         ),
       ),
     );

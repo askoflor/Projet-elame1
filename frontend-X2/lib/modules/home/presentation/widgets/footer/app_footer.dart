@@ -87,24 +87,10 @@ class AppFooter extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Logo
-        RichText(
-          text: const TextSpan(
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              fontFamily: 'Sora',
-            ),
-            children: [
-              TextSpan(
-                text: 'E-',
-                style: TextStyle(color: Colors.white),
-              ),
-              TextSpan(
-                text: 'BOLO',
-                style: TextStyle(color: Color(0xFFF97316)),
-              ),
-            ],
-          ),
+        Image.asset(
+          'assets/images/logo-white.png',
+          height: 30,
+          fit: BoxFit.contain,
         ),
         const SizedBox(height: 12),
         // Description

@@ -242,7 +242,7 @@ Deux implémentations indépendantes et redondantes d'un **serveur d'authentific
 
 - **`web/index.html`** — Page HTML hôte de l'app Flutter Web. Définit le `<base href>` (remplacé au build via `--base-href`), les métadonnées (description « E-BOLO - Trouvez des professionnels de confiance pres de chez vous »), les icônes iOS/favicon, le titre d'onglet (« E-BOLO - Plateforme de Services ») et charge `flutter_bootstrap.js` en asynchrone — c'est le template standard généré par `flutter create`, avec les métadonnées personnalisées pour la marque E-BOLO.
 - **`web/manifest.json`** — Manifeste PWA : nom `E-BOLO`, couleurs de thème alignées sur le bleu dominant de l'interface (`#2563EB` — à noter que `AppTheme.primary` définit `#1A73E8`, une nuance légèrement différente, peu utilisée en pratique dans le reste du code), icônes standard (192/512, plus variantes maskable).
-- **`web/favicon.png`, `web/icons/*.png`** — Assets d'icônes binaires standards générés par `flutter create` (non modifiés avec un branding personnalisé visible).
+- **`web/favicon.ico`** — Favicon personnalisé E-BOLO. **`web/icons/*.png`** — Icônes PWA/mobile (à remplacer avec le même branding, voir section logo).
 
 ### assets/
 
