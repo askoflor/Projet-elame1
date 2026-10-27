@@ -15,34 +15,9 @@ class _PartnersSectionState extends State<PartnersSection> {
   final ScrollController _scrollController = ScrollController();
   Timer? _timer;
 
-  final List<Map<String, dynamic>> partners = [
-    {
-      'name': 'Orange Money',
-      'icon': Icons.account_balance_wallet,
-      'color': const Color(0xFFFF6600)
-    },
-    {
-      'name': 'MTN MoMo',
-      'icon': Icons.phone_android,
-      'color': const Color(0xFFFFCC00)
-    },
-    {'name': 'Wave', 'icon': Icons.waves, 'color': const Color(0xFF1DC8E0)},
-    {
-      'name': 'Hostinger',
-      'icon': Icons.cloud,
-      'color': const Color(0xFF673DE6)
-    },
-    {'name': 'CamTel', 'icon': Icons.router, 'color': const Color(0xFF16A34A)},
-    {
-      'name': 'Afriland',
-      'icon': Icons.account_balance,
-      'color': const Color(0xFFDC2626)
-    },
-    {
-      'name': 'Express Union',
-      'icon': Icons.payments,
-      'color': const Color(0xFFF97316)
-    },
+  // TODO: ajouter les prochains partenaires ici au fur et a mesure (nom + chemin de l'image).
+  final List<Map<String, String>> partners = [
+    {'name': 'Suwelleh Farm', 'image': 'assets/images/partner-suwelleh-farm.jpg'},
   ];
 
   @override
@@ -124,9 +99,8 @@ class _PartnersSectionState extends State<PartnersSection> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: _buildPartnerLogo(
-                      name: partner['name'] as String,
-                      icon: partner['icon'] as IconData,
-                      color: partner['color'] as Color,
+                      name: partner['name']!,
+                      imagePath: partner['image']!,
                     ),
                   );
                 },
@@ -140,36 +114,23 @@ class _PartnersSectionState extends State<PartnersSection> {
 
   Widget _buildPartnerLogo({
     required String name,
-    required IconData icon,
-    required Color color,
+    required String imagePath,
   }) {
     return ScaleOnHover(
       scale: 1.05,
       child: Container(
-        width: 160,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        width: 150,
+        height: 90,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: const Color(0xFFE8ECF2)),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                name,
-                style: GoogleFonts.sora(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF1E293B),
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+        child: Image.asset(
+          imagePath,
+          fit: BoxFit.contain,
+          semanticLabel: name,
         ),
       ),
     );
