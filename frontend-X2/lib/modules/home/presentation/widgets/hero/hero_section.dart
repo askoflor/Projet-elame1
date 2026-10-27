@@ -19,28 +19,33 @@ class HeroSection extends StatelessWidget {
           stops: [0.0, 0.5, 1.0],
         ),
       ),
-      child: Column(
-        children: [
-          // Badge
-          _buildBadge(),
-          const SizedBox(height: 24),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 700;
+          return Column(
+            children: [
+              // Badge
+              _buildBadge(),
+              const SizedBox(height: 24),
 
-          // Titre
-          _buildTitle(context),
-          const SizedBox(height: 16),
+              // Titre
+              _buildTitle(context, isMobile),
+              const SizedBox(height: 16),
 
-          // Paragraphe
-          _buildSubtitle(),
-          const SizedBox(height: 36),
+              // Paragraphe
+              _buildSubtitle(isMobile),
+              const SizedBox(height: 36),
 
-          // Search bar
-          const Center(child: custom.SearchBar()),
+              // Search bar
+              const Center(child: custom.SearchBar()),
 
-          const SizedBox(height: 15),
+              const SizedBox(height: 15),
 
-          // Stats
-          _buildStats(context),
-        ],
+              // Stats
+              _buildStats(context),
+            ],
+          );
+        },
       ),
     );
   }
@@ -78,29 +83,32 @@ class HeroSection extends StatelessWidget {
     );
   }
 
-  Widget _buildTitle(BuildContext context) {
-    return RichText(
-      textAlign: TextAlign.center,
-      text: TextSpan(
-        style: GoogleFonts.sora(
-          fontSize: 42,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-          letterSpacing: -1,
-          height: 1.2,
-        ),
-        children: [
-          const TextSpan(text: 'Trouvez un professionnel\ndisponible en '),
-          TextSpan(
-            text: context.tr('hero.titleHighlight'),
-            style: const TextStyle(color: Color(0xFFF97316)),
+  Widget _buildTitle(BuildContext context, bool isMobile) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 20 : 0),
+      child: RichText(
+        textAlign: TextAlign.center,
+        text: TextSpan(
+          style: GoogleFonts.sora(
+            fontSize: isMobile ? 28 : 42,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+            letterSpacing: -0.5,
+            height: 1.25,
           ),
-        ],
+          children: [
+            const TextSpan(text: 'Trouvez un professionnel\ndisponible en '),
+            TextSpan(
+              text: context.tr('hero.titleHighlight'),
+              style: const TextStyle(color: Color(0xFFF97316)),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildSubtitle() {
+  Widget _buildSubtitle(bool isMobile) {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 620),
@@ -110,7 +118,7 @@ class HeroSection extends StatelessWidget {
             'Plombiers, électriciens, frigoristes, techniciens et bien plus près de chez vous.',
             textAlign: TextAlign.center,
             style: GoogleFonts.dmSans(
-              fontSize: 17,
+              fontSize: isMobile ? 14 : 17,
               color: Colors.white.withOpacity(0.75),
             ),
           ),

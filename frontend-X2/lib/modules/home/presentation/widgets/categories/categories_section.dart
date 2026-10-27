@@ -122,8 +122,8 @@ class _CategoriesSectionState extends State<CategoriesSection> {
           crossAxisCount = 3;
         }
         final childAspectRatio = crossAxisCount == 2
-            ? 0.95
-            : (crossAxisCount == 3 ? 1.15 : 224 / 150);
+            ? 1.15
+            : (crossAxisCount == 3 ? 1.35 : 1.7);
 
         final categories = CategoryTaxonomy.categories;
 

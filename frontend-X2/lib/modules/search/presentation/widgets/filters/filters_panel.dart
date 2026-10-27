@@ -27,10 +27,13 @@ class FiltersPanel extends StatefulWidget {
 }
 
 class _FiltersPanelState extends State<FiltersPanel> {
+  static const int _collapsedCategoryCount = 10;
+
   late String selectedCategory;
   late String selectedAvailabilityKey;
   String? selectedQuartier;
   String selectedUrgency = 'Semi-urgent';
+  bool _showAllCategories = false;
 
   static List<String> get categories =>
       ['Tous', ...CategoryTaxonomy.toutesSousCategories.map((s) => s.label)];
@@ -94,15 +97,7 @@ class _FiltersPanelState extends State<FiltersPanel> {
           _buildFilterGroup(
             label: context.tr('search.categoryLabel'),
             showBorder: true,
-            child: _buildTagsFilter(
-              items: categories,
-              selected: selectedCategory,
-              labelBuilder: _categoryLabel,
-              onSelect: (val) {
-                setState(() => selectedCategory = val);
-                widget.onCategoryChanged?.call(val);
-              },
-            ),
+            child: _buildCategoryFilter(),
           ),
           // Disponibilité
           _buildFilterGroup(
@@ -211,38 +206,87 @@ class _FiltersPanelState extends State<FiltersPanel> {
       spacing: 6,
       runSpacing: 6,
       children: items.map((item) {
-        final isActive = selected == item;
-        return _HoverButton(
+        return _buildTagChip(
+          label: labelBuilder != null ? labelBuilder(item) : item,
+          isActive: selected == item,
           onTap: () => onSelect(item),
-          builder: (isHovered) => AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: isActive
-                  ? const Color(0xFFEFF4FF)
-                  : isHovered
-                      ? const Color(0xFFF8FAFC)
-                      : Colors.white,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(
-                color: isActive
-                    ? const Color(0xFFBFCFFD)
-                    : const Color(0xFFE8ECF2),
-              ),
-            ),
-            child: Text(
-              labelBuilder != null ? labelBuilder(item) : item,
-              style: GoogleFonts.sora(
-                fontSize: 12,
-                fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
-                color: isActive
-                    ? const Color(0xFF2563EB)
-                    : const Color(0xFF64748B),
-              ),
-            ),
-          ),
         );
       }).toList(),
+    );
+  }
+
+  /// Filtre catégorie : la taxonomie compte une vingtaine de sous-catégories,
+  /// bien trop pour tenir confortablement dans le panneau. On n'affiche que
+  /// les [_collapsedCategoryCount] premières par défaut, avec un bouton
+  /// "Voir tout" pour dérouler le reste.
+  Widget _buildCategoryFilter() {
+    final hiddenCount = categories.length - _collapsedCategoryCount;
+    final visibleCategories = _showAllCategories || hiddenCount <= 0
+        ? categories
+        : categories.take(_collapsedCategoryCount).toList();
+
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        ...visibleCategories.map((item) => _buildTagChip(
+              label: _categoryLabel(item),
+              isActive: selectedCategory == item,
+              onTap: () {
+                setState(() => selectedCategory = item);
+                widget.onCategoryChanged?.call(item);
+              },
+            )),
+        if (hiddenCount > 0)
+          _buildTagChip(
+            label: _showAllCategories
+                ? context.tr('search.showLess')
+                : '${context.tr('search.showAll')} (+$hiddenCount)',
+            isActive: false,
+            accent: true,
+            onTap: () => setState(() => _showAllCategories = !_showAllCategories),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildTagChip({
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+    bool accent = false,
+  }) {
+    return _HoverButton(
+      onTap: onTap,
+      builder: (isHovered) => AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: isActive
+              ? const Color(0xFFEFF4FF)
+              : isHovered
+                  ? const Color(0xFFF8FAFC)
+                  : Colors.white,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: isActive
+                ? const Color(0xFFBFCFFD)
+                : accent
+                    ? const Color(0xFF2563EB)
+                    : const Color(0xFFE8ECF2),
+          ),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.sora(
+            fontSize: 12,
+            fontWeight: isActive || accent ? FontWeight.w600 : FontWeight.w400,
+            color: isActive || accent
+                ? const Color(0xFF2563EB)
+                : const Color(0xFF64748B),
+          ),
+        ),
+      ),
     );
   }
 

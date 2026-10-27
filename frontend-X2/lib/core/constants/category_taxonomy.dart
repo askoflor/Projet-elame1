@@ -104,6 +104,30 @@ class CategoryTaxonomy {
         SubCategory('Installation réseau & domotique', '📡'),
       ],
     ),
+    MainCategory(
+      label: 'Médecine',
+      emoji: '🩺',
+      pastelBg: Color(0xFFFEE2E2),
+      accent: Color(0xFFDC2626),
+      sousCategories: [
+        SubCategory('Médecin généraliste', '🩺'),
+        SubCategory('Infirmier à domicile', '💉'),
+        SubCategory('Kinésithérapeute', '🦵'),
+        SubCategory('Sage-femme', '🤰'),
+      ],
+    ),
+    MainCategory(
+      label: 'Restauration',
+      emoji: '🍽️',
+      pastelBg: Color(0xFFFFEDD5),
+      accent: Color(0xFFEA580C),
+      sousCategories: [
+        SubCategory('Chef à domicile', '👨‍🍳'),
+        SubCategory('Traiteur événementiel', '🍱'),
+        SubCategory('Pâtissier', '🎂'),
+        SubCategory('Livraison de repas', '🍲'),
+      ],
+    ),
   ];
 
   /// Toutes les sous-categories, a plat (utilisees a l'inscription).

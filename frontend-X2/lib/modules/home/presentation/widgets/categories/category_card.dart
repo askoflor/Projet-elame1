@@ -30,19 +30,19 @@ class CategoryCard extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           curve: Curves.ease,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            color: pastelBg,
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: isHovered ? accent : const Color(0xFFE8ECF2),
+              color: isHovered ? accent : accent.withOpacity(0.18),
               width: isHovered ? 1.5 : 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: (isHovered ? accent : Colors.black).withOpacity(isHovered ? 0.16 : 0.06),
-                blurRadius: isHovered ? 18 : 10,
-                offset: Offset(0, isHovered ? 8 : 4),
+                color: accent.withOpacity(isHovered ? 0.28 : 0.14),
+                blurRadius: isHovered ? 16 : 8,
+                offset: Offset(0, isHovered ? 6 : 3),
               ),
             ],
           ),
@@ -50,30 +50,30 @@ class CategoryCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Badge emoji "en relief"
+              // Badge emoji "en relief" : blanc pour ressortir sur la carte colorée
               Container(
-                width: 56,
-                height: 56,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: pastelBg,
+                  color: Colors.white,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: accent.withOpacity(0.25),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                      color: accent.withOpacity(0.2),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
                 child: Center(
-                  child: Text(emoji, style: const TextStyle(fontSize: 26)),
+                  child: Text(emoji, style: const TextStyle(fontSize: 18)),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Text(
                 name,
                 style: GoogleFonts.sora(
-                  fontSize: 13.5,
+                  fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF1E293B),
                 ),
@@ -81,12 +81,12 @@ class CategoryCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 3),
+              const SizedBox(height: 2),
               Text(
                 subtitle,
                 style: GoogleFonts.dmSans(
-                  fontSize: 11,
-                  color: const Color(0xFF94A3B8),
+                  fontSize: 10,
+                  color: const Color(0xFF1E293B).withOpacity(0.55),
                 ),
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,

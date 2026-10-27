@@ -50,6 +50,8 @@
     "resultsHeaderNoCount": "Providers available in Douala",
     "filtersTitle": "Filters",
     "resetButton": "Reset",
+    "showAll": "Show all",
+    "showLess": "Show less",
     "categoryLabel": "CATEGORY",
     "categoryAll": "All",
     "categoryElectricite": "Electricity",
