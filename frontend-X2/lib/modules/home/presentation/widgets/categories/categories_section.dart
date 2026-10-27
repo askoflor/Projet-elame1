@@ -30,22 +30,97 @@ class _CategoriesSectionState extends State<CategoriesSection> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 56, horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionHeader(),
-          const SizedBox(height: 32),
-          _buildCategoryGrid(),
-        ],
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 700;
+        return Container(
+          width: double.infinity,
+          color: Colors.white,
+          padding: EdgeInsets.symmetric(
+            vertical: isMobile ? 36 : 56,
+            horizontal: isMobile ? 16 : 24,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionHeader(isMobile),
+              SizedBox(height: isMobile ? 20 : 32),
+              _buildCategoryGrid(),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildSectionHeader() {
+  Widget _buildSectionHeader(bool isMobile) {
+    final title = Text(
+      context.tr('categories.sectionTitle'),
+      style: GoogleFonts.sora(
+        fontSize: isMobile ? 19 : 26,
+        fontWeight: FontWeight.w700,
+        color: const Color(0xFF1E293B),
+        letterSpacing: -0.5,
+        height: 1.25,
+      ),
+    );
+    final subtitle = Text(
+      context.tr('categories.sectionSubtitle'),
+      style: GoogleFonts.dmSans(
+        fontSize: isMobile ? 13 : 14,
+        color: const Color(0xFF64748B),
+      ),
+    );
+    final button = _HoverButton(
+      onTap: _openRechercheGlobale,
+      builder: (isHovered) => AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isHovered
+                ? const Color(0xFF2563EB)
+                : const Color(0xFFE8ECF2),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.search_rounded, size: 14, color: Color(0xFF2563EB)),
+            const SizedBox(width: 6),
+            Text(
+              context.tr('categories.voirTout'),
+              style: GoogleFonts.sora(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: isHovered
+                    ? const Color(0xFF2563EB)
+                    : const Color(0xFF64748B),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (isMobile) {
+      // Empile le titre/sous-titre et le bouton au lieu de les mettre côte à
+      // côte : sur un écran étroit, le Row faisait flotter le bouton au
+      // niveau du sous-titre une fois le titre passé sur plusieurs lignes.
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          title,
+          const SizedBox(height: 6),
+          subtitle,
+          const SizedBox(height: 14),
+          button,
+        ],
+      );
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -53,61 +128,11 @@ class _CategoriesSectionState extends State<CategoriesSection> {
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                context.tr('categories.sectionTitle'),
-                style: GoogleFonts.sora(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1E293B),
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                context.tr('categories.sectionSubtitle'),
-                style: GoogleFonts.dmSans(
-                  fontSize: 14,
-                  color: const Color(0xFF64748B),
-                ),
-              ),
-            ],
+            children: [title, const SizedBox(height: 6), subtitle],
           ),
         ),
         const SizedBox(width: 12),
-        _HoverButton(
-          onTap: _openRechercheGlobale,
-          builder: (isHovered) => AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isHovered
-                    ? const Color(0xFF2563EB)
-                    : const Color(0xFFE8ECF2),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.search_rounded, size: 14, color: Color(0xFF2563EB)),
-                const SizedBox(width: 6),
-                Text(
-                  context.tr('categories.voirTout'),
-                  style: GoogleFonts.sora(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: isHovered
-                        ? const Color(0xFF2563EB)
-                        : const Color(0xFF64748B),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+        button,
       ],
     );
   }
