@@ -13,12 +13,17 @@ class NavBar extends StatefulWidget {
 }
 
 class _NavBarState extends State<NavBar> {
-  bool get isLoggedIn =>
-      context.watch<AuthProvider>().isAuthenticated;
+  bool get isLoggedIn => context.watch<AuthProvider>().isAuthenticated;
 
   List<String> get allMenuItems {
     final auth = context.watch<AuthProvider>();
-    final items = ['Accueil', 'Recherche', 'Profil', 'Paiement', 'Confidentialité'];
+    final items = [
+      'Accueil',
+      'Recherche',
+      'Profil',
+      'Paiement',
+      'Confidentialité'
+    ];
     if (auth.isAuthenticated) {
       // Un prestataire peut lui aussi commander un service aupres d'un
       // autre prestataire : il garde donc acces a son espace prestataire
@@ -323,21 +328,25 @@ class _NavBarState extends State<NavBar> {
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isHovered ? const Color(0xFF2563EB) : const Color(0xFFE8ECF2),
+            color:
+                isHovered ? const Color(0xFF2563EB) : const Color(0xFFE8ECF2),
             width: 1,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.language_rounded, size: 14, color: Color(0xFF64748B)),
+            const Icon(Icons.language_rounded,
+                size: 14, color: Color(0xFF64748B)),
             const SizedBox(width: 4),
             Text(
               isFr ? 'FR' : 'EN',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: isHovered ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+                color: isHovered
+                    ? const Color(0xFF2563EB)
+                    : const Color(0xFF64748B),
                 fontFamily: 'Sora',
               ),
             ),
@@ -359,7 +368,8 @@ class _NavBarState extends State<NavBar> {
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isHovered ? const Color(0xFFF97316) : const Color(0xFFE8ECF2),
+            color:
+                isHovered ? const Color(0xFFF97316) : const Color(0xFFE8ECF2),
             width: 1,
           ),
         ),
@@ -368,7 +378,8 @@ class _NavBarState extends State<NavBar> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: isHovered ? const Color(0xFFF97316) : const Color(0xFF64748B),
+            color:
+                isHovered ? const Color(0xFFF97316) : const Color(0xFF64748B),
             fontFamily: 'Sora',
           ),
         ),
@@ -381,7 +392,8 @@ class _NavBarState extends State<NavBar> {
     final nom = user?.nom ?? '';
     final prenom = user?.prenom ?? '';
     final displayName = '$prenom $nom'.trim();
-    final initiales = (prenom.isNotEmpty ? prenom[0] : '') + (nom.isNotEmpty ? nom[0] : '');
+    final initiales =
+        (prenom.isNotEmpty ? prenom[0] : '') + (nom.isNotEmpty ? nom[0] : '');
     final photoBytes = decodeDataUri(user?.photoUrl);
 
     return PopupMenuButton<String>(
@@ -400,9 +412,11 @@ class _NavBarState extends State<NavBar> {
           value: 'profil',
           child: Row(
             children: [
-              const Icon(Icons.person_outline_rounded, size: 18, color: Color(0xFF64748B)),
+              const Icon(Icons.person_outline_rounded,
+                  size: 18, color: Color(0xFF64748B)),
               const SizedBox(width: 10),
-              Text(context.tr('nav.monProfil'), style: const TextStyle(fontSize: 13, fontFamily: 'Sora')),
+              Text(context.tr('nav.monProfil'),
+                  style: const TextStyle(fontSize: 13, fontFamily: 'Sora')),
             ],
           ),
         ),
@@ -410,9 +424,14 @@ class _NavBarState extends State<NavBar> {
           value: 'logout',
           child: Row(
             children: [
-              const Icon(Icons.logout_rounded, size: 18, color: Color(0xFFEF4444)),
+              const Icon(Icons.logout_rounded,
+                  size: 18, color: Color(0xFFEF4444)),
               const SizedBox(width: 10),
-              Text(context.tr('nav.deconnexion'), style: const TextStyle(fontSize: 13, fontFamily: 'Sora', color: Color(0xFFEF4444))),
+              Text(context.tr('nav.deconnexion'),
+                  style: const TextStyle(
+                      fontSize: 13,
+                      fontFamily: 'Sora',
+                      color: Color(0xFFEF4444))),
             ],
           ),
         ),
@@ -425,11 +444,18 @@ class _NavBarState extends State<NavBar> {
             CircleAvatar(
               radius: 16,
               backgroundColor: const Color(0xFF2563EB),
-              backgroundImage: photoBytes != null ? MemoryImage(photoBytes) : null,
+              backgroundImage:
+                  photoBytes != null ? MemoryImage(photoBytes) : null,
               child: photoBytes == null
                   ? Text(
-                      initiales.toUpperCase().isEmpty ? '?' : initiales.toUpperCase(),
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white, fontFamily: 'Sora'),
+                      initiales.toUpperCase().isEmpty
+                          ? '?'
+                          : initiales.toUpperCase(),
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                          fontFamily: 'Sora'),
                     )
                   : null,
             ),
@@ -439,10 +465,15 @@ class _NavBarState extends State<NavBar> {
               child: Text(
                 displayName.isEmpty ? context.tr('nav.monCompte') : displayName,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF1E293B), fontFamily: 'Sora'),
+                style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF1E293B),
+                    fontFamily: 'Sora'),
               ),
             ),
-            const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF64748B)),
+            const Icon(Icons.keyboard_arrow_down_rounded,
+                size: 18, color: Color(0xFF64748B)),
           ],
         ),
       ),
@@ -454,6 +485,7 @@ class _NavBarState extends State<NavBar> {
       onPressed: () {
         showModalBottomSheet(
           context: context,
+          isScrollControlled: true,
           builder: (_) => _buildMobileDrawer(currentItem),
         );
       },
@@ -462,47 +494,63 @@ class _NavBarState extends State<NavBar> {
   }
 
   Widget _buildMobileDrawer(String currentItem) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Align(alignment: Alignment.centerRight, child: _buildLanguageToggle()),
-          const SizedBox(height: 12),
-          ...allMenuItems.map(
-            (item) => ListTile(
-              title: Text(
-                _labelFor(item),
-                style: TextStyle(
-                  color: currentItem == item
-                      ? const Color(0xFF2563EB)
-                      : const Color(0xFF1E293B),
-                  fontWeight:
-                      currentItem == item ? FontWeight.w600 : FontWeight.normal,
+    // isScrollControlled + hauteur bornee + SingleChildScrollView : sans ca,
+    // le contenu (items + boutons Connexion/Inscription) peut depasser la
+    // hauteur par defaut de la feuille et se faire couper en bas, invisible
+    // sans pouvoir scroller.
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Align(
+                  alignment: Alignment.centerRight,
+                  child: _buildLanguageToggle()),
+              const SizedBox(height: 12),
+              ...allMenuItems.map(
+                (item) => ListTile(
+                  title: Text(
+                    _labelFor(item),
+                    style: TextStyle(
+                      color: currentItem == item
+                          ? const Color(0xFF2563EB)
+                          : const Color(0xFF1E293B),
+                      fontWeight: currentItem == item
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _navigateToItem(item);
+                  },
                 ),
               ),
-              onTap: () {
-                Navigator.pop(context);
-                _navigateToItem(item);
-              },
-            ),
-          ),
-          const SizedBox(height: 16),
-          if (_showDevenirPrestataire) ...[
-            SizedBox(width: double.infinity, child: _buildDevenirPrestataireButton()),
-            const SizedBox(height: 8),
-          ],
-          if (!isLoggedIn)
-            Row(
-              children: [
-                Expanded(child: _buildConnexionButton()),
-                const SizedBox(width: 8),
-                Expanded(child: _buildInscriptionButton()),
+              const SizedBox(height: 16),
+              if (_showDevenirPrestataire) ...[
+                SizedBox(
+                    width: double.infinity,
+                    child: _buildDevenirPrestataireButton()),
+                const SizedBox(height: 8),
               ],
-            )
-          else
-            _buildMobileUserRow(),
-        ],
+              if (!isLoggedIn)
+                Row(
+                  children: [
+                    Expanded(child: _buildConnexionButton()),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildInscriptionButton()),
+                  ],
+                )
+              else
+                _buildMobileUserRow(),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -520,9 +568,12 @@ class _NavBarState extends State<NavBar> {
               context.go('/profil');
             },
             icon: photoBytes != null
-                ? CircleAvatar(radius: 10, backgroundImage: MemoryImage(photoBytes))
+                ? CircleAvatar(
+                    radius: 10, backgroundImage: MemoryImage(photoBytes))
                 : const Icon(Icons.person_outline_rounded, size: 16),
-            label: Text(displayName.isEmpty ? context.tr('nav.monProfil') : displayName, overflow: TextOverflow.ellipsis),
+            label: Text(
+                displayName.isEmpty ? context.tr('nav.monProfil') : displayName,
+                overflow: TextOverflow.ellipsis),
           ),
         ),
         const SizedBox(width: 8),
@@ -532,7 +583,8 @@ class _NavBarState extends State<NavBar> {
             context.read<AuthProvider>().logout();
             context.go('/');
           },
-          style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFEF4444)),
+          style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFFEF4444)),
           child: const Icon(Icons.logout_rounded, size: 16),
         ),
       ],
