@@ -1,10 +1,12 @@
 package com.renkotechnologie.backend.modules.auth.controller;
 
 import com.renkotechnologie.backend.modules.auth.dto.AuthResponse;
+import com.renkotechnologie.backend.modules.auth.dto.ForgotPasswordRequest;
 import com.renkotechnologie.backend.modules.auth.dto.LoginRequest;
 import com.renkotechnologie.backend.modules.auth.dto.RealisationPhotoRequest;
 import com.renkotechnologie.backend.modules.auth.dto.RealisationPhotoResponse;
 import com.renkotechnologie.backend.modules.auth.dto.RegisterRequest;
+import com.renkotechnologie.backend.modules.auth.dto.ResetPasswordRequest;
 import com.renkotechnologie.backend.modules.auth.dto.UpdateProfileRequest;
 import com.renkotechnologie.backend.modules.auth.dto.UserResponse;
 import com.renkotechnologie.backend.modules.auth.security.UserPrincipal;
@@ -70,6 +72,18 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> verifyEmail(@RequestParam String token) {
         authService.verifyEmail(token);
         return ResponseEntity.ok(Map.of("message", "Adresse email verifiee avec succes"));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, String>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+        return ResponseEntity.ok(Map.of("message", "Si un compte existe pour cet email, un lien de reinitialisation a ete envoye"));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok(Map.of("message", "Mot de passe reinitialise avec succes"));
     }
 
     @GetMapping("/me/realisations")

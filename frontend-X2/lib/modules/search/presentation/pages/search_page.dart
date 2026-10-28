@@ -12,8 +12,14 @@ class SearchPage extends StatefulWidget {
   final String? initialCategory;
   final bool? initialDisponible;
   final DateTime? initialDate;
+  final String? initialQuartier;
 
-  const SearchPage({super.key, this.initialCategory, this.initialDisponible, this.initialDate});
+  const SearchPage(
+      {super.key,
+      this.initialCategory,
+      this.initialDisponible,
+      this.initialDate,
+      this.initialQuartier});
 
   @override
   State<SearchPage> createState() => _SearchPageState();
@@ -35,6 +41,7 @@ class _SearchPageState extends State<SearchPage> {
     _selectedCategory = widget.initialCategory ?? 'Tous';
     _selectedDisponible = widget.initialDisponible;
     _selectedDate = widget.initialDate;
+    _selectedQuartier = widget.initialQuartier;
     _rechercher();
   }
 

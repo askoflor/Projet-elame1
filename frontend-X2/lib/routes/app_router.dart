@@ -6,6 +6,7 @@ import '../modules/auth/presentation/pages/client_login_screen.dart';
 import '../modules/auth/presentation/pages/register_screen.dart';
 import '../modules/auth/presentation/pages/provider_login_screen.dart';
 import '../modules/auth/presentation/pages/forgot_password_screen.dart';
+import '../modules/auth/presentation/pages/reset_password_screen.dart';
 import '../modules/dashboard/presentation/pages/dashboard_screen.dart';
 import '../modules/home/presentation/pages/home_page.dart';
 import '../modules/search/presentation/pages/search_page.dart';
@@ -35,7 +36,8 @@ class AppRouter {
       initialLocation: AppConstants.homeRoute,
       refreshListenable: authProvider,
       redirect: (context, state) {
-        final isProtected = _protectedRoutes.any((r) => state.matchedLocation.startsWith(r));
+        final isProtected =
+            _protectedRoutes.any((r) => state.matchedLocation.startsWith(r));
         if (isProtected && !authProvider.isAuthenticated) {
           return AppConstants.loginRoute;
         }
@@ -61,12 +63,18 @@ class AppRouter {
         GoRoute(
           path: AppConstants.registerRoute,
           builder: (context, state) => RegisterScreen(
-            initialRole: state.extra == 'PRESTATAIRE' ? UserRole.prestataire : null,
+            initialRole:
+                state.extra == 'PRESTATAIRE' ? UserRole.prestataire : null,
           ),
         ),
         GoRoute(
           path: AppConstants.forgotPasswordRoute,
           builder: (context, state) => const ForgotPasswordScreen(),
+        ),
+        GoRoute(
+          path: AppConstants.resetPasswordRoute,
+          builder: (context, state) =>
+              ResetPasswordScreen(token: state.uri.queryParameters['token']),
         ),
         GoRoute(
           path: AppConstants.dashboardRoute,
@@ -77,7 +85,10 @@ class AppRouter {
           builder: (context, state) {
             final extra = state.extra;
             if (extra is SearchEntryArgs) {
-              return SearchPage(initialCategory: extra.specialite, initialDate: extra.date);
+              return SearchPage(
+                  initialCategory: extra.specialite,
+                  initialDate: extra.date,
+                  initialQuartier: extra.quartier);
             }
             return SearchPage(initialCategory: extra is String ? extra : null);
           },
@@ -87,7 +98,10 @@ class AppRouter {
           builder: (context, state) {
             final extra = state.extra;
             if (extra is BookingEntryArgs) {
-              return BookingPage(provider: extra.provider, initialDate: extra.date, initialHours: extra.hours);
+              return BookingPage(
+                  provider: extra.provider,
+                  initialDate: extra.date,
+                  initialHours: extra.hours);
             }
             // La réservation ne devrait être atteinte que depuis le calendrier
             // du profil (BookingEntryArgs) ; on retombe sur l'accueil sinon.
@@ -96,7 +110,10 @@ class AppRouter {
         ),
         GoRoute(
           path: AppConstants.profileRoute,
-          builder: (context, state) => ProfileScreen(provider: state.extra is ProviderModel ? state.extra as ProviderModel : null),
+          builder: (context, state) => ProfileScreen(
+              provider: state.extra is ProviderModel
+                  ? state.extra as ProviderModel
+                  : null),
         ),
         GoRoute(
           path: AppConstants.paymentRoute,

@@ -1,19 +1,23 @@
 package com.renkotechnologie.backend.modules.auth.service.impl;
 
 import com.renkotechnologie.backend.modules.auth.dto.AuthResponse;
+import com.renkotechnologie.backend.modules.auth.dto.ForgotPasswordRequest;
 import com.renkotechnologie.backend.modules.auth.dto.LoginRequest;
 import com.renkotechnologie.backend.modules.auth.dto.RealisationPhotoRequest;
 import com.renkotechnologie.backend.modules.auth.dto.RealisationPhotoResponse;
 import com.renkotechnologie.backend.modules.auth.dto.RegisterRequest;
+import com.renkotechnologie.backend.modules.auth.dto.ResetPasswordRequest;
 import com.renkotechnologie.backend.modules.auth.dto.UpdateProfileRequest;
 import com.renkotechnologie.backend.modules.auth.dto.UserResponse;
 import com.renkotechnologie.backend.modules.auth.entity.EmailVerificationToken;
+import com.renkotechnologie.backend.modules.auth.entity.PasswordResetToken;
 import com.renkotechnologie.backend.modules.auth.entity.RealisationPhoto;
 import com.renkotechnologie.backend.modules.auth.entity.Role;
 import com.renkotechnologie.backend.modules.auth.entity.User;
 import com.renkotechnologie.backend.modules.auth.exception.EmailAlreadyUsedException;
 import com.renkotechnologie.backend.modules.auth.exception.InvalidTokenException;
 import com.renkotechnologie.backend.modules.auth.repository.EmailVerificationTokenRepository;
+import com.renkotechnologie.backend.modules.auth.repository.PasswordResetTokenRepository;
 import com.renkotechnologie.backend.modules.auth.repository.RealisationPhotoRepository;
 import com.renkotechnologie.backend.modules.auth.repository.UserRepository;
 import com.renkotechnologie.backend.modules.auth.security.JwtService;
@@ -24,6 +28,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -33,12 +38,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthServiceImpl implements AuthService {
 
     private static final int VERIFICATION_TOKEN_VALIDITY_HOURS = 24;
+    private static final int RESET_TOKEN_VALIDITY_HOURS = 1;
 
     private final UserRepository userRepository;
     private final EmailVerificationTokenRepository tokenRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final RealisationPhotoRepository realisationPhotoRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -171,6 +179,43 @@ public class AuthServiceImpl implements AuthService {
         user.setEmailVerified(true);
         userRepository.save(user);
         tokenRepository.delete(verificationToken);
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequest request) {
+        userRepository.findByEmail(request.getEmail()).ifPresentOrElse(
+                this::sendPasswordResetEmail,
+                () -> log.info("Demande de reinitialisation pour un email inconnu : {}", request.getEmail()));
+        // Reponse volontairement identique que l'email existe ou non, pour ne
+        // jamais reveler si une adresse est enregistree.
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(request.getToken())
+                .orElseThrow(() -> new InvalidTokenException("Lien de reinitialisation invalide"));
+
+        if (resetToken.isExpired()) {
+            throw new InvalidTokenException("Lien de reinitialisation expire");
+        }
+
+        User user = resetToken.getUser();
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        passwordResetTokenRepository.delete(resetToken);
+    }
+
+    private void sendPasswordResetEmail(User user) {
+        String token = UUID.randomUUID().toString();
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .token(token)
+                .user(user)
+                .expiresAt(LocalDateTime.now().plusHours(RESET_TOKEN_VALIDITY_HOURS))
+                .build();
+        passwordResetTokenRepository.save(resetToken);
+        emailService.sendPasswordResetEmail(user.getEmail(), user.getPrenom(), token);
     }
 
     private void sendVerificationEmail(User user) {

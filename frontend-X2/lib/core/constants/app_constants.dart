@@ -10,6 +10,7 @@ class AppConstants {
   static const String registerRoute = '/register';
   static const String dashboardRoute = '/dashboard';
   static const String forgotPasswordRoute = '/forgot-password';
+  static const String resetPasswordRoute = '/reset-password';
   static const String clientLoginRoute = '/client-login';
   static const String providerLoginRoute = '/provider-login';
   static const String clientDashboardRoute = '/client-dashboard';

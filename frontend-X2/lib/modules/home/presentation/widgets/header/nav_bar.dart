@@ -60,13 +60,6 @@ class _NavBarState extends State<NavBar> {
     }
   }
 
-  /// "Devenir prestataire" reste visible pour les visiteurs et les clients,
-  /// et disparait uniquement une fois connecte en tant que prestataire.
-  bool get _showDevenirPrestataire {
-    final auth = context.watch<AuthProvider>();
-    return !(auth.isAuthenticated && auth.user?.role == 'PRESTATAIRE');
-  }
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -107,10 +100,6 @@ class _NavBarState extends State<NavBar> {
                   children: [
                     _buildLanguageToggle(),
                     const SizedBox(width: 8),
-                    if (_showDevenirPrestataire) ...[
-                      _buildDevenirPrestataireButton(),
-                      const SizedBox(width: 8),
-                    ],
                     if (!isLoggedIn) _buildButtons() else _buildUserMenu(),
                   ],
                 ),
@@ -371,37 +360,6 @@ class _NavBarState extends State<NavBar> {
     );
   }
 
-  Widget _buildDevenirPrestataireButton() {
-    return _HoverButton(
-      onTap: () => context.go('/register', extra: 'PRESTATAIRE'),
-      builder: (isHovered) => AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        curve: Curves.ease,
-        height: 29,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color:
-                isHovered ? const Color(0xFFF97316) : const Color(0xFFE8ECF2),
-            width: 1,
-          ),
-        ),
-        child: Text(
-          context.tr('nav.devenirPrestataire'),
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color:
-                isHovered ? const Color(0xFFF97316) : const Color(0xFF64748B),
-            fontFamily: 'Sora',
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildUserMenu() {
     final user = context.watch<AuthProvider>().user;
     final nom = user?.nom ?? '';
@@ -547,12 +505,6 @@ class _NavBarState extends State<NavBar> {
                 ),
               ),
               const SizedBox(height: 16),
-              if (_showDevenirPrestataire) ...[
-                SizedBox(
-                    width: double.infinity,
-                    child: _buildDevenirPrestataireButton()),
-                const SizedBox(height: 8),
-              ],
               if (!isLoggedIn)
                 Row(
                   children: [

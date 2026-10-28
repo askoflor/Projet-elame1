@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/localization/translation_provider.dart';
-import '../../../../../core/constants/referentials.dart';
 import '../../../../../core/constants/category_taxonomy.dart';
+import '../../../../../core/widgets/quartier_field.dart';
 
 class FiltersPanel extends StatefulWidget {
   final String? initialCategory;
@@ -41,7 +41,8 @@ class _FiltersPanelState extends State<FiltersPanel> {
   final List<String> availabilityKeys = ['tous', 'maintenant'];
   final List<String> urgencies = ['Planifié', 'Semi-urgent', 'Urgent'];
 
-  String _categoryLabel(String v) => v == 'Tous' ? context.tr('search.categoryAll') : v;
+  String _categoryLabel(String v) =>
+      v == 'Tous' ? context.tr('search.categoryAll') : v;
 
   String _availabilityLabel(String v) {
     switch (v) {
@@ -74,7 +75,8 @@ class _FiltersPanelState extends State<FiltersPanel> {
         ? widget.initialCategory!
         : 'Tous';
     selectedQuartier = widget.initialQuartier;
-    selectedAvailabilityKey = widget.initialAvailability == true ? 'maintenant' : 'tous';
+    selectedAvailabilityKey =
+        widget.initialAvailability == true ? 'maintenant' : 'tous';
   }
 
   @override
@@ -109,7 +111,8 @@ class _FiltersPanelState extends State<FiltersPanel> {
               labelBuilder: _availabilityLabel,
               onSelect: (val) {
                 setState(() => selectedAvailabilityKey = val);
-                widget.onAvailabilityChanged?.call(val == 'maintenant' ? true : null);
+                widget.onAvailabilityChanged
+                    ?.call(val == 'maintenant' ? true : null);
               },
             ),
           ),
@@ -244,7 +247,8 @@ class _FiltersPanelState extends State<FiltersPanel> {
                 : '${context.tr('search.showAll')} (+$hiddenCount)',
             isActive: false,
             accent: true,
-            onTap: () => setState(() => _showAllCategories = !_showAllCategories),
+            onTap: () =>
+                setState(() => _showAllCategories = !_showAllCategories),
           ),
       ],
     );
@@ -293,32 +297,19 @@ class _FiltersPanelState extends State<FiltersPanel> {
   Widget _buildQuartierDropdown() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFFE8ECF2)),
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String?>(
-          value: selectedQuartier,
-          isExpanded: true,
-          hint: Text(context.tr('search.locationAll'), style: GoogleFonts.sora(fontSize: 13, color: const Color(0xFF64748B))),
-          icon: const Icon(Icons.keyboard_arrow_down,
-              color: Color(0xFF64748B), size: 18),
-          style: GoogleFonts.sora(
-            fontSize: 13,
-            color: const Color(0xFF1E293B),
-          ),
-          items: [
-            DropdownMenuItem<String?>(value: null, child: Text(context.tr('search.locationAll'))),
-            ...Referentials.quartiers.map((q) => DropdownMenuItem<String?>(value: q, child: Text(q))),
-          ],
-          onChanged: (val) {
-            setState(() => selectedQuartier = val);
-            widget.onQuartierChanged?.call(val);
-          },
-        ),
+      child: QuartierField(
+        value: selectedQuartier,
+        hintText: context.tr('search.locationAll'),
+        onChanged: (val) {
+          setState(() => selectedQuartier = val);
+          widget.onQuartierChanged?.call(val);
+        },
       ),
     );
   }

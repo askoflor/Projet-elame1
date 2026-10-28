@@ -22,6 +22,7 @@ class AppConfig {
   static const String refreshEndpoint = '/auth/refresh';
   static const String meEndpoint = '/auth/me';
   static const String forgotPasswordEndpoint = '/auth/forgot-password';
+  static const String resetPasswordEndpoint = '/auth/reset-password';
 
   // Endpoints Interventions
   static const String interventionsEndpoint = '/interventions';

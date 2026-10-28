@@ -19,7 +19,8 @@ class AuthRepository {
 
       await StorageService.saveToken(token);
       if (response.data['refreshToken'] != null) {
-        await StorageService.saveRefreshToken(response.data['refreshToken'] as String);
+        await StorageService.saveRefreshToken(
+            response.data['refreshToken'] as String);
       }
 
       return AuthResult(success: true, token: token, user: user);
@@ -27,7 +28,8 @@ class AuthRepository {
       final message = _handleDioError(e);
       return AuthResult(success: false, errorMessage: message);
     } catch (e) {
-      return AuthResult(success: false, errorMessage: 'Reponse du serveur inattendue ($e)');
+      return AuthResult(
+          success: false, errorMessage: 'Reponse du serveur inattendue ($e)');
     }
   }
 
@@ -64,7 +66,8 @@ class AuthRepository {
       final user = UserModel.fromJson(response.data['user']);
       await StorageService.saveToken(token);
       if (response.data['refreshToken'] != null) {
-        await StorageService.saveRefreshToken(response.data['refreshToken'] as String);
+        await StorageService.saveRefreshToken(
+            response.data['refreshToken'] as String);
       }
 
       return AuthResult(success: true, token: token, user: user);
@@ -72,7 +75,8 @@ class AuthRepository {
       final message = _handleDioError(e);
       return AuthResult(success: false, errorMessage: message);
     } catch (e) {
-      return AuthResult(success: false, errorMessage: 'Reponse du serveur inattendue ($e)');
+      return AuthResult(
+          success: false, errorMessage: 'Reponse du serveur inattendue ($e)');
     }
   }
 
@@ -88,6 +92,18 @@ class AuthRepository {
       await _dio.post(
         AppConfig.forgotPasswordEndpoint,
         data: {'email': email},
+      );
+      return null;
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    }
+  }
+
+  Future<String?> resetPassword(String token, String newPassword) async {
+    try {
+      await _dio.post(
+        AppConfig.resetPasswordEndpoint,
+        data: {'token': token, 'newPassword': newPassword},
       );
       return null;
     } on DioException catch (e) {
@@ -137,7 +153,8 @@ class AuthRepository {
     }
   }
 
-  Future<Map<String, dynamic>?> addRealisation(String imageData, {String? caption}) async {
+  Future<Map<String, dynamic>?> addRealisation(String imageData,
+      {String? caption}) async {
     try {
       final response = await _dio.post(
         '${AppConfig.meEndpoint}/realisations',
@@ -166,6 +183,14 @@ class AuthRepository {
       case DioExceptionType.badResponse:
         if (e.response?.statusCode == 401) {
           return 'Email ou mot de passe incorrect';
+        }
+        // Le backend renvoie {"message": "..."} pour ses erreurs metier
+        // (ex. lien de reinitialisation invalide/expire, email deja utilise) :
+        // on l'affiche directement plutot qu'un message generique peu utile.
+        final backendMessage =
+            e.response?.data is Map ? e.response?.data['message'] : null;
+        if (backendMessage is String && backendMessage.isNotEmpty) {
+          return backendMessage;
         }
         return 'Erreur serveur (${e.response?.statusCode})';
       case DioExceptionType.connectionError:

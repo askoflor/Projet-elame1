@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/category_taxonomy.dart';
 import '../localization/translation_provider.dart';
+import 'quartier_field.dart';
 
 /// Popup listant les sous-categories d'UNE categorie principale. Retourne
 /// (via Navigator.pop) le libelle de la sous-categorie choisie, ou null si
@@ -37,29 +38,38 @@ class SubcategoryPickerDialog extends StatelessWidget {
                   Container(
                     width: 8,
                     height: 24,
-                    decoration: BoxDecoration(color: categorie.accent, borderRadius: BorderRadius.circular(4)),
+                    decoration: BoxDecoration(
+                        color: categorie.accent,
+                        borderRadius: BorderRadius.circular(4)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       categorie.label,
-                      style: GoogleFonts.sora(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B)),
+                      style: GoogleFonts.sora(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1E293B)),
                     ),
                   ),
-                  IconButton(onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.close, size: 20)),
+                  IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close, size: 20)),
                 ],
               ),
               const SizedBox(height: 4),
               Text(
                 context.tr('categories.choisirMetier'),
-                style: GoogleFonts.dmSans(fontSize: 12, color: const Color(0xFF64748B)),
+                style: GoogleFonts.dmSans(
+                    fontSize: 12, color: const Color(0xFF64748B)),
               ),
               const SizedBox(height: 12),
               Flexible(
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: categorie.sousCategories.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                  separatorBuilder: (_, __) =>
+                      const Divider(height: 1, color: Color(0xFFF1F5F9)),
                   itemBuilder: (context, index) {
                     final sub = categorie.sousCategories[index];
                     return _SousCategorieTile(
@@ -86,21 +96,23 @@ class SubcategoryPickerDialog extends StatelessWidget {
 class AllCategoriesSearchDialog extends StatefulWidget {
   const AllCategoriesSearchDialog({super.key});
 
-  static Future<(String, DateTime?)?> show(BuildContext context) {
-    return showDialog<(String, DateTime?)>(
+  static Future<(String, DateTime?, String?)?> show(BuildContext context) {
+    return showDialog<(String, DateTime?, String?)>(
       context: context,
       builder: (_) => const AllCategoriesSearchDialog(),
     );
   }
 
   @override
-  State<AllCategoriesSearchDialog> createState() => _AllCategoriesSearchDialogState();
+  State<AllCategoriesSearchDialog> createState() =>
+      _AllCategoriesSearchDialogState();
 }
 
 class _AllCategoriesSearchDialogState extends State<AllCategoriesSearchDialog> {
   MainCategory? _categorie;
   SubCategory? _sousCategorie;
   DateTime? _dateDisponibilite;
+  String? _quartier;
   bool _searchHovered = false;
 
   void _selectCategorie(MainCategory? c) {
@@ -142,10 +154,15 @@ class _AllCategoriesSearchDialogState extends State<AllCategoriesSearchDialog> {
                   Expanded(
                     child: Text(
                       context.tr('categories.rechercherTitre'),
-                      style: GoogleFonts.sora(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF1E293B)),
+                      style: GoogleFonts.sora(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF1E293B)),
                     ),
                   ),
-                  IconButton(onPressed: () => Navigator.of(context).pop(), icon: const Icon(Icons.close, size: 20)),
+                  IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close, size: 20)),
                 ],
               ),
               const SizedBox(height: 14),
@@ -160,18 +177,32 @@ class _AllCategoriesSearchDialogState extends State<AllCategoriesSearchDialog> {
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
                       child: _buildCategorieField(),
                     ),
                     const Divider(height: 1, color: Color(0xFFE2E8F0)),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
                       child: _buildSousCategorieField(),
                     ),
                     const Divider(height: 1, color: Color(0xFFE2E8F0)),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
                       child: _buildDisponibiliteField(),
+                    ),
+                    const Divider(height: 1, color: Color(0xFFE2E8F0)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
+                      child: QuartierField(
+                        value: _quartier,
+                        icon: Icons.location_on_outlined,
+                        hintText: context.tr('categories.quartierTous'),
+                        onChanged: (val) => setState(() => _quartier = val),
+                      ),
                     ),
                   ],
                 ),
@@ -185,22 +216,30 @@ class _AllCategoriesSearchDialogState extends State<AllCategoriesSearchDialog> {
                   onExit: (_) => setState(() => _searchHovered = false),
                   child: ElevatedButton.icon(
                     onPressed: peutRechercher
-                        ? () => Navigator.of(context).pop((_sousCategorie!.label, _dateDisponibilite))
+                        ? () => Navigator.of(context).pop((
+                              _sousCategorie!.label,
+                              _dateDisponibilite,
+                              _quartier
+                            ))
                         : null,
                     icon: const Icon(Icons.search_rounded, size: 18),
                     label: Text(
                       context.tr('search.heroButton'),
-                      style: GoogleFonts.sora(fontSize: 14, fontWeight: FontWeight.w600),
+                      style: GoogleFonts.sora(
+                          fontSize: 14, fontWeight: FontWeight.w600),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: peutRechercher
-                          ? (_searchHovered ? const Color(0xFFEA6C0A) : const Color(0xFFF97316))
+                          ? (_searchHovered
+                              ? const Color(0xFFEA6C0A)
+                              : const Color(0xFFF97316))
                           : const Color(0xFFE2E8F0),
                       foregroundColor: Colors.white,
                       disabledBackgroundColor: const Color(0xFFE2E8F0),
                       disabledForegroundColor: const Color(0xFF94A3B8),
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
                     ),
                   ),
@@ -224,12 +263,15 @@ class _AllCategoriesSearchDialogState extends State<AllCategoriesSearchDialog> {
               value: _categorie,
               isExpanded: true,
               isDense: true,
-              icon: const Icon(Icons.keyboard_arrow_down, size: 16, color: Color(0xFF64748B)),
+              icon: const Icon(Icons.keyboard_arrow_down,
+                  size: 16, color: Color(0xFF64748B)),
               hint: Text(
                 context.tr('search.heroPlaceholder'),
-                style: GoogleFonts.sora(fontSize: 13, color: const Color(0xFF94A3B8)),
+                style: GoogleFonts.sora(
+                    fontSize: 13, color: const Color(0xFF94A3B8)),
               ),
-              style: GoogleFonts.sora(fontSize: 13, color: const Color(0xFF1E293B)),
+              style: GoogleFonts.sora(
+                  fontSize: 13, color: const Color(0xFF1E293B)),
               items: CategoryTaxonomy.categories
                   .map((c) => DropdownMenuItem(
                         value: c,
@@ -252,7 +294,8 @@ class _AllCategoriesSearchDialogState extends State<AllCategoriesSearchDialog> {
         ignoring: !active,
         child: Row(
           children: [
-            const Icon(Icons.build_outlined, size: 16, color: Color(0xFF64748B)),
+            const Icon(Icons.build_outlined,
+                size: 16, color: Color(0xFF64748B)),
             const SizedBox(width: 8),
             Expanded(
               child: DropdownButtonHideUnderline(
@@ -260,17 +303,23 @@ class _AllCategoriesSearchDialogState extends State<AllCategoriesSearchDialog> {
                   value: _sousCategorie,
                   isExpanded: true,
                   isDense: true,
-                  icon: const Icon(Icons.keyboard_arrow_down, size: 16, color: Color(0xFF64748B)),
+                  icon: const Icon(Icons.keyboard_arrow_down,
+                      size: 16, color: Color(0xFF64748B)),
                   hint: Text(
-                    active ? context.tr('categories.rechercherMetier') : context.tr('categories.etapeMetierPlaceholder'),
-                    style: GoogleFonts.sora(fontSize: 13, color: const Color(0xFF94A3B8)),
+                    active
+                        ? context.tr('categories.rechercherMetier')
+                        : context.tr('categories.etapeMetierPlaceholder'),
+                    style: GoogleFonts.sora(
+                        fontSize: 13, color: const Color(0xFF94A3B8)),
                     overflow: TextOverflow.ellipsis,
                   ),
-                  style: GoogleFonts.sora(fontSize: 13, color: const Color(0xFF1E293B)),
+                  style: GoogleFonts.sora(
+                      fontSize: 13, color: const Color(0xFF1E293B)),
                   items: (_categorie?.sousCategories ?? const <SubCategory>[])
                       .map((s) => DropdownMenuItem(
                             value: s,
-                            child: Text(s.label, overflow: TextOverflow.ellipsis),
+                            child:
+                                Text(s.label, overflow: TextOverflow.ellipsis),
                           ))
                       .toList(),
                   onChanged: (val) => setState(() => _sousCategorie = val),
@@ -294,7 +343,8 @@ class _AllCategoriesSearchDialogState extends State<AllCategoriesSearchDialog> {
           height: 40,
           child: Row(
             children: [
-              const Icon(Icons.calendar_today_outlined, size: 16, color: Color(0xFF64748B)),
+              const Icon(Icons.calendar_today_outlined,
+                  size: 16, color: Color(0xFF64748B)),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -303,20 +353,24 @@ class _AllCategoriesSearchDialogState extends State<AllCategoriesSearchDialog> {
                       : '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}',
                   style: GoogleFonts.sora(
                     fontSize: 13,
-                    color: date == null ? const Color(0xFF94A3B8) : const Color(0xFF1E293B),
+                    color: date == null
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF1E293B),
                   ),
                 ),
               ),
               if (date != null)
                 IconButton(
                   onPressed: () => setState(() => _dateDisponibilite = null),
-                  icon: const Icon(Icons.close, size: 16, color: Color(0xFF94A3B8)),
+                  icon: const Icon(Icons.close,
+                      size: 16, color: Color(0xFF94A3B8)),
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 )
               else
-                const Icon(Icons.keyboard_arrow_down, size: 16, color: Color(0xFF64748B)),
+                const Icon(Icons.keyboard_arrow_down,
+                    size: 16, color: Color(0xFF64748B)),
             ],
           ),
         ),
@@ -330,7 +384,8 @@ class _SousCategorieTile extends StatelessWidget {
   final Color accent;
   final VoidCallback onTap;
 
-  const _SousCategorieTile({required this.sub, required this.accent, required this.onTap});
+  const _SousCategorieTile(
+      {required this.sub, required this.accent, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -342,7 +397,11 @@ class _SousCategorieTile extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: Text(sub.label, style: GoogleFonts.dmSans(fontSize: 13.5, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B))),
+              child: Text(sub.label,
+                  style: GoogleFonts.dmSans(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1E293B))),
             ),
             Icon(Icons.chevron_right_rounded, size: 18, color: accent),
           ],

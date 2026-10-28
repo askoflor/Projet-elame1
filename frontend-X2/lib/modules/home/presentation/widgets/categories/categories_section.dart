@@ -16,7 +16,8 @@ class CategoriesSection extends StatefulWidget {
 
 class _CategoriesSectionState extends State<CategoriesSection> {
   Future<void> _openCategorie(MainCategory categorie) async {
-    final sousCategorie = await SubcategoryPickerDialog.show(context, categorie);
+    final sousCategorie =
+        await SubcategoryPickerDialog.show(context, categorie);
     if (sousCategorie == null || !mounted) return;
     context.push('/recherche', extra: sousCategorie);
   }
@@ -24,8 +25,10 @@ class _CategoriesSectionState extends State<CategoriesSection> {
   Future<void> _openRechercheGlobale() async {
     final resultat = await AllCategoriesSearchDialog.show(context);
     if (resultat == null || !mounted) return;
-    final (specialite, date) = resultat;
-    context.push('/recherche', extra: SearchEntryArgs(specialite: specialite, date: date));
+    final (specialite, date, quartier) = resultat;
+    context.push('/recherche',
+        extra: SearchEntryArgs(
+            specialite: specialite, date: date, quartier: quartier));
   }
 
   @override
@@ -80,15 +83,15 @@ class _CategoriesSectionState extends State<CategoriesSection> {
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isHovered
-                ? const Color(0xFF2563EB)
-                : const Color(0xFFE8ECF2),
+            color:
+                isHovered ? const Color(0xFF2563EB) : const Color(0xFFE8ECF2),
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.search_rounded, size: 14, color: Color(0xFF2563EB)),
+            const Icon(Icons.search_rounded,
+                size: 14, color: Color(0xFF2563EB)),
             const SizedBox(width: 6),
             Text(
               context.tr('categories.voirTout'),
@@ -146,9 +149,8 @@ class _CategoriesSectionState extends State<CategoriesSection> {
         } else if (constraints.maxWidth < 900) {
           crossAxisCount = 3;
         }
-        final childAspectRatio = crossAxisCount == 2
-            ? 1.15
-            : (crossAxisCount == 3 ? 1.35 : 1.7);
+        final childAspectRatio =
+            crossAxisCount == 2 ? 1.15 : (crossAxisCount == 3 ? 1.35 : 1.7);
 
         final categories = CategoryTaxonomy.categories;
 
@@ -166,7 +168,8 @@ class _CategoriesSectionState extends State<CategoriesSection> {
             final categorie = categories[index];
             return CategoryCard(
               name: categorie.label,
-              subtitle: '${categorie.sousCategories.length} ${context.tr('categories.metiers')}',
+              subtitle:
+                  '${categorie.sousCategories.length} ${context.tr('categories.metiers')}',
               emoji: categorie.emoji,
               pastelBg: categorie.pastelBg,
               accent: categorie.accent,

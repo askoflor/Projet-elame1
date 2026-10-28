@@ -24,7 +24,13 @@ class AuthProvider extends ChangeNotifier {
     _checkAuthStatus();
   }
 
-  void enableDemoMode({String? email, String? nom, String? prenom, String? role, String? specialite, DateTime? dateNaissance}) {
+  void enableDemoMode(
+      {String? email,
+      String? nom,
+      String? prenom,
+      String? role,
+      String? specialite,
+      DateTime? dateNaissance}) {
     _user = UserModel(
       id: 'demo-001',
       email: email ?? 'demo@serviceconnect.com',
@@ -161,9 +167,41 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      return await _repository.forgotPassword(email);
+      final error = await _repository.forgotPassword(email);
+      if (error != null) {
+        _errorMessage = error;
+        _status = AuthStatus.error;
+        notifyListeners();
+      }
+      return error;
     } catch (_) {
-      return 'Impossible de joindre le serveur';
+      _errorMessage = 'Impossible de joindre le serveur';
+      _isConnectionError = true;
+      _status = AuthStatus.error;
+      notifyListeners();
+      return _errorMessage;
+    }
+  }
+
+  Future<String?> resetPassword(String token, String newPassword) async {
+    _errorMessage = null;
+    _isConnectionError = false;
+    notifyListeners();
+
+    try {
+      final error = await _repository.resetPassword(token, newPassword);
+      if (error != null) {
+        _errorMessage = error;
+        _status = AuthStatus.error;
+        notifyListeners();
+      }
+      return error;
+    } catch (_) {
+      _errorMessage = 'Impossible de joindre le serveur';
+      _isConnectionError = true;
+      _status = AuthStatus.error;
+      notifyListeners();
+      return _errorMessage;
     }
   }
 
