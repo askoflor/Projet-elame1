@@ -1,11 +1,11 @@
 {
-    "name": "E-BOLO",
-    "short_name": "E-BOLO",
+    "name": "NZELA-SERVICES",
+    "short_name": "NZELA-SERVICES",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#2563EB",
     "theme_color": "#2563EB",
-    "description": "E-BOLO - Trouvez des professionnels de confiance pres de chez vous",
+    "description": "NZELA-SERVICES - Trouvez des professionnels de confiance pres de chez vous",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

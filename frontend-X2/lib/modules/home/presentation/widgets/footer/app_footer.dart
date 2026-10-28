@@ -87,10 +87,24 @@ class AppFooter extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Logo
-        Image.asset(
-          'assets/images/logo-white.png',
-          height: 30,
-          fit: BoxFit.contain,
+        RichText(
+          text: const TextSpan(
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              fontFamily: 'Sora',
+            ),
+            children: [
+              TextSpan(
+                text: 'NZELA-',
+                style: TextStyle(color: Colors.white),
+              ),
+              TextSpan(
+                text: 'SERVICES',
+                style: TextStyle(color: Color(0xFFF97316)),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 12),
         // Description
