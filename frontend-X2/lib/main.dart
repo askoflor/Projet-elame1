@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:provider/provider.dart';
 import 'app.dart';
 import 'core/localization/translation_provider.dart';
@@ -9,6 +10,10 @@ import 'modules/intervention/state/intervention_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // URLs "propres" (sans #) sur le web, pour que les liens emailes
+  // (reinitialisation de mot de passe, etc.) et les liens partages/mis en
+  // favoris vers une sous-page fonctionnent au premier chargement.
+  usePathUrlStrategy();
   final translationProvider = TranslationProvider();
   await translationProvider.loadTranslations(const Locale('fr'));
   runApp(
